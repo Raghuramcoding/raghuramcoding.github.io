@@ -1,1 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background-color: #000; color: #fff;
+            font-family: 'Segoe UI', sans-serif; overflow: hidden;
+        }
+        #effect-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        #ui-layer {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100vh; text-align: center;
+        }
+        .screen { display: none; width: 100%; max-width: 500px; }
+        .active { display: flex; flex-direction: column; align-items: center; }
+        h1 { font-size: 2.5rem; margin-bottom: 20px; color: #00ffcc; text-shadow: 0 0 15px #00ffcc; }
+        button {
+            width: 85%; padding: 15px; margin: 10px;
+            font-size: 18px; font-weight: bold;
+            cursor: pointer; border: 2px solid #fff;
+            background: rgba(255,255,255,0.1); color: #fff;
+            transition: 0.2s; border-radius: 10px;
+        }
+        button:hover:not(:disabled) { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
+        button:disabled { border-color: #444; color: #666; cursor: not-allowed; opacity: 0.5; }
+        input { font-size: 32px; width: 140px; text-align: center; margin: 20px; border-radius: 10px; border: none; padding: 10px; background: #eee; }
+        .trophy-row { display: flex; gap: 20px; margin-bottom: 30px; font-size: 1.4rem; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; }
+        #hearts { color: #ff4d4d; font-size: 35px; margin: 15px; letter-spacing: 5px; }
+        #feedback { font-size: 1.3rem; min-height: 70px; color: #00ffcc; font-weight: bold; }
+        .reset-btn { font-size: 12px; width: auto; padding: 8px 20px; margin-top: 40px; border-color: #ff4d4d; color: #ff4d4d; }
+    </style>
+</head>
+<body>
 
+<canvas id="effect-canvas"></canvas>
+
+<div id="ui-layer">
+    <div id="menu-screen" class="screen active">
+        <h1>GUESS THE NUMBER</h1>
+        <div class="trophy-row">
+            <span>🥉 <span id="count-bronze">0</span></span>
+            <span>🥈 <span id="count-silver">0</span></span>
+            <span>🥇 <span id="count-gold">0</span></span>
+            <span>🏆 <span id="count-platinum">0</span></span>
+        </div>
+        <button onclick="game.start('bronze', 25, 20)">Easy (1-25)</button>
+        <button onclick="game.start('silver', 50, 10)">Medium (1-50)</button>
+        <button onclick="game.start('gold', 100, 5)">Hard (1-100)</button>
+        <button id="btn-platinum" onclick="game.start('platinum', 1000, 100)">Platinum (Locked)</button>
+        <button class="reset-btn" onclick="game.resetData()">Reset Progress</button>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <h2 id="game-info"></h2>
+        <div id="hearts"></div>
+        <p id="attempts-text"></p>
+        <div id="feedback"></div>
+        <input type="number" id="guess-input" placeholder="?">
+        <button onclick="game.submitGuess()">Submit Guess</button>
+        <button onclick="game.showMenu()" style="font-size: 14px; border-color: #444;">Quit to Menu</button>
+    </div>
+</div>
+
+<script>
+const game = {
+    trophies: { bronze: 0, silver: 0, gold: 0, platinum: 0 },
+    secret: 0, attempts: 0, maxAttempts: 0, currentDiff: '', maxNum: 0, effectMode: 'none',
+
+    init: function() {
+        const saved = localStorage.getItem('guessingGameProgress');
+        if (saved) {
+            try {
+                this.trophies = JSON.parse(saved);
+            } catch(e) { console.error("Data error"); }
+        }
+        this.updateMenuUI();
+        this.animate();
+    },
+
+    updateMenuUI: function() {
+        document.getElementById('count-bronze').innerText = this.trophies.bronze || 0;
+        document.getElementById('count-silver').innerText = this.trophies.silver || 0;
+        document.getElementById('count-gold').innerText = this.trophies.gold || 0;
+        document.getElementById('count-platinum').innerText = this.trophies.platinum || 0;
+
+        const platBtn = document.getElementById('btn-platinum');
+        if (this.trophies.gold > 0) {
+            platBtn.disabled = false;
+            platBtn.innerText = "Platinum (1-1000)";
+        } else {
+            platBtn.disabled = true;
+            platBtn.innerText = "Platinum (Locked)";
+        }
+    },
+
+    start: function(diff, max, tries) {
+        this.currentDiff = diff;
+        this.maxNum = max;
+        this.maxAttempts = tries;
+        this.attempts = 0;
+        
+        // Pick a multiple of 10 to match your Python game
+        const highLimit = Math.floor(max / 10);
+        this.secret = (Math.floor(Math.random() * highLimit) + 1) * 10;
+
+        document.getElementById('game-info').innerText = `I'm thinking of a number (1 to ${max})`;
+        document.getElementById('feedback').innerText = 'Make a guess!';
+        document.getElementById('guess-input').value = '';
+        
+        this.updateGameUI();
+        document.getElementById('menu-screen').classList.remove('active');
+        document.getElementById('game-screen').classList.add('active');
+    },
+
+    updateGameUI: function() {
+        document.getElementById('hearts').innerText = "❤️".repeat(Math.max(0, this.maxAttempts - this.attempts));
+        document.getElementById('attempts-text').innerText = `Attempts Left: ${this.maxAttempts - this.attempts}`;
+    },
+
+    submitGuess: function() {
+        const input = document.getElementById('guess-input');
+        const guess = parseInt(input.value);
+        if (isNaN(guess)) return;
+
+        this.attempts++;
+        this.updateGameUI();
+
+        if (guess === this.secret) {
+            alert(`🎉 CORRECT! The number was ${this.secret}`);
+            this.awardTrophy();
+            this.showMenu();
+        } else if (this.attempts >= this.maxAttempts) {
+            alert(`😢 GAME OVER! The number was ${this.secret}`);
+            this.showMenu();
+        } else {
+            const diff = Math.abs(guess - this.secret);
+            const hint = guess < this.secret ? "HIGHER" : "LOWER";
+            
+            if (diff <= (this.maxNum * 0.1)) {
+                this.effectMode = 'fire';
+                document.getElementById('feedback').innerHTML = `🔥 VERY HOT!<br>Go ${hint}`;
+            } else if (diff <= (this.maxNum * 0.2)) {
+                this.effectMode = 'fire';
+                document.getElementById('feedback').innerHTML = `🌡️ HOT!<br>Go ${hint}`;
+            } else {
+                this.effectMode = 'snow';
+                document.getElementById('feedback').innerHTML = `❄️ COLD...<br>Go ${hint}`;
+            }
+        }
+        input.value = '';
+        input.focus();
+    },
+
+    awardTrophy: function() {
+        if (!this.trophies[this.currentDiff]) this.trophies[this.currentDiff] = 0;
+        this.trophies[this.currentDiff]++;
+        
+        localStorage.setItem('guessingGameProgress', JSON.stringify(this.trophies));
+        
+        if (this.currentDiff === 'gold' && this.trophies.gold === 1) {
+            alert("🏆 PLATINUM MODE UNLOCKED!");
+        }
+    },
+
+    showMenu: function() {
+        this.effectMode = 'none';
+        document.getElementById('game-screen').classList.remove('active');
+        document.getElementById('menu-screen').classList.add('active');
+        this.updateMenuUI();
+    },
+
+    resetData: function() {
+        if (confirm("Reset everything? All trophies will be gone.")) {
+            this.trophies = { bronze: 0, silver: 0, gold: 0, platinum: 0 };
+            localStorage.setItem('guessingGameProgress', JSON.stringify(this.trophies));
+            this.updateMenuUI();
+        }
+    },
+
+    particles: [],
+    animate: function() {
+        const canvas = document.getElementById('effect-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (this.effectMode !== 'none' && Math.random() < 0.4) {
+            this.particles.push({
+                x: Math.random() * canvas.width,
+                y: this.effectMode === 'fire' ? canvas.height : 0,
+                speed: Math.random() * 4 + 2,
+                size: Math.random() * 5 + 2,
+                color: this.effectMode === 'fire' ? '#ff4500' : '#ffffff'
+            });
+        }
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 7); ctx.fill();
+            p.y += this.effectMode === 'fire' ? -p.speed : p.speed;
+            if (p.y < -50 || p.y > canvas.height + 50) this.particles.splice(i, 1);
+        
+        }
+        requestAnimationFrame(() => this.animate());
+    }
+};
+
+window.onload = () => game.init();
+</script>
+</body>
+</html>
