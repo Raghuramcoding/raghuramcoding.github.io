@@ -3,300 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velocity Quest: All-In-One</title>
+    <title>Velocity Quest: Level Up!</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
         canvas { display: block; margin: 0 auto; background: #111; border: 4px solid #444; }
         
-        /* UI Layers */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 10; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 10; }
         .active { display: flex; }
 
-        .hud { position: fixed; top: 10px; left: 10px; pointer-events: none; z-index: 5; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; }
-        .trophy-row { font-size: 18px; margin-bottom: 5px; }
+        .hud { position: fixed; top: 10px; left: 10px; z-index: 5; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border: 1px solid #444; }
+        .lvl-tag { color: #ffff00; font-weight: bold; font-size: 20px; }
 
-        /* Component Styles */
-        button { padding: 15px 30px; margin: 10px; font-size: 18px; cursor: pointer; background: #222; color: #0f0; border: 2px solid #0f0; border-radius: 5px; }
+        button { padding: 15px 30px; margin: 10px; font-size: 18px; cursor: pointer; background: #222; color: #0f0; border: 2px solid #0f0; border-radius: 8px; }
         button:hover { background: #0f0; color: #000; }
-        button:disabled { border-color: #444; color: #444; cursor: not-allowed; }
-        input { font-size: 24px; width: 150px; text-align: center; margin: 10px; }
-        #feedback { font-size: 20px; color: #00ffcc; margin: 10px; height: 30px; }
-        .reset-btn { position: fixed; bottom: 10px; right: 10px; font-size: 10px; padding: 5px; border-color: red; color: red; }
+        input { font-size: 24px; width: 150px; text-align: center; margin: 10px; padding: 5px; }
     </style>
 </head>
 <body>
 
 <div class="hud">
-    <div class="trophy-row">
-        🥉:<span id="h-bronze">0</span> 🥈:<span id="h-silver">0</span> 🥇:<span id="h-gold">0</span> 🏆:<span id="h-platinum">0</span>
-    </div>
-    <div>Engine Power: <span id="h-power">0</span></div>
+    <div class="lvl-tag">RACE LEVEL: <span id="h-level">1</span></div>
+    <div style="margin: 5px 0;">Power: <span id="h-power">0</span> / <span id="h-cost">10</span></div>
+    <div>🥈:<span id="h-silver">0</span> 🥇:<span id="h-gold">0</span> 🏆:<span id="h-platinum">0</span></div>
 </div>
-
-<button class="reset-btn" onclick="game.reset()">RESET PROGRESS</button>
 
 <div id="screen-menu" class="overlay active">
     <h1>VELOCITY QUEST</h1>
-    <p>A Multi-Game Adventure</p>
-    <button onclick="game.setState('OVERWORLD')">START ADVENTURE</button>
+    <button onclick="game.setState('OVERWORLD')">ENTER WORLD</button>
 </div>
 
 <div id="screen-guessing" class="overlay">
-    <h2 id="hack-title">SYSTEM HACK</h2>
-    <div id="hack-hearts"></div>
-    <div id="feedback"></div>
-    <input type="number" id="guess-input" placeholder="???">
+    <h2>HACKING TERMINAL</h2>
+    <div id="hack-hearts" style="font-size:30px;"></div>
+    <p id="feedback">Multiples of 10</p>
+    <input type="number" id="guess-input">
     <button onclick="game.submitGuess()">INJECT DATA</button>
-    <button onclick="game.setState('OVERWORLD')" style="font-size:12px; border-color:#555;">ABORT</button>
+    <button onclick="game.setState('OVERWORLD')" style="border-color:#555; font-size:12px;">EXIT</button>
 </div>
 
 <div id="screen-math" class="overlay">
-    <h2>MATH LAB</h2>
-    <p>Solve to increase Engine Power!</p>
-    <h1 id="math-problem">5 + 5 = ?</h1>
+    <h2>ENGINEERING LAB</h2>
+    <h1 id="math-problem"></h1>
     <input type="number" id="math-input">
-    <button onclick="game.submitMath()">SUBMIT</button>
-    <button onclick="game.setState('OVERWORLD')" style="font-size:12px; border-color:#555;">LEAVE LAB</button>
+    <button onclick="game.submitMath()">CALCULATE</button>
+    <button onclick="game.setState('OVERWORLD')" style="border-color:#555; font-size:12px;">EXIT</button>
 </div>
 
 <div id="screen-racing" class="overlay">
-    <div style="position:absolute; top:20px; color:lime;">DIST: <span id="race-dist">0</span>m</div>
-    <div id="race-msg" style="font-size:40px; font-weight:bold;"></div>
+    <h1 id="race-level-display">LEVEL 1</h1>
+    <div style="font-size: 25px;">Distance: <span id="race-dist">0</span> / 5000m</div>
+    <p>Use Left/Right Arrows to Steer!</p>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
-/**
- * THE ULTIMATE GAME ENGINE
- */
 const game = {
     state: 'MENU',
     canvas: document.getElementById('gameCanvas'),
     ctx: null,
-    saveData: { bronze: 0, silver: 0, gold: 0, platinum: 0, power: 0 },
+    // NEW: Added currentLevel to save data
+    saveData: { gold: 0, silver: 0, platinum: 0, power: 0, currentLevel: 1 },
     
-    // Player for 2D Overworld
-    player: { x: 400, y: 300, size: 15, speed: 4, color: '#00ffff' },
+    player: { x: 400, y: 300, size: 15, speed: 5, color: '#00ffff' },
     keys: {},
-    
-    // Overworld Zones
     zones: [
-        { name: 'MATH', color: 'rgba(0, 0, 255, 0.3)', x: 100, y: 100, w: 100, h: 100, label: 'Math Lab' },
-        { name: 'GUESSING', color: 'rgba(255, 255, 0, 0.3)', x: 600, y: 100, w: 100, h: 100, label: 'Hacking' },
-        { name: 'RACING', color: 'rgba(255, 0, 0, 0.3)', x: 350, y: 450, w: 100, h: 100, label: 'Race Track' }
+        { name: 'MATH', color: 'rgba(0, 0, 255, 0.4)', x: 100, y: 100, w: 120, h: 120, label: 'Math Lab' },
+        { name: 'GUESSING', color: 'rgba(255, 255, 0, 0.4)', x: 580, y: 100, w: 120, h: 120, label: 'Hacking' },
+        { name: 'RACING', color: 'rgba(255, 0, 0, 0.4)', x: 340, y: 440, w: 120, h: 120, label: 'RACE TRACK' }
     ],
 
-    // Minigame Data
-    hack: { secret: 0, attempts: 0, max: 5, difficulty: 'gold' },
+    hack: { secret: 0, attempts: 0 },
     math: { a: 0, b: 0, ans: 0 },
-    race: { active: false, distance: 0, speed: 0, roadOffset: 0, playerX: 0 },
+    race: { distance: 0, speed: 0, playerX: 0, roadOffset: 0 },
 
     init: function() {
         this.ctx = this.canvas.getContext('2d');
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
+        this.canvas.width = 800; this.canvas.height = 600;
+        
         window.addEventListener('keydown', (e) => this.keys[e.code] = true);
         window.addEventListener('keyup', (e) => this.keys[e.code] = false);
 
-        // Load Save
-        const stored = localStorage.getItem('vQuestSave');
+        const stored = localStorage.getItem('vQuestSaveV2');
         if (stored) this.saveData = JSON.parse(stored);
         this.updateHUD();
-
         this.loop();
     },
 
-    resize: function() {
-        this.canvas.width = 800;
-        this.canvas.height = 600;
-    },
-
     updateHUD: function() {
-        document.getElementById('h-bronze').innerText = this.saveData.bronze;
-        document.getElementById('h-silver').innerText = this.saveData.silver;
+        document.getElementById('h-level').innerText = this.saveData.currentLevel;
+        document.getElementById('h-power').innerText = this.saveData.power;
         document.getElementById('h-gold').innerText = this.saveData.gold;
         document.getElementById('h-platinum').innerText = this.saveData.platinum;
-        document.getElementById('h-power').innerText = this.saveData.power;
+        // Calculation: Power needed = Level * 10
+        document.getElementById('h-cost').innerText = this.saveData.currentLevel * 10;
     },
 
     save: function() {
-        localStorage.setItem('vQuestSave', JSON.stringify(this.saveData));
+        localStorage.setItem('vQuestSaveV2', JSON.stringify(this.saveData));
         this.updateHUD();
     },
 
-    reset: function() {
-        if(confirm("Erase everything?")) {
-            this.saveData = { bronze: 0, silver: 0, gold: 0, platinum: 0, power: 0 };
-            this.save();
-            location.reload();
-        }
-    },
-
     setState: function(s) {
-        this.state = s;
-        // Hide all overlays
-        document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
-        
-        if (s === 'GUESSING') {
-            document.getElementById('screen-guessing').classList.add('active');
-            this.initHack();
-        } else if (s === 'MATH') {
-            document.getElementById('screen-math').classList.add('active');
-            this.newMath();
-        } else if (s === 'RACING') {
-            if (this.saveData.power < 20) {
-                alert("Low Power! Solve math problems to reach 20 Power first.");
-                this.state = 'OVERWORLD';
-            } else {
-                document.getElementById('screen-racing').classList.add('active');
-                this.initRace();
+        // Power Check for Racing
+        if (s === 'RACING') {
+            const powerNeeded = this.saveData.currentLevel * 10;
+            if (this.saveData.power < powerNeeded) {
+                alert(`LOCKED! You need ${powerNeeded} Power for Level ${this.saveData.currentLevel}.\nGo to the Math Lab!`);
+                return;
             }
-        } else if (s === 'OVERWORLD') {
-            // No overlay for overworld, it's the canvas
-        } else if (s === 'MENU') {
-            document.getElementById('screen-menu').classList.add('active');
+            document.getElementById('race-level-display').innerText = "LEVEL " + this.saveData.currentLevel;
+            this.race.distance = 0;
+            this.race.playerX = 0;
         }
+
+        this.state = s;
+        document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+        if (s !== 'OVERWORLD') document.getElementById('screen-' + s.toLowerCase()).classList.add('active');
+        
+        if (s === 'GUESSING') this.initHack();
+        if (s === 'MATH') this.newMath();
     },
 
-    // --- 2D OVERWORLD LOGIC ---
+    // --- SYSTEMS ---
     updateOverworld: function() {
         if (this.keys['ArrowUp']) this.player.y -= this.player.speed;
         if (this.keys['ArrowDown']) this.player.y += this.player.speed;
         if (this.keys['ArrowLeft']) this.player.x -= this.player.speed;
         if (this.keys['ArrowRight']) this.player.x += this.player.speed;
 
-        // Collision with Zones
         this.zones.forEach(z => {
             if (this.player.x > z.x && this.player.x < z.x + z.w &&
                 this.player.y > z.y && this.player.y < z.y + z.h) {
-                this.player.x = 400; this.player.y = 300; // Reset pos to avoid loop
+                this.player.x = 400; this.player.y = 300; 
                 this.setState(z.name);
             }
         });
     },
 
-    drawOverworld: function() {
-        this.ctx.clearRect(0,0,800,600);
-        // Draw Zones
-        this.zones.forEach(z => {
-            this.ctx.fillStyle = z.color;
-            this.ctx.fillRect(z.x, z.y, z.w, z.h);
-            this.ctx.fillStyle = "#fff";
-            this.ctx.fillText(z.label, z.x + 10, z.y + 50);
-        });
-        // Draw Player
-        this.ctx.fillStyle = this.player.color;
-        this.ctx.beginPath();
-        this.ctx.arc(this.player.x, this.player.y, this.player.size, 0, Math.PI*2);
-        this.ctx.fill();
-        this.ctx.fillStyle = "#fff";
-        this.ctx.fillText("YOU (Use Arrows)", this.player.x - 30, this.player.y - 20);
-    },
-
-    // --- HACKING (GUESSING) LOGIC ---
-    initHack: function() {
-        this.hack.secret = (Math.floor(Math.random() * 10) + 1) * 10;
-        this.hack.attempts = 0;
-        document.getElementById('hack-hearts').innerText = "❤️❤️❤️❤️❤️";
-        document.getElementById('feedback').innerText = "Target: Multiples of 10 (10-100)";
-    },
-    submitGuess: function() {
-        let val = parseInt(document.getElementById('guess-input').value);
-        this.hack.attempts++;
-        if (val === this.hack.secret) {
-            alert("SYSTEM OVERRIDE SUCCESSFUL! Gold Trophy Earned.");
-            this.saveData.gold++;
-            this.save();
-            this.setState('OVERWORLD');
-        } else {
-            let hint = val < this.hack.secret ? "Higher" : "Lower";
-            document.getElementById('feedback').innerText = "Access Denied. Hint: " + hint;
-            document.getElementById('hack-hearts').innerText = "❤️".repeat(5 - this.hack.attempts);
-            if(this.hack.attempts >= 5) {
-                alert("Hack Failed!");
-                this.setState('OVERWORLD');
-            }
-        }
-        document.getElementById('guess-input').value = "";
-    },
-
-    // --- MATH LAB LOGIC ---
     newMath: function() {
-        this.math.a = Math.floor(Math.random() * 50);
-        this.math.b = Math.floor(Math.random() * 50);
+        this.math.a = Math.floor(Math.random() * 20) + (this.saveData.currentLevel * 2);
+        this.math.b = Math.floor(Math.random() * 20);
         this.math.ans = this.math.a + this.math.b;
         document.getElementById('math-problem').innerText = `${this.math.a} + ${this.math.b} = ?`;
     },
+
     submitMath: function() {
-        let val = parseInt(document.getElementById('math-input').value);
-        if (val === this.math.ans) {
+        if (parseInt(document.getElementById('math-input').value) === this.math.ans) {
             this.saveData.power += 5;
             this.save();
-            alert("Engine Power +5!");
             this.newMath();
-        } else {
-            alert("Incorrect Calculation.");
         }
         document.getElementById('math-input').value = "";
     },
 
-    // --- RACING LOGIC (PSEUDO-3D) ---
-    initRace: function() {
-        this.race.distance = 0;
-        this.race.speed = 0;
-        this.race.playerX = 0;
-        this.race.active = true;
+    initHack: function() {
+        this.hack.secret = (Math.floor(Math.random() * 10) + 1) * 10;
+        this.hack.attempts = 0;
+        document.getElementById('hack-hearts').innerText = "❤️❤️❤️❤️❤️";
     },
+
+    submitGuess: function() {
+        let val = parseInt(document.getElementById('guess-input').value);
+        this.hack.attempts++;
+        if (val === this.hack.secret) {
+            alert("HACK COMPLETE! +1 Gold Trophy");
+            this.saveData.gold++; this.save(); this.setState('OVERWORLD');
+        } else {
+            document.getElementById('hack-hearts').innerText = "❤️".repeat(5 - this.hack.attempts);
+            if (this.hack.attempts >= 5) this.setState('OVERWORLD');
+        }
+        document.getElementById('guess-input').value = "";
+    },
+
     updateRace: function() {
-        this.race.speed = 5 + (this.saveData.power / 10);
+        // Speed increases with Level
+        this.race.speed = 10 + this.saveData.currentLevel;
         this.race.distance += Math.floor(this.race.speed);
+        this.race.roadOffset = (this.race.roadOffset + this.race.speed) % 100;
         document.getElementById('race-dist').innerText = this.race.distance;
 
-        if (this.keys['ArrowLeft']) this.race.playerX -= 5;
-        if (this.keys['ArrowRight']) this.race.playerX += 5;
-
-        this.race.roadOffset = (this.race.roadOffset + this.race.speed) % 100;
+        if (this.keys['ArrowLeft']) this.race.playerX -= 8;
+        if (this.keys['ArrowRight']) this.race.playerX += 8;
 
         if (this.race.distance > 5000) {
-            alert("RACE FINISHED! Platinum Trophy Awarded!");
+            alert(`LEVEL ${this.saveData.currentLevel} CLEARED!`);
+            this.saveData.currentLevel++;
             this.saveData.platinum++;
             this.save();
-            this.race.active = false;
             this.setState('OVERWORLD');
         }
     },
-    drawRace: function() {
-        this.ctx.fillStyle = "#222";
-        this.ctx.fillRect(0,0,800,600);
-        
-        // Draw 3D Road
-        for(let i=0; i<600; i+=10) {
-            let w = i * 1.5;
-            let y = 600 - i;
-            let shift = Math.sin((i + this.race.roadOffset)*0.02) * 20;
-            this.ctx.fillStyle = (Math.floor((i+this.race.roadOffset)/50)%2==0) ? "#444" : "#333";
-            this.ctx.fillRect(400 - w/2 + shift + this.race.playerX, y, w, 10);
-        }
 
-        // Draw Car (Triangle)
-        this.ctx.fillStyle = "yellow";
-        this.ctx.beginPath();
-        this.ctx.moveTo(400, 500);
-        this.ctx.lineTo(380, 550);
-        this.ctx.lineTo(420, 550);
-        this.ctx.fill();
+    draw: function() {
+        this.ctx.clearRect(0,0,800,600);
+        if (this.state === 'OVERWORLD') {
+            this.zones.forEach(z => {
+                this.ctx.fillStyle = z.color;
+                this.ctx.fillRect(z.x, z.y, z.w, z.h);
+                this.ctx.fillStyle = "#fff";
+                this.ctx.fillText(z.label, z.x + 20, z.y + 60);
+            });
+            this.ctx.fillStyle = this.player.color;
+            this.ctx.beginPath(); this.ctx.arc(this.player.x, this.player.y, 15, 0, 7); this.ctx.fill();
+        } 
+        else if (this.state === 'RACING') {
+            this.ctx.fillStyle = "#111"; this.ctx.fillRect(0,0,800,600);
+            for(let i=0; i<600; i+=20) {
+                let w = i * 2; let y = 600 - i;
+                this.ctx.fillStyle = (Math.floor((i+this.race.roadOffset)/50)%2==0) ? "#333" : "#444";
+                this.ctx.fillRect(400 - w/2 + this.race.playerX, y, w, 20);
+            }
+            this.ctx.fillStyle = "red"; this.ctx.fillRect(385, 520, 30, 50); // Simple Car
+        }
     },
 
-    // MAIN LOOP
     loop: function() {
-        if (this.state === 'OVERWORLD') {
-            this.updateOverworld();
-            this.drawOverworld();
-        } else if (this.state === 'RACING') {
-            this.updateRace();
-            this.drawRace();
-        }
+        if (this.state === 'OVERWORLD') this.updateOverworld();
+        if (this.state === 'RACING') this.updateRace();
+        this.draw();
         requestAnimationFrame(() => this.loop());
     }
 };
