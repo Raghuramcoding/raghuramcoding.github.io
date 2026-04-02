@@ -1,1 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+        /* CSS from your styles.css and index.html */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
 
+        canvas {
+            border: 2px solid white;
+            background-color: black;
+        }
+
+        .ui {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="pong" width="800" height="400"></canvas>
+
+    <div class="ui">
+        <button class="button" onclick="location.reload()">Reset Game</button>
+    </div>
+
+    <script>
+        // JavaScript from your game.js
+        const canvas = document.getElementById('pong');
+        const ctx = canvas.getContext('2d');
+
+        const canvasWidth = 800;
+        const canvasHeight = 400;
+        const ballSize = 10;
+        const paddleWidth = 10;
+        const paddleHeight = 100;
+
+        let ballX = canvasWidth / 2;
+        let ballY = canvasHeight / 2;
+        let ballSpeedX = 5;
+        let ballSpeedY = 5;
+
+        let paddle1Y = 150;
+        let paddle2Y = 150;
+        let player1Score = 0;
+        let player2Score = 0;
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Bounce off top and bottom
+            if (ballY <= 0 || ballY >= canvasHeight) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            // Paddle collision
+            if (ballX <= paddleWidth && ballY > paddle1Y && ballY < paddle1Y + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
+            if (ballX >= canvasWidth - paddleWidth && ballY > paddle2Y && ballY < paddle2Y + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
+
+            // Scoring
+            if (ballX < 0) {
+                player2Score++;
+                resetBall();
+            }
+            if (ballX > canvasWidth) {
+                player1Score++;
+                resetBall();
+            }
+        }
+
+        function resetBall() {
+            ballX = canvasWidth / 2;
+            ballY = canvasHeight / 2;
+            ballSpeedX = -ballSpeedX;
+        }
+
+        function draw() {
+            // Background
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // Paddles
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, paddle1Y, paddleWidth, paddleHeight);
+            ctx.fillRect(canvasWidth - paddleWidth, paddle2Y, paddleWidth, paddleHeight);
+
+            // Ball
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2, false);
+            ctx.fill();
+
+            // Scores
+            ctx.font = '20px Arial';
+            ctx.fillText('Player 1 (W/S): ' + player1Score, 50, 50);
+            ctx.fillText('Player 2 (Arrows): ' + player2Score, canvasWidth - 220, 50);
+        }
+
+        window.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'w': paddle1Y = Math.max(0, paddle1Y - 20); break;
+                case 's': paddle1Y = Math.min(canvasHeight - paddleHeight, paddle1Y + 20); break;
+                case 'ArrowUp': paddle2Y = Math.max(0, paddle2Y - 20); break;
+                case 'ArrowDown': paddle2Y = Math.min(canvasHeight - paddleHeight, paddle2Y + 20); break;
+            }
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>
