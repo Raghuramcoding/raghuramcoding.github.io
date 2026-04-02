@@ -61,7 +61,7 @@
         <div id="hearts"></div>
         <p id="attempts-text"></p>
         <div id="feedback"></div>
-        <input type="number" id="guess-input" placeholder="?">
+        <input type="number" id="guess-input" placeholder="?" min="1">
         <button onclick="game.submitGuess()">Submit Guess</button>
         <button onclick="game.showMenu()" style="font-size: 14px; border-color: #444;">Quit to Menu</button>
     </div>
@@ -105,9 +105,8 @@ const game = {
         this.maxAttempts = tries;
         this.attempts = 0;
         
-        // Pick a multiple of 10 to match your Python game
-        const highLimit = Math.floor(max / 10);
-        this.secret = (Math.floor(Math.random() * highLimit) + 1) * 10;
+        // Pick any random number between 1 and max
+        this.secret = Math.floor(Math.random() * max) + 1;
 
         document.getElementById('game-info').innerText = `I'm thinking of a number (1 to ${max})`;
         document.getElementById('feedback').innerText = 'Make a guess!';
@@ -126,7 +125,12 @@ const game = {
     submitGuess: function() {
         const input = document.getElementById('guess-input');
         const guess = parseInt(input.value);
-        if (isNaN(guess)) return;
+        
+        // Stop negative numbers or numbers higher than the limit
+        if (isNaN(guess) || guess < 1 || guess > this.maxNum) {
+            alert(`Please enter a valid number between 1 and ${this.maxNum}`);
+            return;
+        }
 
         this.attempts++;
         this.updateGameUI();
@@ -186,6 +190,7 @@ const game = {
     particles: [],
     animate: function() {
         const canvas = document.getElementById('effect-canvas');
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
