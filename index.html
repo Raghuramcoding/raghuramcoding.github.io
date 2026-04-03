@@ -2,145 +2,147 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>*** WELCOME TO MY HOME PAGE ***</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ultimate Coding Voyage</title>
     <style>
-        /* 90s Color Palette */
+        /* 2020s: "Glassmorphism" and Smooth Gradients */
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --neon: #00ffcc;
+        }
+
         body {
-            background-color: #008080; /* Classic Teal */
-            color: #000000;
-            font-family: "Times New Roman", Times, serif;
             margin: 0;
-            padding: 20px;
-        }
-
-        /* The "3D" Beveled Look */
-        .window {
-            background-color: #c0c0c0; /* Standard Gray */
-            border-top: 3px solid #ffffff;
-            border-left: 3px solid #ffffff;
-            border-right: 3px solid #404040;
-            border-bottom: 3px solid #404040;
-            padding: 10px;
-            margin-bottom: 20px;
-        }
-
-        .title-bar {
-            background: linear-gradient(90deg, #000080, #0080ff);
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
             color: white;
-            padding: 3px 10px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-family: 'Segoe UI', sans-serif; /* 2010s clean font */
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 90s: The Classic Scrolling Marquee */
+        .top-banner {
+            width: 100%;
+            background: #ff00ff;
+            color: yellow;
+            font-weight: bold;
+            padding: 5px 0;
+            border-bottom: 3px dashed yellow;
+        }
+
+        /* 2010s: Centered "Hero" Header */
+        header {
+            padding: 50px 20px;
+            text-align: center;
         }
 
         header h1 {
-            color: #ffff00; /* Bright Yellow */
-            text-align: center;
-            text-decoration: underline;
+            font-size: 3.5rem;
+            text-shadow: 3px 3px 0px #ff00ff; /* 90s style shadow */
         }
 
-        /* Classic Scrolling Text */
-        marquee {
-            background-color: #000000;
-            color: #00ff00;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 5px;
-            border: 2px inset #ffffff;
+        /* 2020s: Modern Glass Card Container */
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            width: 80%;
+            max-width: 900px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        .game-grid {
+        /* 2010s: Neat Flexbox Grid */
+        .project-grid {
             display: flex;
-            flex-wrap: wrap;
             gap: 20px;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 30px;
         }
 
-        .game-card {
-            width: 300px;
-        }
-
-        .play-btn {
-            background-color: #c0c0c0;
-            border-top: 2px solid #ffffff;
-            border-left: 2px solid #ffffff;
-            border-right: 2px solid #000000;
-            border-bottom: 2px solid #000000;
-            padding: 5px 15px;
-            text-decoration: none;
+        /* 90s/2000s: The "Beveled" Windows Button */
+        .retro-card {
+            background: #c0c0c0; /* Gray 90s background */
             color: black;
-            font-weight: bold;
-            display: inline-block;
+            border-top: 4px solid #fff;
+            border-left: 4px solid #fff;
+            border-right: 4px solid #444;
+            border-bottom: 4px solid #444;
+            padding: 15px;
+            width: 250px;
         }
 
-        .play-btn:active {
-            border: 2px inset #000000;
+        .retro-card h3 {
+            background: #000080; /* Windows 95 blue */
+            color: white;
+            padding: 2px 10px;
+            margin: -15px -15px 15px -15px;
+            font-size: 0.9rem;
         }
 
-        footer {
+        /* 2020s: Animated Glowing Button */
+        .play-btn {
+            display: block;
+            margin-top: 15px;
+            padding: 10px;
+            background: var(--neon);
+            color: black;
+            text-decoration: none;
             text-align: center;
-            margin-top: 50px;
-            font-size: 0.8rem;
-        }
-
-        /* Blinking effect */
-        .blink {
-            animation: blinker 1s linear infinite;
-            color: red;
             font-weight: bold;
+            border-radius: 50px;
+            transition: 0.3s;
+            box-shadow: 0 0 15px var(--neon);
         }
 
-        @keyframes blinker {
-            50% { opacity: 0; }
+        .play-btn:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
         }
+
+        /* 2000s: Blinking Text */
+        .blink {
+            animation: blinker 0.8s linear infinite;
+        }
+
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="window">
-        <div class="title-bar">
-            <span>Navigation.exe</span>
-            <span>[X]</span>
-        </div>
-        <header>
-            <h1>My Coding Voyage</h1>
-            <marquee>*** UNDER CONSTRUCTION - WELCOME TO MY GAMING HUB - PORTFOLIO v1.0 ***</marquee>
-        </header>
+    <div class="top-banner">
+        <marquee>WELCOME TO THE FUTURE OF THE PAST! <span class="blink">*** NEW GAMES ADDED ***</span></marquee>
     </div>
 
-    <div class="window">
-        <div class="title-bar">
-            <span>About_Me.txt</span>
-        </div>
-        <p>This is my coding journey from when I started with simple HTML stuff to now! <span class="blink">NEW!</span> Check out my Python games below.</p>
-    </div>
+    <header>
+        <h1>My Coding Voyage</h1>
+        <p>A mix of every era I love.</p>
+    </header>
 
-    <h2 style="color: white; text-shadow: 2px 2px #000000;">My Projects</h2>
-    
-    <div class="game-grid">
-        <div class="window game-card">
-            <div class="title-bar">GuessingGame.sys</div>
-            <h3>Number Guessing</h3>
-            <p>I originally made this in Python, but here is the HTML version for the web!</p>
-            <center>
-                <a href="number-guessinggame.html" class="play-btn">CLICK TO PLAY</a>
-            </center>
-        </div>
+    <div class="container">
+        <h2 style="text-align: center;">Choose Your Adventure</h2>
+        
+        <div class="project-grid">
+            <div class="retro-card">
+                <h3>Guessing_Game.exe</h3>
+                <p>A classic number game. Simple, fun, and fast!</p>
+                <a href="number-guessinggame.html" class="play-btn">PLAY NOW</a>
+            </div>
 
-        <div class="window game-card">
-            <div class="title-bar">Quest.exe</div>
-            <h3>A Velocitic Quest</h3>
-            <p>The latest game that's still being made. Stay tuned for updates!</p>
-            <center>
-                <a href="velocityquest.html" class="play-btn">CLICK TO PLAY</a>
-            </center>
+            <div class="retro-card">
+                <h3>Velocity_Quest.sys</h3>
+                <p>The latest 2D adventure. Still in development!</p>
+                <a href="velocityquest.html" class="play-btn">PLAY NOW</a>
+            </div>
         </div>
     </div>
 
-    <footer>
-        <hr>
-        <p>Best viewed in <b>Internet Explorer 5.0</b> at 800x600 resolution</p>
-        <p>&copy; 2024 My Game Portfolio. Built with passion and code.</p>
-        <img src="https://web.archive.org/web/20091027005003/http://geocities.com/Heartland/7134/images/counter.gif" alt="Visitor Counter">
+    <footer style="margin-top: 40px; font-size: 0.8rem; color: #aaa;">
+        <p>Created in 2024 | <span class="blink" style="color: yellow;">Online</span></p>
     </footer>
 
 </body>
