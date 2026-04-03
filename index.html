@@ -5,112 +5,193 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ultimate Coding Voyage</title>
     <style>
-        /* 2020s: Glassmorphism and Deep Ocean Gradients */
+        /* CSS VARIABLES - The Color Palette */
         :root {
             --glass: rgba(0, 255, 255, 0.1);
             --neon-green: #00ff00;
             --cyber-blue: #00ccff;
+            --win-blue: #000080;
+            --win-gray: #c0c0c0;
         }
 
+        /* 2020s: Smooth Gradient Background */
         body {
             margin: 0;
-            /* 2020s Gradient */
-            background: linear-gradient(135deg, #001a1a, #003366, #000000);
+            padding: 0;
+            background: linear-gradient(135deg, #001a1a 0%, #003366 50%, #000000 100%);
+            background-attachment: fixed;
             color: white;
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        /* 90s: Scrolling Marquee with Green/Blue theme */
+        /* 90s: Classic Scrolling Marquee Banner */
         .top-banner {
             width: 100%;
-            background: #000080; /* Classic Navy */
+            background: var(--win-blue);
             color: var(--neon-green);
             font-weight: bold;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 3px solid var(--cyber-blue);
-            font-family: 'Courier New', monospace;
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: uppercase;
         }
 
+        /* 2010s: Clean, Centered Hero Section */
         header {
-            padding: 50px 20px;
+            padding: 60px 20px;
             text-align: center;
         }
 
-        /* 2010s Style Header with 90s Shadow */
         header h1 {
             font-size: 3.5rem;
             color: var(--cyber-blue);
-            text-shadow: 3px 3px 0px #005500; 
+            text-shadow: 4px 4px 0px #004400; /* 90s Blocky Shadow */
+            margin: 0;
         }
 
-        /* 2020s: Modern Glass Card Container */
-        .container {
+        header p {
+            font-size: 1.2rem;
+            color: var(--neon-green);
+            margin-top: 10px;
+        }
+
+        /* 2020s: Glassmorphism Container */
+        .main-container {
             background: var(--glass);
             backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(0, 255, 255, 0.2);
-            border-radius: 20px;
+            border-radius: 25px;
             padding: 40px;
             width: 85%;
-            max-width: 900px;
-            box-shadow: 0 0 30px rgba(0, 204, 255, 0.2);
+            max-width: 1000px;
+            box-shadow: 0 0 40px rgba(0, 204, 255, 0.15);
+            margin-bottom: 50px;
         }
 
+        /* 2010s: Flexbox Grid for Projects */
         .project-grid {
             display: flex;
-            gap: 25px;
+            gap: 30px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-top: 30px;
+            margin-top: 40px;
         }
 
-        /* 90s/2000s: The "Beveled" Windows Button (Green Edition) */
+        /* 90s/2000s: The "Beveled" Windows Program Look */
         .retro-card {
-            background: #c0c0c0; 
+            background: var(--win-gray);
             color: black;
             border-top: 4px solid #ffffff;
             border-left: 4px solid #ffffff;
             border-right: 4px solid #444444;
             border-bottom: 4px solid #444444;
             padding: 15px;
-            width: 260px;
+            width: 280px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
         }
 
-        .retro-card h3 {
-            background: linear-gradient(90deg, #000080, #008080); /* Blue to Teal title bar */
+        .card-header {
+            background: linear-gradient(90deg, var(--win-blue), var(--cyber-blue));
             color: white;
-            padding: 4px 10px;
+            padding: 5px 10px;
             margin: -15px -15px 15px -15px;
-            font-size: 0.9rem;
-            font-family: sans-serif;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
         }
 
-        /* 2020s: Glowing Green Play Button */
+        /* 2020s: Modern Neon Button */
         .play-btn {
             display: block;
-            margin-top: 15px;
+            margin-top: 20px;
             padding: 12px;
             background: var(--neon-green);
             color: black;
             text-decoration: none;
             text-align: center;
             font-weight: bold;
-            border-radius: 5px; /* Blocky 2000s shape but 2020s glow */
-            transition: 0.2s;
-            box-shadow: 0 0 10px var(--neon-green);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px var(--neon-green);
+            border: none;
+            cursor: pointer;
         }
 
         .play-btn:hover {
-            transform: translateY(-3px);
+            transform: translateY(-5px) scale(1.05);
             background: white;
-            box-shadow: 0 0 20px white;
+            box-shadow: 0 0 25px white;
         }
 
+        /* 2000s: The Infamous Blinking Text */
         .blink {
             animation: blinker 1s linear infinite;
-            color: #0000ff;
-            font-weight: bold;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        footer {
+            text-align: center;
+            padding-bottom: 40px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-banner">
+        <marquee scrollamount="10">
+            SYSTEM STATUS: FUNCTIONAL <span class="blink">>>></span> LOADING VOYAGE_LOGS.EXE <span class="blink">>>></span> USER IDENTIFIED: CODING PRO <span class="blink">>>></span>
+        </marquee>
+    </div>
+
+    <header>
+        <h1>My Coding Voyage</h1>
+        <p>A journey through pixels, logic, and time.</p>
+    </header>
+
+    <div class="main-container">
+        <h2 style="text-align: center; color: white; border-bottom: 2px solid var(--neon-green); padding-bottom: 10px;">
+            PROJECT_DATABASE
+        </h2>
+        
+        <div class="project-grid">
+            
+            <div class="retro-card">
+                <div class="card-header">
+                    <span>Number_Guess.sys</span>
+                    <span>[X]</span>
+                </div>
+                <p>My first major game! Originally written in Python, now fully optimized for the Web.</p>
+                <a href="number-guessinggame.html" class="play-btn">EXECUTE PLAY</a>
+            </div>
+
+            <div class="retro-card">
+                <div class="card-header">
+                    <span>Velocity_Quest.sh</span>
+                    <span>[X]</span>
+                </div>
+                <p>An early-stage 2D quest engine. It's the beginning of something huge.</p>
+                <a href="velocityquest.html" class="play-btn">EXECUTE PLAY</a>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>[ 2024 PORTFOLIO v3.0 ]</p>
+        <p style="font-size: 0.7rem;">Optimized for Internet Explorer 6.0 and Modern Browsers</p>
+        <div class="blink" style="color: var(--cyber-blue); margin-top: 10px;">● ONLINE</div>
+    </footer>
+
+</body>
+</html>
