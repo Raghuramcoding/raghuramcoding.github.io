@@ -1,241 +1,146 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My coding journey</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>*** WELCOME TO MY HOME PAGE ***</title>
     <style>
-        :root {
-            --primary: #00ff00; /* Neon Green */
-            --secondary: #00ccff; /* Cyber Blue */
-            --bg-dark: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text: #ffffff;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
+        /* 90s Color Palette */
         body {
-            background-color: var(--bg-dark);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* Animated Background Mesh */
-        .bg-mesh {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: -1;
-            animation: move 20s linear infinite;
-        }
-
-        @keyframes move {
-            from { background-position: 0 0; }
-            to { background-position: 0 1000px; }
-        }
-
-        /* Hero Section */
-        header {
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
+            background-color: #008080; /* Classic Teal */
+            color: #000000;
+            font-family: "Times New Roman", Times, serif;
+            margin: 0;
             padding: 20px;
-            background: radial-gradient(circle at center, rgba(0, 255, 0, 0.1) 0%, transparent 70%);
+        }
+
+        /* The "3D" Beveled Look */
+        .window {
+            background-color: #c0c0c0; /* Standard Gray */
+            border-top: 3px solid #ffffff;
+            border-left: 3px solid #ffffff;
+            border-right: 3px solid #404040;
+            border-bottom: 3px solid #404040;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .title-bar {
+            background: linear-gradient(90deg, #000080, #0080ff);
+            color: white;
+            padding: 3px 10px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
         }
 
         header h1 {
-            font-size: 4rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            color: var(--primary);
-            text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-            margin-bottom: 10px;
+            color: #ffff00; /* Bright Yellow */
+            text-align: center;
+            text-decoration: underline;
         }
 
-        header p {
-            font-size: 1.5rem;
-            color: #888;
-            max-width: 600px;
-        }
-
-        /* Game Grid */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 50px 20px;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            margin-bottom: 40px;
-            border-left: 5px solid var(--primary);
-            padding-left: 20px;
+        /* Classic Scrolling Text */
+        marquee {
+            background-color: #000000;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 5px;
+            border: 2px inset #ffffff;
         }
 
         .game-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         .game-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #333;
-            position: relative;
-        }
-
-        .game-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.2);
-            border-color: var(--primary);
-        }
-
-        .game-img {
-            width: 100%;
-            height: 200px;
-            background: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            color: #444;
-        }
-
-        .game-content {
-            padding: 20px;
-        }
-
-        .game-content h3 {
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-        .game-tags {
-            margin-bottom: 15px;
-        }
-
-        .tag {
-            font-size: 0.7rem;
-            background: #333;
-            padding: 3px 8px;
-            border-radius: 5px;
-            margin-right: 5px;
-            color: #aaa;
+            width: 300px;
         }
 
         .play-btn {
-            display: inline-block;
-            background: var(--primary);
-            color: black;
-            padding: 10px 25px;
-            border-radius: 25px;
+            background-color: #c0c0c0;
+            border-top: 2px solid #ffffff;
+            border-left: 2px solid #ffffff;
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+            padding: 5px 15px;
             text-decoration: none;
+            color: black;
             font-weight: bold;
-            transition: 0.3s;
+            display: inline-block;
         }
 
-        .play-btn:hover {
-            background: white;
-            box-shadow: 0 0 15px white;
+        .play-btn:active {
+            border: 2px inset #000000;
         }
 
-        /* Footer */
         footer {
             text-align: center;
-            padding: 50px 20px;
-            border-top: 1px solid #222;
-            color: #666;
+            margin-top: 50px;
+            font-size: 0.8rem;
         }
 
-        .social-links a {
-            color: var(--primary);
-            font-size: 1.5rem;
-            margin: 0 15px;
-            transition: 0.3s;
+        /* Blinking effect */
+        .blink {
+            animation: blinker 1s linear infinite;
+            color: red;
+            font-weight: bold;
         }
 
-        .social-links a:hover {
-            color: white;
+        @keyframes blinker {
+            50% { opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-mesh"></div>
+    <div class="window">
+        <div class="title-bar">
+            <span>Navigation.exe</span>
+            <span>[X]</span>
+        </div>
+        <header>
+            <h1>My Coding Voyage</h1>
+            <marquee>*** UNDER CONSTRUCTION - WELCOME TO MY GAMING HUB - PORTFOLIO v1.0 ***</marquee>
+        </header>
+    </div>
 
-    <header>
-        <h1>My coding voyage</h1>
-        <p>This is my coding journey from when i started with simple html stuff to now, with a python game that has a full ui.This is not the height of my journey this is just 
-        begining...</p>
-    </header>
+    <div class="window">
+        <div class="title-bar">
+            <span>About_Me.txt</span>
+        </div>
+        <p>This is my coding journey from when I started with simple HTML stuff to now! <span class="blink">NEW!</span> Check out my Python games below.</p>
+    </div>
 
-    <div class="container">
-        <h2 class="section-title">My Projects</h2>
-        
-        <div class="game-grid">
-            <div class="game-card">
-                <div class="game-img">
-                    <i class="fas fa-car"></i>
-                </div>
-                <div class="game-content">
-                    <div class="game-tags">
-                        <span class="tag">3D</span>
-                        <span class="tag">Three.js</span>
-                        <span class="tag">Arcade</span>
-                    </div>
-                    <h3>A number-guessing game</h3>
-                    <p>(I orignally made this game in python but I know python wont work for everybody so i made a html version)</p>This is my first major game that i made and i like
-                to think of it as my starting point on my coding journey, with every thing i make along the way being stops in the journey of life.</p>
-                    <br>
-                    <a href="number-guessinggame.html" class="play-btn">Play Now</a>
-                </div>
-            </div>
+    <h2 style="color: white; text-shadow: 2px 2px #000000;">My Projects</h2>
+    
+    <div class="game-grid">
+        <div class="window game-card">
+            <div class="title-bar">GuessingGame.sys</div>
+            <h3>Number Guessing</h3>
+            <p>I originally made this in Python, but here is the HTML version for the web!</p>
+            <center>
+                <a href="number-guessinggame.html" class="play-btn">CLICK TO PLAY</a>
+            </center>
+        </div>
 
-            <div class="game-card">
-                <div class="game-img">
-                    <i class="fas fa-ghost"></i>
-                </div>
-                <div class="game-content">
-                    <div class="game-tags">
-                        <span class="tag">2D</span>
-                        <span class="tag">Canvas</span>
-                    </div>
-                    <h3>A velocitic quest</h3>
-                    <p>the latest game thats still being made and in the early stages but when released and done will be crazy.</p>
-                    <br>
-                    <a href="velocityquest.html" class="play-btn">Play Now</a> 
-                </div>
-            </div>
+        <div class="window game-card">
+            <div class="title-bar">Quest.exe</div>
+            <h3>A Velocitic Quest</h3>
+            <p>The latest game that's still being made. Stay tuned for updates!</p>
+            <center>
+                <a href="velocityquest.html" class="play-btn">CLICK TO PLAY</a>
+            </center>
         </div>
     </div>
 
     <footer>
-        <div class="social-links">
-            <a href="#"><i class="fab fa-github"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fas fa-envelope"></i></a>
-        </div>
-        <br>
+        <hr>
+        <p>Best viewed in <b>Internet Explorer 5.0</b> at 800x600 resolution</p>
         <p>&copy; 2024 My Game Portfolio. Built with passion and code.</p>
+        <img src="https://web.archive.org/web/20091027005003/http://geocities.com/Heartland/7134/images/counter.gif" alt="Visitor Counter">
     </footer>
 
 </body>
