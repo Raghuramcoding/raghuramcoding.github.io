@@ -3,69 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Number Racer RPG</title>
+    <title>Global Racer RPG - No Math Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111; color: white; overflow: hidden; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #111; color: white; overflow: hidden; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         .menu { pointer-events: auto; background: rgba(20, 20, 20, 0.95); padding: 30px; border-radius: 15px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; border: 2px solid #444; min-width: 300px; }
         #hud { position: absolute; top: 20px; left: 20px; font-size: 18px; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; }
-        #math-prompt { position: absolute; top: 15%; width: 100%; text-align:center; font-size: 50px; color: #00ffcc; text-shadow: 2px 2px #000; }
+        #race-msg { position: absolute; top: 15%; width: 100%; text-align:center; font-size: 40px; color: #f1c40f; text-shadow: 2px 2px #000; }
         .btn { background: #3498db; color: white; border: none; padding: 12px 24px; margin: 8px; cursor: pointer; font-size: 16px; border-radius: 5px; transition: 0.2s; pointer-events: auto; }
         .btn:hover { background: #2980b9; transform: scale(1.05); }
-        .exit-btn { background: #e74c3c; position: absolute; top: 80px; left: 20px; display: none; }
+        .exit-btn { background: #e74c3c; position: absolute; top: 100px; left: 20px; display: none; }
         #world-map { display: block; }
         #shop { display: none; }
-        .stat-box { color: #f1c40f; font-weight: bold; }
+        .stat-box { color: #00ffcc; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="ui-layer">
         <div id="world-map" class="menu">
-            <h1>🌍 Global Number Racer</h1>
-            <p>Select a destination to earn points:</p>
+            <h1>🌍 Global Racer RPG</h1>
+            <p>Travel the world to earn points and upgrade!</p>
             <button class="btn" onclick="startRace('Tokyo', 0x111122, '¥')">Japan (Neon City)</button>
-            <button class="btn" onclick="startRace('Paris', 0x2c3e50, '€')">France (Evening)</button>
-            <button class="btn" onclick="startRace('Sydney', 0x2980b9, '$')">Australia (Ocean)</button>
+            <button class="btn" onclick="startRace('Amazon', 0x1b5e20, 'R$')">Brazil (Jungle)</button>
+            <button class="btn" onclick="startRace('Cairo', 0xe67e22, '£')">Egypt (Desert)</button>
             <br>
-            <button class="btn" style="background:#8e44ad" onclick="openShop()">🛒 Visit RPG Shop</button>
+            <button class="btn" style="background:#8e44ad" onclick="openShop()">🛒 RPG Upgrade Shop</button>
         </div>
 
         <div id="shop" class="menu">
-            <h1 id="shop-title">Global Garage</h1>
+            <h1>Global Garage</h1>
             <p>Your Balance: <span id="shop-points" class="stat-box">0</span> Points</p>
-            <div id="shop-items">
-                <button class="btn" onclick="buyUpgrade('speed')">Engine Tune-up (50 pts)</button><br>
-                <button class="btn" onclick="buyUpgrade('color')">Random 3D Paint (20 pts)</button>
-            </div>
-            <br>
+            <button class="btn" onclick="buyUpgrade('speed')">Boost Engine (50 pts)</button><br>
+            <button class="btn" onclick="buyUpgrade('color')">Custom Paint (20 pts)</button><br>
             <button class="btn" style="background:#7f8c8d" onclick="closeShop()">Back to Map</button>
         </div>
 
         <div id="hud">
             Points: <span id="points-display" class="stat-box">0</span><br>
-            Level: <span id="level-display" class="stat-box">1</span><br>
-            Currency: <span id="currency-type">Points</span>
+            Engine Level: <span id="level-display" class="stat-box">1</span><br>
+            Current City: <span id="location-display" class="stat-box">None</span>
         </div>
-        <button id="exit-btn" class="btn exit-btn" onclick="stopRace()">🚪 Exit Race</button>
-        <div id="math-prompt"></div>
+        <button id="exit-btn" class="btn exit-btn" onclick="stopRace()">🏁 Finish Race</button>
+        <div id="race-msg"></div>
     </div>
 
     <script>
-        // --- GAME STATE ---
+        // --- GAME DATA ---
         let gameData = {
             points: 0,
-            level: 1,
+            engineLevel: 1,
             speed: 1,
             isRacing: false,
-            currency: "Points",
-            currentAns: 0
+            pointTimer: null
         };
 
         // --- 3D SETUP ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x111111);
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -75,7 +70,7 @@
         const car = new THREE.Group();
         const body = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 2), new THREE.MeshPhongMaterial({color: 0x3498db}));
         car.add(body);
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.4, 0.8), new THREE.MeshPhongMaterial({color: 0xffffff, transparent: true, opacity: 0.5}));
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.7), new THREE.MeshPhongMaterial({color: 0x000000}));
         cabin.position.y = 0.4;
         car.add(cabin);
         scene.add(car);
@@ -89,52 +84,33 @@
         camera.position.set(0, 3, 6);
         camera.lookAt(car.position);
 
-        // --- CORE FUNCTIONS ---
+        // --- RACING LOGIC ---
         function startRace(location, color, curr) {
             gameData.isRacing = true;
-            gameData.currency = curr;
             document.getElementById('world-map').style.display = 'none';
             document.getElementById('exit-btn').style.display = 'block';
-            document.getElementById('currency-type').innerText = curr;
+            document.getElementById('location-display').innerText = location;
+            document.getElementById('race-msg').innerText = "Driving in " + location + "...";
             scene.background = new THREE.Color(color);
-            nextProblem();
+            
+            // Start earning points automatically
+            gameData.pointTimer = setInterval(() => {
+                gameData.points += 5 * gameData.engineLevel;
+                updateUI();
+            }, 1000);
         }
 
         function stopRace() {
             gameData.isRacing = false;
+            clearInterval(gameData.pointTimer);
             document.getElementById('world-map').style.display = 'block';
             document.getElementById('exit-btn').style.display = 'none';
-            document.getElementById('math-prompt').innerText = "";
+            document.getElementById('race-msg').innerText = "";
+            document.getElementById('location-display').innerText = "None";
             scene.background = new THREE.Color(0x111111);
         }
 
-        function nextProblem() {
-            if(!gameData.isRacing) return;
-            const n1 = Math.floor(Math.random() * 10 * gameData.level);
-            const n2 = Math.floor(Math.random() * 10);
-            gameData.currentAns = n1 + n2;
-            document.getElementById('math-prompt').innerText = `${n1} + ${n2} = ?`;
-            
-            // Auto-solve simulation for demo - in a full game, you'd add an input box!
-            setTimeout(() => {
-                if(gameData.isRacing) {
-                    gameData.points += 10;
-                    checkLevelUp();
-                    updateUI();
-                    nextProblem();
-                }
-            }, 3000);
-        }
-
-        function checkLevelUp() {
-            gameData.level = Math.floor(gameData.points / 100) + 1;
-        }
-
-        function updateUI() {
-            document.getElementById('points-display').innerText = gameData.points;
-            document.getElementById('level-display').innerText = gameData.level;
-        }
-
+        // --- SHOP LOGIC ---
         function openShop() {
             document.getElementById('world-map').style.display = 'none';
             document.getElementById('shop').style.display = 'block';
@@ -149,12 +125,13 @@
         function buyUpgrade(type) {
             if(type === 'speed' && gameData.points >= 50) {
                 gameData.points -= 50;
+                gameData.engineLevel += 1;
                 gameData.speed += 0.5;
-                alert("Engine Upgraded!");
+                alert("Engine Upgraded! You earn points faster now.");
             } else if(type === 'color' && gameData.points >= 20) {
                 gameData.points -= 20;
                 body.material.color.setHex(Math.random() * 0xffffff);
-                alert("New Paint Job!");
+                alert("New Paint Job Applied!");
             } else {
                 alert("Not enough points!");
             }
@@ -162,14 +139,21 @@
             document.getElementById('shop-points').innerText = gameData.points;
         }
 
+        function updateUI() {
+            document.getElementById('points-display').innerText = gameData.points;
+            document.getElementById('level-display').innerText = gameData.engineLevel;
+        }
+
         // --- ANIMATION LOOP ---
         function animate() {
             requestAnimationFrame(animate);
             if(gameData.isRacing) {
-                car.position.x = Math.sin(Date.now() * 0.005) * 2; // Swerve effect
-                car.rotation.y = Math.sin(Date.now() * 0.005) * 0.2;
+                // Car moves back and forth to look like it's driving
+                car.position.x = Math.sin(Date.now() * 0.002 * gameData.speed) * 2;
+                car.rotation.z = -Math.cos(Date.now() * 0.002 * gameData.speed) * 0.1;
             } else {
-                car.rotation.y += 0.01; // Spin in menu
+                car.rotation.y += 0.01;
+                car.position.x = 0;
             }
             renderer.render(scene, camera);
         }
