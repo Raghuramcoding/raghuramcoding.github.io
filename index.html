@@ -74,7 +74,14 @@
         }
 
         /* 2010s: Flexbox Grid for Projects */
-        .project-grid {
+            .project-grid {
+    display: flex;
+    gap: 50px; /* Extra gap so they have room to float */
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding: 20px;
+}
             display: flex;
             gap: 30px;
             justify-content: center;
@@ -145,6 +152,31 @@
             color: #666;
         }
     </style>
+    /* This makes the cards move in a gentle circle */
+@keyframes float {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(10px, -15px); }
+  50% { transform: translate(-10px, 10px); }
+  75% { transform: translate(15px, 5px); }
+  100% { transform: translate(0, 0); }
+}
+
+.retro-card {
+  /* ... keep your existing card styles ... */
+  animation: float 8s ease-in-out infinite;
+  position: relative;
+}
+
+/* This makes each card move at a slightly different time */
+.retro-card:nth-child(2) {
+  animation-delay: 2s;
+  animation-duration: 10s;
+}
+
+.retro-card:nth-child(3) {
+  animation-delay: 4s;
+  animation-duration: 12s;
+}
 </head>
 <body>
 
