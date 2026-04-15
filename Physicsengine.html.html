@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ultimate Coding Voyage - Bouncing Edition</title>
+    <style>
+        :root {
+            --glass: rgba(0, 255, 255, 0.1);
+            --neon-green: #00ff00;
+            --cyber-blue: #00ccff;
+            --win-blue: #000080;
+            --win-gray: #c0c0c0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #001a1a 0%, #003366 50%, #000000 100%);
+            background-attachment: fixed;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; /* Keeps tiles inside the view */
+            height: 100vh;
+        }
+
+        .top-banner {
+            width: 100%;
+            background: var(--win-blue);
+            color: var(--neon-green);
+            padding: 10px 0;
+            border-bottom: 3px solid var(--cyber-blue);
+            font-family: 'Courier New', monospace;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* This container holds the bouncing area */
+        #canvas-area {
+            position: relative;
+            width: 100vw;
+            height: 70vh;
+        }
+
+        .retro-card {
+            background: var(--win-gray);
+            color: black;
+            border: 4px solid;
+            border-color: #fff #444 #444 #fff;
+            padding: 15px;
+            width: 250px;
+            position: absolute; /* Required for JS movement */
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            user-select: none;
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, var(--win-blue), var(--cyber-blue));
+            color: white;
+            padding: 5px 10px;
+            margin: -15px -15px 15px -15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .play-btn {
+            display: block;
+            margin-top: 10px;
+            padding: 8px;
+            background: var(--neon-green);
+            color: black;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="top-banner">
+        <marquee>SYSTEM STATUS: PHYSICS ENABLED <span class="blink">>>></span> BOUNCING ACTIVE</marquee>
+    </div>
+
+    <header>
+        <h1>Coding Voyage: Physics</h1>
+    </header>
+
+    <div id="canvas-area">
+        <div class="retro-card" id="tile1">
+            <div class="card-header"><span>Updates.log</span><span>[X]</span></div>
+            <p>I am bouncing off the walls!</p>
+            <a href="#" class="play-btn">VIEW</a>
+        </div>
+        
+        <div class="retro-card" id="tile2">
+            <div class="card-header"><span>Guess.sys</span><span>[X]</span></div>
+            <p>Watch me collide with others.</p>
+            <a href="#" class="play-btn">PLAY</a>
+        </div>
+
+        <div class="retro-card" id="tile3">
+            <div class="card-header"><span>Quest.sh</span><span>[X]</span></div>
+            <p>Floating in the digital void.</p>
+            <a href="#" class="play-btn">QUEST</a>
+        </div>
+    </div>
+
+    <script>
+        const cards = document.querySelectorAll('.retro-card');
+        const container = document.getElementById('canvas-area');
+        
+        // Setup initial data for each card
+        let items = Array.from(cards).map((card, i) => ({
+            element: card,
+            x: Math.random() * (window.innerWidth - 250),
+            y: Math.random() * (window.innerHeight * 0.5),
+            dx: (Math.random() - 0.5) * 4, // Horizontal speed
+            dy: (Math.random() - 0.5) * 4, // Vertical speed
+            w: 250,
+            h: card.offsetHeight
+        }));
+
+        function update() {
+            items.forEach((item, i) => {
+                // Move
+                item.x += item.dx;
+                item.y += item.dy;
+
+                // Wall Collisions
+                if (item.x <= 0 || item.x + item.w >= window.innerWidth) item.dx *= -1;
+                if (item.y <= 0 || item.y + item.h >= container.offsetHeight) item.dy *= -1;
+
+                // Simple Tile-to-Tile Collision
+                for (let j = i + 1; j < items.length; j++) {
+                    let other = items[j];
+                    if (item.x < other.x + other.w && item.x + item.w > other.x &&
+                        item.y < other.y + other.h && item.y + item.h > other.y) {
+                        // Reverse directions on hit
+                        item.dx *= -1;
+                        item.dy *= -1;
+                        other.dx *= -1;
+                        other.dy *= -1;
+                    }
+                }
+
+                // Apply styles
+                item.element.style.left = item.x + 'px';
+                item.element.style.top = item.y + 'px';
+            });
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>
