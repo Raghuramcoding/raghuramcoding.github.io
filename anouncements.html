@@ -2,79 +2,46 @@
 <html>
 <head>
 <style>
-  body {
-    background-color: #f0f2f5;
-    font-family: 'Segoe UI', sans-serif;
-    display: flex;
-    justify-content: center;
-    padding: 50px 20px;
+  body { background-color: #f0f2f5; font-family: sans-serif; padding: 40px 20px; display: flex; justify-content: center; }
+  .container { width: 100%; max-width: 700px; }
+  .back-btn { text-decoration: none; color: #007bff; font-weight: bold; }
+  
+  /* The Announcement Box */
+  .post { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 15px; 
+    margin-top: 20px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
   }
-
-  .forum-grid {
-    display: grid;
-    /* This creates two columns side-by-side */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    width: 100%;
-    max-width: 900px;
-  }
-
-  .card {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    text-decoration: none;
-    color: #333;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    transition: 0.3s;
-    border-top: 6px solid #007bff;
-  }
-
-  .card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  }
-
-  .card i { font-size: 40px; display: block; margin-bottom: 10px; }
-  .card h3 { margin: 0; font-size: 22px; }
-  .card p { color: #666; font-size: 14px; }
-
-  /* Different colors for different sections */
-  .news { border-top-color: #ff4757; }
-  .chat { border-top-color: #2ed573; }
-  .help { border-top-color: #ffa502; }
+  .date { color: #888; font-size: 13px; }
+  h2 { margin: 10px 0; color: #222; }
+  hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
 </style>
 </head>
 <body>
 
-<div class="forum-grid">
-  
-  <a href="announcements.html" class="card news">
-    <i>📢</i>
-    <h3>Announcements</h3>
-    <p>Official updates and news.</p>
-  </a>
+<div class="container">
+  <a href="index.html" class="back-btn">⬅ Back to Menu</a>
+  <h1>📢 Announcements</h1>
 
-  <a href="general.html" class="card chat">
-    <i>💬</i>
-    <h3>General Chat</h3>
-    <p>Talk about anything here!</p>
-  </a>
+  <div class="post">
+    <div class="date">April 20, 2026</div>
+    <h2>The Forum is officially open!</h2>
+    <p>Welcome to our community. Feel free to leave a comment below to say hi!</p>
+    
+    <hr>
 
-  <a href="projects.html" class="card">
-    <i>🚀</i>
-    <h3>Showcase</h3>
-    <p>Share what you're building.</p>
-  </a>
-
-  <a href="rules.html" class="card help">
-    <i>🛡️</i>
-    <h3>Rules</h3>
-    <p>Read this before posting.</p>
-  </a>
-
-</div>
+    <div id="cusdis_thread"
+      data-host="https://cusdis.com"
+      data-app-id="YOUR_APP_ID"
+      data-page-id="announcement_01"
+      data-page-url="https://YOUR_URL/announcements.html"
+      data-page-title="Welcome Post">
+    </div>
+    <script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
+  </div>
+  </div>
 
 </body>
 </html>
