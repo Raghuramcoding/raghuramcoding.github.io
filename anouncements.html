@@ -1,33 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Announcements</title>
-  <style>
-    body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-    .card { background: white; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .back-link { color: blue; text-decoration: none; }
-  </style>
+<style>
+  body {
+    background-color: #f0f2f5;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 50px 20px;
+  }
+
+  .forum-grid {
+    display: grid;
+    /* This creates two columns side-by-side */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-decoration: none;
+    color: #333;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: 0.3s;
+    border-top: 6px solid #007bff;
+  }
+
+  .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+
+  .card i { font-size: 40px; display: block; margin-bottom: 10px; }
+  .card h3 { margin: 0; font-size: 22px; }
+  .card p { color: #666; font-size: 14px; }
+
+  /* Different colors for different sections */
+  .news { border-top-color: #ff4757; }
+  .chat { border-top-color: #2ed573; }
+  .help { border-top-color: #ffa502; }
+</style>
 </head>
 <body>
 
-  <a href="index.html" class="back-link">⬅ Back to Menu</a>
+<div class="forum-grid">
   
-  <h1>📢 Latest Announcements</h1>
+  <a href="announcements.html" class="card news">
+    <i>📢</i>
+    <h3>Announcements</h3>
+    <p>Official updates and news.</p>
+  </a>
 
-  <div class="card">
-    <h2>Welcome to the Forum!</h2>
-    <p>We are now live on GitHub Pages.</p>
-    
-<div id="cusdis_thread"
-  data-host="https://cusdis.com"
-  data-app-id="47589963-25e8-4c98-9d6a-efd7d162a2a0"
-  data-page-id="{{ Annoucements }}"
-  data-page-url="{{ raghuramcoding.gituhb.io/anouncements.html}}"
-  data-page-title="{{ PAGE_TITLE }}"
-></div>
-<script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
+  <a href="general.html" class="card chat">
+    <i>💬</i>
+    <h3>General Chat</h3>
+    <p>Talk about anything here!</p>
+  </a>
 
-  </div>
+  <a href="projects.html" class="card">
+    <i>🚀</i>
+    <h3>Showcase</h3>
+    <p>Share what you're building.</p>
+  </a>
+
+  <a href="rules.html" class="card help">
+    <i>🛡️</i>
+    <h3>Rules</h3>
+    <p>Read this before posting.</p>
+  </a>
+
+</div>
 
 </body>
 </html>
