@@ -2,37 +2,65 @@
 <html>
 <head>
 <style>
-  /* This makes the buttons look nice */
+  body {
+    background-color: #f4f7f6; /* Light grey background */
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+  }
+
+  .forum-container {
+    width: 90%;
+    max-width: 600px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .forum-title {
+    text-align: center;
+    color: #333;
+    font-size: 32px;
+    margin-bottom: 30px;
+  }
+
   .forum-menu {
-    font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    max-width: 300px;
+    gap: 15px;
   }
+
   .menu-item {
-    background-color: #007bff;
-    color: white;
-    padding: 15px;
+    background-color: #ffffff;
+    color: #333;
+    padding: 25px; /* Makes the buttons taller */
     text-decoration: none;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: bold;
+    border-radius: 12px; /* Rounded corners for a sleek look */
+    font-size: 20px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Adds a soft shadow */
+    transition: transform 0.2s, box-shadow 0.2s; /* Makes the movement smooth */
+    border-left: 8px solid #007bff; /* Color accent on the side */
   }
+
+  /* This happens when you hover or click */
   .menu-item:hover {
-    background-color: #0056b3;
+    transform: translateY(-5px); /* Makes it lift up */
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    background-color: #f9f9f9;
   }
 </style>
 </head>
 <body>
 
-  <h2>Welcome to the Forum</h2>
+<div class="forum-container">
+  <h1 class="forum-title">Community Forum</h1>
+  
   <div class="forum-menu">
     <a class="menu-item" href="announcements.html">📢 Announcements</a>
-    <a class="menu-item" href="general.html">💬 General Chat</a>
-    <a class="menu-item" href="help.html">❓ Help & Support</a>
-    <a class="menu-item" href="games.html">🎮 Games</a>
+    <a class="menu-item" href="general.html">💬 General Discussion</a>
+    <a class="menu-item" href="help.html">🛡️ Rules & Help</a>
+    <a class="menu-item" href="projects.html">🚀 Creative Projects</a>
   </div>
+</div>
 
 </body>
 </html>
