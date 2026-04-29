@@ -1,1 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flip's Cyber-Deck</title>
+    <style>
+        :root {
+            --neon-green: #00ff00;
+            --cyber-blue: #00ccff;
+            --dark-bg: #050505;
+            --panel-bg: rgba(20, 20, 20, 0.9);
+        }
 
+        body {
+            margin: 0;
+            background: var(--dark-bg);
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden; /* Keeps the deck feeling like an app */
+        }
+
+        /* --- TOP NAV BAR --- */
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            padding: 15px;
+            background: black;
+            border-bottom: 2px solid var(--cyber-blue);
+        }
+
+        .top-nav a {
+            color: var(--neon-green);
+            text-decoration: none;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* --- MAIN CONSOLE LAYOUT --- */
+        .deck-container {
+            display: grid;
+            grid-template-columns: 1fr 350px; /* Map on left, Projects on right */
+            height: calc(100vh - 60px);
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /* --- LEFT SIDE: GAME CANVAS --- */
+        #game-panel {
+            background: #111;
+            border: 2px solid #333;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            border: 1px solid var(--cyber-blue);
+            background: black;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* --- RIGHT SIDE: PROJECT EXPLORER --- */
+        #project-panel {
+            background: var(--panel-bg);
+            border: 2px solid var(--cyber-blue);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .project-file {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--neon-green);
+            margin-bottom: 15px;
+            padding: 10px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .project-file:hover {
+            background: rgba(0, 255, 0, 0.1);
+            transform: translateX(10px);
+        }
+
+        .project-file h3 { margin: 0; color: var(--cyber-blue); font-size: 1rem; }
+        .project-file p { font-size: 0.8rem; color: #aaa; }
+
+        .btn-play {
+            display: inline-block;
+            margin-top: 5px;
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 3px 8px;
+            text-decoration: none;
+            font-size: 0.7rem;
+        }
+
+        /* UI Overlay */
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+            color: var(--neon-green);
+            text-shadow: 0 0 5px green;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="#">HOME</a>
+        <a href="#">FORUM</a>
+        <a href="#">TERMINAL</a>
+    </nav>
+
+    <div class="deck-container">
+        <div id="game-panel">
+            <div class="hud">
+                <div>SYSTEM: ACTIVE</div>
+                <div id="timer-display">TIME: 0.00</div>
+                <div id="section-display">SECTORS: 0</div>
+            </div>
+            <canvas id="gameCanvas" width="640" height="480"></canvas>
+        </div>
+
+        <div id="project-panel">
+            <h2 style="color: var(--neon-green); border-bottom: 1px solid; padding-bottom: 5px;">DIRECTORY:/ROOT</h2>
+            
+            <div class="project-file">
+                <h3>Number_Guess.sys</h3>
+                <p>Classic logic challenge. Can you beat the CPU?</p>
+                <a href="#" class="btn-play">EXECUTE</a>
+            </div>
+
+            <div class="project-file">
+                <h3>Velocity_Quest.sh</h3>
+                <p>2D Engine Test Build v1.02</p>
+                <a href="#" class="btn-play">EXECUTE</a>
+            </div>
+
+            <div class="project-file">
+                <h3>Untitled_Map.jpg</h3>
+                <p>Primary navigation asset loaded.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // --- GAME STATE ---
+        let state = "MAP";
+        let flip = { x: 320, y: 240, size: 30, speed: 5 };
+        let bullets = [];
+        let enemy = { x: 300, y: 100, hp: 5, alive: true };
+        let totalTimer = 0;
+        let sectionCount = 0;
+
+        // Load Map Image
+        const mapImg = new Image();
+        mapImg.src = "Untitled.jpg"; 
+
+        // Levels (Coordinates based on your drawing)
+        const levels = [
+            { x: 110, y: 110, name: "Level 1" },
+            { x: 315, y: 350, name: "Level 2" }
+        ];
+
+        // --- INPUT ---
+        const keys = {};
+        window.addEventListener("keydown", (e) => keys[e.key] = true);
+        window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        window.addEventListener("mousedown", (e) => {
+            if(state === "BRAWL") {
+                const rect = canvas.getBoundingClientRect();
+                const angle = Math.atan2((e.clientY - rect.top) - flip.y, (e.clientX - rect.left) - flip.x);
+                bullets.push({ x: flip.x+15, y: flip.y+15, vx: Math.cos(angle)*7, vy: Math.sin(angle)*7 });
+            }
+        });
+
+        // --- CORE LOOP ---
+        function main() {
+            // Logic
+            if(keys["ArrowLeft"]) flip.x -= flip.speed;
+            if(keys["ArrowRight"]) flip.x += flip.speed;
+            if(keys["ArrowUp"]) flip.y -= flip.speed;
+            if(keys["ArrowDown"]) flip.y += flip.speed;
+
+            if(state === "MAP") {
+                totalTimer += 1/60;
+                levels.forEach(lvl => {
+                    if(Math.hypot(flip.x - lvl.x, flip.y - lvl.y) < 30 && keys["Enter"]) {
+                        state = "BRAWL";
+                        enemy.alive = true; enemy.hp = 5;
+                    }
+                });
+            } else {
+                bullets.forEach((b, i) => {
+                    b.x += b.vx; b.y += b.vy;
+                    if(enemy.alive && b.x > enemy.x && b.x < enemy.x+40 && b.y > enemy.y && b.y < enemy.y+40) {
+                        enemy.hp--; bullets.splice(i, 1);
+                        if(enemy.hp <= 0) { 
+                            enemy.alive = false; state = "MAP"; sectionCount++; 
+                        }
+                    }
+                });
+            }
+
+            // Draw
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0,640,480);
+
+            if(state === "MAP") {
+                ctx.drawImage(mapImg, 0, 0, 640, 480);
+                ctx.strokeStyle = "white";
+                levels.forEach(lvl => { ctx.strokeRect(lvl.x-20, lvl.y-20, 40, 40); });
+            } else {
+                if(enemy.alive) {
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(enemy.x, enemy.y, 40, 40);
+                }
+                ctx.fillStyle = "yellow";
+                bullets.forEach(b => ctx.fillRect(b.x, b.y, 5, 5));
+            }
+
+            ctx.fillStyle = "green";
+            ctx.fillRect(flip.x, flip.y, flip.size, flip.size);
+
+            document.getElementById("timer-display").innerText = "TIME: " + totalTimer.toFixed(2);
+            document.getElementById("section-display").innerText = "SECTORS: " + sectionCount;
+
+            requestAnimationFrame(main);
+        }
+
+        mapImg.onload = main;
+    </script>
+</body>
+</html>
