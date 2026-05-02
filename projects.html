@@ -1,122 +1,155 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <style>
-    /* 1. DARK BACKGROUND FOR THE DECK */
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #0a0a0a;
-      display: flex;
-      font-family: 'Courier New', Courier, monospace;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Database - Separate View</title>
+    <style>
+        /* CORE STYLES COPIED FROM YOUR ORIGINAL PAGE */
+        :root {
+            --neon-green: #00ff00;
+            --cyber-blue: #00ccff;
+            --win-blue: #000080;
+            --win-gray: #c0c0c0;
+        }
 
-    /* 2. THE SIDEBAR CONTAINER */
-    #sidebar {
-      width: 100px;
-      height: 100vh;
-      background-color: #000;
-      border-right: 2px solid #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 40px;
-      gap: 30px;
-    }
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #001a1a 0%, #003366 50%, #000000 100%);
+            background-attachment: fixed;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    /* 3. NEON BUTTON BASE STYLE */
-    .btn {
-      width: 60px;
-      height: 60px;
-      background: transparent;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      border-radius: 8px;
-    }
+        .project-grid {
+            display: flex;
+            gap: 60px; 
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
 
-    /* GREEN NEON (ROOT) */
-    .green {
-      color: #39ff14;
-      border: 2px solid #39ff14;
-      box-shadow: 0 0 10px #39ff14;
-    }
-    .green:hover {
-      background: #39ff14;
-      color: #000;
-      box-shadow: 0 0 30px #39ff14;
-    }
+        /* --- FLOATING ANIMATION --- */
+        @keyframes freeFloat {
+            0%   { transform: translate(0, 0); }
+            25%  { transform: translate(60px, -40px); } 
+            50%  { transform: translate(-70px, 30px); } 
+            75%  { transform: translate(50px, 60px); }  
+            100% { transform: translate(0, 0); }
+        }
 
-    /* BLUE NEON (MAP) */
-    .blue {
-      color: #00f2ff;
-      border: 2px solid #00f2ff;
-      box-shadow: 0 0 10px #00f2ff;
-    }
-    .blue:hover {
-      background: #00f2ff;
-      color: #000;
-      box-shadow: 0 0 30px #00f2ff;
-    }
+        /* --- RETRO CARD DESIGN --- */
+        .retro-card {
+            background: var(--win-gray);
+            color: black;
+            border-top: 4px solid #ffffff;
+            border-left: 4px solid #ffffff;
+            border-right: 4px solid #444444;
+            border-bottom: 4px solid #444444;
+            padding: 15px;
+            width: 280px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            animation: freeFloat 20s ease-in-out infinite;
+        }
 
-    /* PINK NEON (BRAWL) */
-    .pink {
-      color: #ff00ff;
-      border: 2px solid #ff00ff;
-      box-shadow: 0 0 10px #ff00ff;
-    }
-    .pink:hover {
-      background: #ff00ff;
-      color: #000;
-      box-shadow: 0 0 30px #ff00ff;
-    }
+        .retro-card:hover {
+            animation-play-state: paused;
+            z-index: 100;
+        }
 
-    /* 4. MAIN CONTENT AREA */
-    #content {
-      flex-grow: 1;
-      padding: 50px;
-      color: white;
-      text-align: center;
-    }
-  </style>
+        /* Timing for independent movement */
+        .retro-card:nth-child(1) { animation-duration: 18s; }
+        .retro-card:nth-child(2) { animation-duration: 25s; }
+        .retro-card:nth-child(3) { animation-duration: 22s; }
+        .retro-card:nth-child(4) { animation-duration: 20s; }
+
+        .card-header {
+            background: linear-gradient(90deg, var(--win-blue), var(--cyber-blue));
+            color: white;
+            padding: 5px 10px;
+            margin: -15px -15px 15px -15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .play-btn {
+            display: block;
+            margin-top: 20px;
+            padding: 12px;
+            background: var(--neon-green);
+            color: black;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: 0.3s;
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .play-btn:hover {
+            background: white;
+            box-shadow: 0 0 25px white;
+            transform: scale(1.05);
+        }
+
+        h2 {
+            color: white;
+            border-bottom: 2px solid var(--neon-green);
+            padding-bottom: 10px;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+    </style>
 </head>
 <body>
 
-  <div id="sidebar">
-    <div class="btn green" onclick="changeMode('ROOT')">/R</div>
-    <div class="btn blue" onclick="changeMode('MAP')">MAP</div>
-    <div class="btn pink" onclick="changeMode('BRAWL')">!!!</div>
-  </div>
+    <h2>PROJECT_DATABASE</h2>
 
-  <div id="content">
-    <h1 id="status">CYBER-DECK READY</h1>
-    <p id="details">Select a sector from the sidebar...</p>
-  </div>
+    <div class="project-grid">
+        <div class="retro-card">
+            <div class="card-header">
+                <span>Dev_Process.mp4</span>
+                <span>[X]</span>
+            </div>
+            <h3 style="margin: 0 0 10px 0; font-size: 1rem;">How I Built This</h3>
+            <video width="100%" controls style="background: black;">
+                <source src="rickroll.mp4" type="video/mp4">
+            </video>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Watch the journey of how this site came to life!</p>
+        </div>
 
-  <script>
-    // 5. THE LOGIC (CHANGING MODES)
-    function changeMode(modeName) {
-      const statusText = document.getElementById('status');
-      const detailText = document.getElementById('details');
+        <div class="retro-card">
+            <div class="card-header">
+                <span>System_Updates.log</span>
+                <span>[X]</span>
+            </div>
+            <p>Check out the latest changes, bug fixes, and new features added to the voyage.</p>
+            <a href="changelog.html" class="play-btn">VIEW LOGS</a>
+        </div>
+        
+        <div class="retro-card">
+            <div class="card-header">
+                <span>Number_Guess.sys</span>
+                <span>[X]</span>
+            </div>
+            <p>My first major game! Originally written in Python, now fully optimized for the Web.</p>
+            <a href="number-guessinggame.html" class="play-btn">EXECUTE PLAY</a>
+        </div>
 
-      if (modeName === 'ROOT') {
-        statusText.innerText = "ACCESSING /ROOT";
-        statusText.style.color = "#39ff14";
-        detailText.innerText = "Viewing directory files...";
-      } else if (modeName === 'MAP') {
-        statusText.innerText = "OPENING MAP";
-        statusText.style.color = "#00f2ff";
-        detailText.innerText = "Locating coordinates...";
-      } else if (modeName === 'BRAWL') {
-        statusText.innerText = "COMBAT INITIALIZED";
-        statusText.style.color = "#ff00ff";
-        detailText.innerText = "Warning: Enemies detected!";
-      }
-    }
-  </script>
+        <div class="retro-card">
+            <div class="card-header">
+                <span>Velocity_Quest.sh</span>
+                <span>[X]</span>
+            </div>
+            <p>An early-stage 2D quest engine. It's the beginning of something huge.</p>
+            <a href="velocityquest.html" class="play-btn">EXECUTE PLAY</a>
+        </div>
+    </div>
 
 </body>
 </html>
