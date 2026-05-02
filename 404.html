@@ -1,37 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
+<style>
   body {
-    /* This sets the background color */
-    background-color: #f0f0f0; 
-
-    /* This adds a background image */
     background-image: url('https://english.aawsat.com/s3/files/styles/1037xauto/public/2026-05/1520824.jpeg.webp');
     background-size: cover;
-    background-repeat: no-repeat;
+    background-position: center;
+    margin: 0;
+    /* These three lines center everything on the screen */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; 
+    font-family: sans-serif;
+  }
+
+  .box {
+    background-color: orange;
+    padding: 30px;
+    border-radius: 20px; /* Makes the corners rounded */
+    text-align: center;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.5); /* Adds a shadow to make it "pop" */
+    border: 5px solid white;
+  }
+
+  button, a {
+    display: inline-block;
+    margin-top: 10px;
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
   }
 </style>
-  <title>404 - Page Not Found</title>
-</head>
+
 <body>
-  <h1>404: You've reached the end of the map!</h1>
-  <p>It’s quiet here... maybe some music will help?</p>
+  <div class="box">
+    <h1>404: You've reached the end of the map!</h1>
+    <p>It’s quiet here... maybe some music will help?</p>
 
-  <audio id="myOST">
-    <source src="01_Flashbeagle.mp3" type="audio/mpeg">
-  </audio>
+    <audio id="myOST">
+      <source src="01_Flashbeagle.mp3" type="audio/mpeg">
+    </audio>
 
-  <button onclick="playMusic()" type="button">OST</button>
-
-  <script>
-    function playMusic() {
-      var music = document.getElementById("myOST");
-      music.play();
-    }
-  </script>
-
-  <br><br>
-  <a href="/">Go Back Home</a>
+    <button onclick="playMusic()" type="button">OST</button>
+    <br>
+    <a href="/">Go Back Home</a>
+  </div>
 </body>
-</html>
