@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VELOCITY — A Language I Invented</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Barlow+Condensed:wght@400;600;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --surface:  #111111;
+      --border:   #222222;
+      --accent:   #e84a1f;
+      --accent2:  #f5a623;
+      --text:     #f0ede8;
+      --muted:    #6b6b6b;
+      --mono:     'DM Mono', monospace;
+      --display:  'Barlow Condensed', sans-serif;
+      --body:     'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID OVERLAY ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232,74,31,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,74,31,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HERO ──────────────────────────────────────── */
+    .hero {
+      position: relative;
+      padding: 7rem 2rem 5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    .hero-title {
+      font-family: var(--display);
+      font-size: clamp(72px, 12vw, 140px);
+      font-weight: 800;
+      line-height: 0.9;
+      letter-spacing: -2px;
+      text-transform: uppercase;
+    }
+    .hero-title span {
+      color: var(--accent);
+      position: relative;
+    }
+    .hero-title span::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 0; right: 0;
+      height: 4px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: underline-in 0.6s 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    @keyframes underline-in { to { transform: scaleX(1); } }
+
+    .hero-sub {
+      margin-top: 2rem;
+      max-width: 560px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 500; }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 2rem;
+    }
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--muted);
+    }
+    .badge.hot { border-color: var(--accent); color: var(--accent); }
+
+    /* ── FADE IN ──────────────────────────────────── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      animation: fade-up 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    .fade-up:nth-child(1) { animation-delay: 0.1s; }
+    .fade-up:nth-child(2) { animation-delay: 0.2s; }
+    .fade-up:nth-child(3) { animation-delay: 0.35s; }
+    .fade-up:nth-child(4) { animation-delay: 0.5s; }
+    @keyframes fade-up { to { opacity: 1; transform: none; } }
+
+    /* ── DIVIDER ──────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── SECTION ──────────────────────────────────── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 5rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── KEYWORD GRID ─────────────────────────────── */
+    .kw-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .kw-card {
+      background: var(--bg);
+      padding: 1.25rem 1.5rem;
+      transition: background 0.15s;
+    }
+    .kw-card:hover { background: var(--surface); }
+    .kw-card code {
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .kw-card p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── CODE TABS ────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    pre.code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 1.75rem 2rem;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.9;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+    .c-kw  { color: #e84a1f; font-weight: 500; }
+    .c-fn  { color: #60a5fa; }
+    .c-str { color: #86efac; }
+    .c-num { color: #fbbf24; }
+    .c-cmt { color: #4b5563; font-style: italic; }
+    .c-op  { color: #f472b6; }
+
+    /* ── SPEC TABLE ───────────────────────────────── */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .spec-table tr {
+      border-bottom: 1px solid var(--border);
+    }
+    .spec-table tr:last-child { border-bottom: none; }
+    .spec-table td {
+      padding: 12px 16px;
+      vertical-align: top;
+    }
+    .spec-table td:first-child {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      width: 160px;
+      white-space: nowrap;
+    }
+    .spec-table td:last-child {
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    /* ── FOOTER ───────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── SCROLLBAR ────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── RACING STRIPE ────────────────────────────── */
+    .stripe {
+      position: fixed;
+      top: 0; bottom: 0;
+      right: 40px;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, var(--accent) 30%, var(--accent2) 70%, transparent);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="stripe"></div>
+
+<!-- ── HERO ──────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-eyebrow fade-up">A language I invented</div>
+  <h1 class="hero-title fade-up">VEL<span>O</span>CITY</h1>
+  <p class="hero-sub fade-up">
+    A <strong>multi-paradigm programming language</strong> themed around racing games and web portfolios.
+    Keywords like <code style="font-family:var(--mono);color:var(--accent);font-size:13px">race</code>,
+    <code style="font-family:var(--mono);color:var(--accent);font-size:13px">lap</code>, and
+    <code style="font-family:var(--mono);color:var(--accent);font-size:13px">podium</code> replace
+    function, loop, and return — because why write boring code?
+  </p>
+  <div class="hero-badges fade-up">
+    <span class="badge hot">.vl</span>
+    <span class="badge">static typing</span>
+    <span class="badge">async/await</span>
+    <span class="badge">pipe operator |&gt;</span>
+    <span class="badge">web-native</span>
+    <span class="badge">oop + functional</span>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── KEYWORDS ──────────────────────────────── -->
+<section>
+  <div class="section-label">Core keywords</div>
+  <div class="kw-grid">
+    <div class="kw-card"><code>race</code><p>Define a function — enter the race</p></div>
+    <div class="kw-card"><code>podium</code><p>Return the winning value</p></div>
+    <div class="kw-card"><code>lap</code><p>Loop — one full iteration</p></div>
+    <div class="kw-card"><code>gear</code><p>Declare a variable</p></div>
+    <div class="kw-card"><code>flag</code><p>Boolean true/false</p></div>
+    <div class="kw-card"><code>boost</code><p>Make a function async</p></div>
+    <div class="kw-card"><code>pit</code><p>Catch errors — pit to recover</p></div>
+    <div class="kw-card"><code>chassis</code><p>Define a class</p></div>
+    <div class="kw-card"><code>livery</code><p>Style a component</p></div>
+    <div class="kw-card"><code>draft</code><p>Inherit / follow a value</p></div>
+    <div class="kw-card"><code>throttle</code><p>Rate-limit execution</p></div>
+    <div class="kw-card"><code>slipstream</code><p>Pipeline operator  |&gt;</p></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── CODE EXAMPLES ─────────────────────────── -->
+<section>
+  <div class="section-label">Code examples</div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('basics')">Basics</button>
+    <button class="tab-btn" onclick="showTab('collision')">Collision</button>
+    <button class="tab-btn" onclick="showTab('timer')">Race Timer</button>
+    <button class="tab-btn" onclick="showTab('portfolio')">Portfolio Site</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-basics">
+    <pre class="code"><span class="c-cmt">// Variables, functions, loops — the fundamentals</span>
+
+<span class="c-kw">gear</span> driver  = <span class="c-str">"Senna"</span>
+<span class="c-kw">gear</span> lapTime = <span class="c-num">78.3</span>
+<span class="c-kw">flag</span> dnf     = false
+
+<span class="c-kw">race</span> <span class="c-fn">fastestLap</span>(times) {
+  <span class="c-kw">podium</span> times.<span class="c-fn">min</span>()
+}
+
+<span class="c-kw">gear</span> drivers = [<span class="c-str">"Senna"</span>, <span class="c-str">"Prost"</span>, <span class="c-str">"Mansell"</span>]
+
+<span class="c-kw">lap</span> d <span class="c-kw">in</span> drivers {
+  <span class="c-fn">render</span>(d)
+}
+
+<span class="c-cmt">// Slipstream (pipe) chaining</span>
+<span class="c-kw">gear</span> result = rawTimes
+  |> <span class="c-fn">filter</span>(valid)
+  |> <span class="c-fn">sort</span>(asc)
+  |> <span class="c-fn">render</span>()
+
+<span class="c-cmt">// Classes</span>
+<span class="c-kw">chassis</span> <span class="c-fn">Car</span> {
+  <span class="c-fn">build</span>(make, topSpeed) {
+    <span class="c-kw">gear</span> this.make     = make
+    <span class="c-kw">gear</span> this.topSpeed = topSpeed
+  }
+  <span class="c-kw">race</span> <span class="c-fn">describe</span>() {
+    <span class="c-kw">podium</span> <span class="c-str">`${this.make} — ${this.topSpeed} km/h`</span>
+  }
+}
+
+<span class="c-kw">gear</span> myRide = <span class="c-kw">new</span> <span class="c-fn">Car</span>(<span class="c-str">"McLaren"</span>, <span class="c-num">372</span>)
+<span class="c-fn">render</span>(myRide.<span class="c-fn">describe</span>())</pre>
+  </div>
+
+  <div class="tab-panel" id="tab-collision">
+    <pre class="code"><span class="c-cmt">// AABB collision detection + impact resolution</span>
+
+<span class="c-kw">chassis</span> <span class="c-fn">Hitbox</span> {
+  <span class="c-fn">build</span>(x, y, w, h) {
+    <span class="c-kw">gear</span> this.x = x
+    <span class="c-kw">gear</span> this.y = y
+    <span class="c-kw">gear</span> this.w = w
+    <span class="c-kw">gear</span> this.h = h
+  }
+  <span class="c-kw">race</span> <span class="c-fn">overlap</span>(other) {
+    <span class="c-kw">gear</span> ox = (this.w + other.w) / <span class="c-num">2</span> - <span class="c-fn">abs</span>((this.x + this.w/<span class="c-num">2</span>) - (other.x + other.w/<span class="c-num">2</span>))
+    <span class="c-kw">gear</span> oy = (this.h + other.h) / <span class="c-num">2</span> - <span class="c-fn">abs</span>((this.y + this.h/<span class="c-num">2</span>) - (other.y + other.h/<span class="c-num">2</span>))
+    <span class="c-kw">podium</span> (ox > <span class="c-num">0</span> && oy > <span class="c-num">0</span>) ? { ox, oy } : null
+  }
+}
+
+<span class="c-kw">race</span> <span class="c-fn">detectCollisions</span>(cars) {
+  <span class="c-kw">gear</span> crashes = []
+  <span class="c-kw">lap</span> i <span class="c-kw">in</span> <span class="c-fn">range</span>(cars.length) {
+    <span class="c-kw">lap</span> j <span class="c-kw">in</span> <span class="c-fn">range</span>(i + <span class="c-num">1</span>, cars.length) {
+      <span class="c-kw">gear</span> hit = cars[i].hitbox.<span class="c-fn">overlap</span>(cars[j].hitbox)
+      <span class="c-kw">if</span> hit {
+        crashes.<span class="c-fn">push</span>({ carA: cars[i].name, carB: cars[j].name })
+        <span class="c-fn">resolveImpact</span>(cars[i], cars[j], hit)
+      }
+    }
+  }
+  <span class="c-kw">podium</span> crashes
+}
+
+<span class="c-kw">race</span> <span class="c-fn">resolveImpact</span>(a, b, hit) {
+  a.speed <span class="c-op">*=</span> <span class="c-num">0.72</span>   <span class="c-cmt">// bleed speed on contact</span>
+  b.speed <span class="c-op">*=</span> <span class="c-num">0.72</span>
+  <span class="c-cmt">// push cars apart along minimum overlap axis</span>
+  <span class="c-kw">if</span> hit.ox < hit.oy { a.x += hit.ox/<span class="c-num">2</span>; b.x -= hit.ox/<span class="c-num">2</span> }
+  <span class="c-kw">else</span>               { a.y += hit.oy/<span class="c-num">2</span>; b.y -= hit.oy/<span class="c-num">2</span> }
+}</pre>
+  </div>
+
+  <div class="tab-panel" id="tab-timer">
+    <pre class="code"><span class="c-cmt">// Lap timer with personal best detection</span>
+
+<span class="c-kw">chassis</span> <span class="c-fn">RaceTimer</span> {
+  <span class="c-fn">build</span>() {
+    <span class="c-kw">gear</span> this.lapStart = null
+    <span class="c-kw">gear</span> this.laps     = []
+    <span class="c-kw">gear</span> this.pb       = Infinity
+    <span class="c-kw">flag</span> this.running  = false
+  }
+
+  <span class="c-kw">race</span> <span class="c-fn">start</span>() {
+    this.lapStart = <span class="c-fn">now</span>()
+    this.running  = true
+  }
+
+  <span class="c-kw">race</span> <span class="c-fn">crossLine</span>() {
+    <span class="c-kw">gear</span> split = <span class="c-fn">now</span>() - this.lapStart
+    this.laps.<span class="c-fn">push</span>(split)
+    this.lapStart = <span class="c-fn">now</span>()
+    <span class="c-kw">if</span> split < this.pb {
+      this.pb = split
+      <span class="c-fn">emit</span>(<span class="c-str">"pb"</span>, { lap: this.laps.length, time: split })
+    }
+    <span class="c-kw">podium</span> split
+  }
+
+  <span class="c-kw">race</span> <span class="c-fn">format</span>(ms) {
+    <span class="c-kw">gear</span> m  = <span class="c-fn">floor</span>(ms / <span class="c-num">60000</span>)
+    <span class="c-kw">gear</span> s  = <span class="c-fn">floor</span>((ms % <span class="c-num">60000</span>) / <span class="c-num">1000</span>)
+    <span class="c-kw">gear</span> ms = ms % <span class="c-num">1000</span>
+    <span class="c-kw">podium</span> <span class="c-str">`${m}:${pad(s)}.${pad3(ms)}`</span>
+  }
+}
+
+<span class="c-cmt">// Async HUD updater — boost keeps the game loop free</span>
+<span class="c-kw">boost race</span> <span class="c-fn">runHUD</span>(timer, hud) {
+  <span class="c-kw">lap</span> {
+    <span class="c-kw">if</span> !timer.running { <span class="c-kw">break</span> }
+    hud.<span class="c-fn">update</span>(timer.<span class="c-fn">format</span>(timer.<span class="c-fn">currentLap</span>()))
+    <span class="c-kw">await</span> <span class="c-fn">sleep</span>(<span class="c-num">16</span>)   <span class="c-cmt">// ~60fps</span>
+  }
+}</pre>
+  </div>
+
+  <div class="tab-panel" id="tab-portfolio">
+    <pre class="code"><span class="c-cmt">// Portfolio site — web-native keywords</span>
+
+<span class="c-kw">hero</span> {
+  title: <span class="c-str">"Hey, I'm Alex."</span>,
+  sub:   <span class="c-str">"I build fast things on the web."</span>,
+  cta:   <span class="c-str">"See my work"</span>
+  <span class="c-kw">livery</span> { bg: <span class="c-str">"#0a0a0a"</span>, text: <span class="c-str">"#f5f5f5"</span>, accent: <span class="c-str">"#e84a1f"</span> }
+}
+
+<span class="c-kw">section</span> <span class="c-str">"Projects"</span> {
+  <span class="c-kw">project</span> {
+    name:  <span class="c-str">"RaceSim"</span>,
+    desc:  <span class="c-str">"Browser-based F1 physics engine"</span>,
+    tags:  [<span class="c-str">"WebGL"</span>, <span class="c-str">"Rust"</span>, <span class="c-str">"WASM"</span>],
+    link:  <span class="c-str">"github.com/alex/racesim"</span>
+  }
+  <span class="c-kw">project</span> {
+    name:  <span class="c-str">"Velocity"</span>,
+    desc:  <span class="c-str">"A programming language I invented"</span>,
+    tags:  [<span class="c-str">"language design"</span>, <span class="c-str">"parser"</span>, <span class="c-str">"racing"</span>],
+    link:  <span class="c-str">"github.com/alex/velocity-lang"</span>
+  }
+}
+
+<span class="c-kw">section</span> <span class="c-str">"Contact"</span> {
+  email: <span class="c-str">"alex@example.com"</span>,
+  github: <span class="c-str">"github.com/alex"</span>
+}
+
+<span class="c-kw">deploy</span> { target: <span class="c-str">"github-pages"</span>, domain: <span class="c-str">"alex.dev"</span> }</pre>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── SPEC ───────────────────────────────────── -->
+<section>
+  <div class="section-label">Language spec</div>
+  <div style="border: 1px solid var(--border);">
+    <table class="spec-table">
+      <tr><td>file extension</td><td>.vl</td></tr>
+      <tr><td>paradigm</td><td>multi-paradigm — OOP + functional</td></tr>
+      <tr><td>typing</td><td>inferred static (like TypeScript)</td></tr>
+      <tr><td>entry point</td><td>race main() { ... }</td></tr>
+      <tr><td>return keyword</td><td>podium &lt;value&gt;</td></tr>
+      <tr><td>loop keyword</td><td>lap ... in ... { }</td></tr>
+      <tr><td>pipe operator</td><td>|&gt; (slipstream)</td></tr>
+      <tr><td>async model</td><td>boost + await (promise-based)</td></tr>
+      <tr><td>error handling</td><td>pit { } catch blocks</td></tr>
+      <tr><td>classes</td><td>chassis / build() constructor</td></tr>
+      <tr><td>web primitives</td><td>hero / section / project / deploy</td></tr>
+      <tr><td>styling</td><td>livery { } blocks</td></tr>
+      <tr><td>inspired by</td><td>JavaScript, Elixir (pipe), Rust (inference)</td></tr>
+    </table>
+  </div>
+</section>
+
+<footer>
+  VELOCITY lang — invented by me &nbsp;·&nbsp; <a href="#">View source on GitHub</a>
+</footer>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>
