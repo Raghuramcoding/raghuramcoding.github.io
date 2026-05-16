@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fact-Check Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1a2e4a;
+    --navy-light: #243b55;
+    --accent: #2d7dd2;
+    --accent-dim: #e8f2fb;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --lime: #65a30d;
+    --lime-bg: #f7fee7;
+    --yellow: #ca8a04;
+    --yellow-bg: #fefce8;
+    --orange: #ea580c;
+    --orange-bg: #fff7ed;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --darkred: #991b1b;
+    --gray: #6b7280;
+    --gray-bg: #f9fafb;
+    --surface: #ffffff;
+    --surface2: #f8f9fb;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --faint: #9ca3af;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f0f4f8;
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 12px rgba(0,0,0,0.15);
+  }
+
+  .header-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .version-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: rgba(255,255,255,0.12);
+    padding: 2px 8px;
+    border-radius: 20px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  #key-status {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 20px;
+    transition: background 0.15s;
+  }
+  #key-status:hover { background: rgba(255,255,255,0.1); }
+  #key-status .dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; }
+  #key-status.has-key .dot { background: #4ade80; }
+  #key-status.has-key { color: rgba(255,255,255,0.8); }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* API key modal */
+  #key-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  #key-modal.open { display: flex; }
+
+  .modal-box {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 2rem;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .modal-box h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--navy);
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-box p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    line-height: 1.6;
+  }
+
+  .modal-box a { color: var(--accent); }
+
+  .key-input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .key-input-row input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .key-input-row input:focus { border-color: var(--accent); }
+
+  .privacy-note {
+    font-size: 12px;
+    color: var(--faint);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 9px 20px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--navy-light); }
+  .btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { background: var(--surface2); }
+
+  /* Input card */
+  .input-card {
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .input-card textarea {
+    width: 100%;
+    min-height: 130px;
+    padding: 1.25rem 1.5rem;
+    border: none;
+    outline: none;
+    resize: vertical;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text);
+    background: transparent;
+  }
+
+  .input-card textarea::placeholder { color: var(--faint); }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .char-count { font-size: 12px; color: var(--faint); font-family: 'DM Mono', monospace; }
+
+  /* Examples */
+  .examples-label { font-size: 12px; color: var(--faint); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .example-pills { display: flex; flex-direction: column; gap: 6px; margin-bottom: 2rem; }
+
+  .example-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.45;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .example-pill:hover { border-color: var(--accent); color: var(--text); }
+
+  /* Loader */
+  #loader {
+    display: none;
+    text-align: center;
+    padding: 3rem 0;
+  }
+  #loader.show { display: block; }
+
+  .spinner {
+    width: 38px; height: 38px;
+    border: 3px solid var(--border);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: spin 0.75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loader-text { font-size: 14px; color: var(--muted); }
+  .loader-sub { font-size: 12px; color: var(--faint); margin-top: 4px; }
+
+  /* Results */
+  #results { display: none; }
+  #results.show { display: block; }
+
+  .result-card {
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .verdict-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .verdict-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); margin-bottom: 6px; }
+
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 18px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 500;
+    border: 1.5px solid;
+  }
+
+  .confidence-tag {
+    display: inline-block;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .mfs-block { text-align: right; }
+
+  .mfs-number { font-size: 32px; font-weight: 500; font-family: 'DM Serif Display', serif; }
+
+  .mfs-track {
+    width: 150px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin: 6px 0 4px auto;
+    overflow: hidden;
+  }
+
+  .mfs-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+  .mfs-components { font-size: 11px; color: var(--faint); font-family: 'DM Mono', monospace; }
+
+  .summary-text { font-size: 14px; color: var(--muted); line-height: 1.65; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+
+  .tab-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: color 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Claim rows */
+  .claim-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 8px;
+  }
+
+  .claim-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 20px;
+  }
+
+  .tag-id { background: #e0e7ff; color: #3730a3; font-family: 'DM Mono', monospace; }
+  .tag-type { background: var(--surface2); color: var(--muted); }
+
+  .claim-text { font-size: 14px; color: var(--text); line-height: 1.55; margin-bottom: 6px; }
+  .claim-explain { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .mini-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* Confidence block */
+  .conf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .conf-col-label { font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+  .conf-item { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 4px; }
+
+  /* Counterfactual */
+  .counterfactual {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-top: 8px;
+  }
+  .counterfactual-label { font-size: 12px; font-weight: 500; color: #1e40af; margin-bottom: 5px; }
+  .counterfactual p { font-size: 13px; color: #1e40af; line-height: 1.55; }
+
+  /* Flag rows */
+  .flag-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 8px;
+  }
+  .flag-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .flag-code { font-family: 'DM Mono', monospace; font-size: 12px; background: var(--surface2); color: var(--muted); padding: 2px 8px; border-radius: var(--radius-sm); }
+  .flag-name { font-size: 13px; font-weight: 500; }
+  .severity-tag { font-size: 11px; font-weight: 500; padding: 2px 10px; border-radius: 20px; margin-left: auto; }
+  .flag-explain { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Source rows */
+  .source-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .source-row:last-child { border-bottom: none; }
+  .tier-badge { width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: var(--navy); color: #fff; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; }
+  .source-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .source-note { font-size: 12px; color: var(--muted); }
+
+  /* Education tab */
+  .edu-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 10px;
+  }
+  .edu-card-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 10px; }
+  .defense-box { background: var(--green-bg); border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 10px; }
+  .defense-label { font-size: 12px; font-weight: 500; color: var(--green); margin-bottom: 3px; }
+  .defense-text { font-size: 13px; color: #166534; line-height: 1.5; }
+
+  .lateral-step { display: flex; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  .lateral-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .lateral-step-label { font-size: 12px; font-weight: 500; color: var(--navy); min-width: 68px; flex-shrink: 0; }
+  .lateral-step-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .q-row { display: flex; gap: 8px; margin-bottom: 6px; }
+  .q-num { font-size: 13px; font-weight: 500; color: var(--navy); }
+  .q-text { font-size: 13px; color: var(--muted); }
+
+  /* Share tab */
+  .share-summary {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.65;
+    padding: 1rem 1.25rem;
+    background: var(--surface2);
+    border-left: 3px solid var(--navy);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-bottom: 1rem;
+  }
+
+  .disclaimer {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    font-size: 12px;
+    color: #1e40af;
+    line-height: 1.55;
+  }
+
+  .reset-btn { display: block; width: 100%; margin-top: 1rem; }
+
+  /* No flags */
+  .no-flags { text-align: center; padding: 2rem; color: var(--faint); font-size: 14px; }
+  .no-flags-icon { font-size: 28px; margin-bottom: 8px; }
+
+  /* Error */
+  .error-box {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    color: #991b1b;
+    font-size: 14px;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .error-box.show { display: block; }
+
+  /* section card wrapper */
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 10px;
+  }
+  .section-title { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+
+  @media (max-width: 600px) {
+    .conf-grid { grid-template-columns: 1fr; }
+    .verdict-row { flex-direction: column; }
+    .mfs-block { text-align: left; }
+    .mfs-track { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🛡</div>
+      Fact-Check Studio
+      <span class="version-badge">v2.1</span>
+    </div>
+    <div id="key-status" onclick="openKeyModal()">
+      <span class="dot"></span>
+      <span id="key-label">No API key</span>
+    </div>
+  </div>
+</header>
+
+<!-- API key modal -->
+<div id="key-modal">
+  <div class="modal-box">
+    <h2>Enter your Anthropic API key</h2>
+    <p>
+      Your key is used only in your browser to call the Anthropic API directly — it's never sent to any server and disappears when you close the tab.<br><br>
+      Get a key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Usage will count against your account.
+    </p>
+    <div class="key-input-row">
+      <input type="password" id="key-input" placeholder="sk-ant-…" autocomplete="off">
+      <button class="btn btn-primary" onclick="saveKey()">Save</button>
+    </div>
+    <p class="privacy-note">🔒 Stored only in <code>sessionStorage</code> — cleared automatically when you close this tab.</p>
+  </div>
+</div>
+
+<main>
+  <div class="input-card">
+    <textarea id="claim-input" placeholder="Paste a claim, headline, social media post, or article excerpt here…" oninput="updateCharCount()"></textarea>
+    <div class="input-footer">
+      <span class="char-count" id="char-count">0 characters</span>
+      <button class="btn btn-primary" id="analyze-btn" onclick="analyze()">Analyze →</button>
+    </div>
+  </div>
+
+  <p class="examples-label">Try an example</p>
+  <div class="example-pills">
+    <button class="example-pill" onclick="loadExample(0)">"Scientists discovered coffee reverses aging — and the pharmaceutical industry is suppressing this information."</button>
+    <button class="example-pill" onclick="loadExample(1)">"NASA confirmed the Earth is flat and the moon landing was filmed in a studio by Stanley Kubrick."</button>
+    <button class="example-pill" onclick="loadExample(2)">"Studies show 30 minutes of moderate exercise per day significantly reduces cardiovascular disease risk."</button>
+  </div>
+
+  <div id="error-box" class="error-box"></div>
+  <div id="loader">
+    <div class="spinner"></div>
+    <p class="loader-text">Running 11-step fact-check pipeline…</p>
+    <p class="loader-sub">Decomposing claims · Evaluating sources · Detecting red flags</p>
+  </div>
+
+  <div id="results">
+    <!-- Verdict card -->
+    <div class="result-card">
+      <div class="verdict-row">
+        <div>
+          <div class="verdict-label">Overall verdict</div>
+          <div id="verdict-badge" class="verdict-badge"></div>
+          <div id="confidence-tag" class="confidence-tag"></div>
+        </div>
+        <div class="mfs-block">
+          <div class="verdict-label">MFS Score</div>
+          <div id="mfs-number" class="mfs-number"></div>
+          <div class="mfs-track"><div id="mfs-fill" class="mfs-fill"></div></div>
+          <div id="mfs-components" class="mfs-components"></div>
+        </div>
+      </div>
+      <div id="summary-text" class="summary-text"></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('claims', this)">Claims</button>
+      <button class="tab-btn" onclick="switchTab('flags', this)">Red Flags</button>
+      <button class="tab-btn" onclick="switchTab('learn', this)">Learn</button>
+      <button class="tab-btn" onclick="switchTab('share', this)">Share</button>
+    </div>
+
+    <div id="tab-claims" class="tab-panel active"></div>
+    <div id="tab-flags" class="tab-panel"></div>
+    <div id="tab-learn" class="tab-panel"></div>
+    <div id="tab-share" class="tab-panel"></div>
+  </div>
+</main>
+
+<script>
+const EXAMPLES = [
+  "Scientists discovered coffee reverses aging — and the pharmaceutical industry is suppressing this information.",
+  "NASA confirmed the Earth is flat and the moon landing was filmed in a studio by Stanley Kubrick.",
+  "Studies show 30 minutes of moderate exercise per day significantly reduces cardiovascular disease risk.",
+];
+
+const VERDICT_CFG = {
+  "CONFIRMED":   { color: "#16a34a", bg: "#f0fdf4", icon: "✓", label: "Confirmed" },
+  "MOSTLY TRUE": { color: "#65a30d", bg: "#f7fee7", icon: "✓", label: "Mostly True" },
+  "MIXED":       { color: "#ca8a04", bg: "#fefce8", icon: "~", label: "Mixed" },
+  "UNVERIFIED":  { color: "#ea580c", bg: "#fff7ed", icon: "?", label: "Unverified" },
+  "MISLEADING":  { color: "#dc2626", bg: "#fef2f2", icon: "!", label: "Misleading" },
+  "FALSE":       { color: "#991b1b", bg: "#fef2f2", icon: "✕", label: "False" },
+  "N/A":         { color: "#6b7280", bg: "#f9fafb", icon: "—", label: "N/A" },
+};
+
+const TYPE_LABELS = { F: "Factual", O: "Opinion", P: "Prediction", U: "Unfalsifiable", I: "Implied", S: "Statistical" };
+
+const SEVERITY_STYLES = {
+  Serious:  { color: "#991b1b", bg: "#fef2f2" },
+  Moderate: { color: "#ca8a04", bg: "#fefce8" },
+  Minor:    { color: "#374151", bg: "#f3f4f6" },
+};
+
+const MFS_ZONES = [
+  { max: 10, color: "#16a34a" }, { max: 25, color: "#65a30d" },
+  { max: 45, color: "#ca8a04" }, { max: 65, color: "#ea580c" },
+  { max: 85, color: "#dc2626" }, { max: 100, color: "#991b1b" },
+];
+
+function getMfsColor(s) {
+  for (const z of MFS_ZONES) if (s <= z.max) return z.color;
+  return "#991b1b";
+}
+
+const SYSTEM_PROMPT = `You are an expert fact-checker following the Fact-Check Skill v2.1 methodology. When given a claim, article, or text to analyze, you perform a rigorous fact-check and return ONLY a valid JSON object (no markdown, no preamble, no backticks).
+
+Your JSON must follow this exact schema:
+{
+  "summary": "2-3 sentence summary of what was checked",
+  "overallVerdict": "CONFIRMED" | "MOSTLY TRUE" | "MIXED" | "UNVERIFIED" | "MISLEADING" | "FALSE",
+  "confidence": "High" | "Medium" | "Low",
+  "mfsScore": <number 0-100>,
+  "cfsScore": <number 0-100>,
+  "mtsScore": <number 0-100>,
+  "scdScore": <number 0-100>,
+  "mfsLabel": "Reliable" | "Mostly Reliable" | "Caution Advised" | "Problematic" | "Highly Misleading" | "Disinformation",
+  "claims": [{"id":"C1","text":"...","type":"F|O|P|U|I|S","verdict":"...","explanation":"..."}],
+  "confidenceFactors": {"increasing": ["..."], "decreasing": ["..."]},
+  "redFlags": [{"code":"A1","name":"...","severity":"Minor|Moderate|Serious","explanation":"..."}],
+  "manipulationTechnique": {"name":"...","howItWorks":"...","defense":"..."},
+  "counterfactual": "If this were true... (null if not applicable)",
+  "shareSafeSummary": "Neutral 2-3 sentence summary",
+  "sources": [{"tier":1,"name":"...","note":"..."}]
+}
+
+Be rigorous and educational. Use real knowledge to evaluate claims. Return ONLY the JSON object.`;
+
+// Key management
+function openKeyModal() {
+  document.getElementById('key-modal').classList.add('open');
+  const stored = sessionStorage.getItem('anthropic_key');
+  if (stored) document.getElementById('key-input').value = stored;
+}
+
+function saveKey() {
+  const val = document.getElementById('key-input').value.trim();
+  if (!val.startsWith('sk-')) { alert('Key should start with sk-'); return; }
+  sessionStorage.setItem('anthropic_key', val);
+  document.getElementById('key-modal').classList.remove('open');
+  updateKeyStatus();
+}
+
+function updateKeyStatus() {
+  const el = document.getElementById('key-status');
+  const lbl = document.getElementById('key-label');
+  const key = sessionStorage.getItem('anthropic_key');
+  if (key) { el.classList.add('has-key'); lbl.textContent = 'Key active'; }
+  else { el.classList.remove('has-key'); lbl.textContent = 'No API key'; }
+}
+
+// Close modal clicking outside
+document.getElementById('key-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+function updateCharCount() {
+  const len = document.getElementById('claim-input').value.length;
+  document.getElementById('char-count').textContent = len + ' characters';
+}
+
+function loadExample(i) {
+  document.getElementById('claim-input').value = EXAMPLES[i];
+  updateCharCount();
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideError() { document.getElementById('error-box').classList.remove('show'); }
+
+async function analyze() {
+  const key = sessionStorage.getItem('anthropic_key');
+  if (!key) { openKeyModal(); return; }
+
+  const text = document.getElementById('claim-input').value.trim();
+  if (!text) return;
+
+  hideError();
+  document.getElementById('loader').classList.add('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('analyze-btn').disabled = true;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: 'Fact-check this content:\n\n' + text }],
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (res.status === 401) throw new Error('Invalid API key. Click the key indicator in the header to update it.');
+      throw new Error(err.error?.message || 'API request failed (' + res.status + ')');
+    }
+
+    const data = await res.json();
+    const raw = (data.content || []).map(b => b.text || '').join('').trim();
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResult(result);
+  } catch (e) {
+    showError('⚠ ' + (e.message || 'Something went wrong. Please try again.'));
+  } finally {
+    document.getElementById('loader').classList.remove('show');
+    document.getElementById('analyze-btn').disabled = false;
+  }
+}
+
+function renderResult(r) {
+  const vc = VERDICT_CFG[r.overallVerdict] || VERDICT_CFG['UNVERIFIED'];
+  const mfsColor = getMfsColor(r.mfsScore);
+
+  // Verdict
+  document.getElementById('verdict-badge').innerHTML = `<span>${vc.icon}</span> ${vc.label}`;
+  document.getElementById('verdict-badge').style.cssText = `color:${vc.color};background:${vc.bg};border-color:${vc.color}44;display:inline-flex;align-items:center;gap:7px;padding:7px 18px;border-radius:30px;font-size:15px;font-weight:500;border:1.5px solid`;
+  document.getElementById('confidence-tag').textContent = r.confidence + ' confidence';
+  document.getElementById('summary-text').textContent = r.summary;
+
+  // MFS
+  document.getElementById('mfs-number').textContent = Math.round(r.mfsScore);
+  document.getElementById('mfs-number').style.color = mfsColor;
+  document.getElementById('mfs-fill').style.width = Math.min(100, r.mfsScore) + '%';
+  document.getElementById('mfs-fill').style.background = mfsColor;
+  document.getElementById('mfs-components').textContent = `CFS ${Math.round(r.cfsScore)} · MTS ${Math.round(r.mtsScore)} · SCD ${Math.round(r.scdScore)}`;
+
+  // Claims tab
+  let claimsHtml = '';
+  (r.claims || []).forEach(c => {
+    const cv = VERDICT_CFG[c.verdict] || VERDICT_CFG['N/A'];
+    const badgeHtml = c.verdict && c.verdict !== 'N/A'
+      ? `<span class="mini-verdict" style="color:${cv.color};background:${cv.bg};border-color:${cv.color}33">${cv.icon} ${cv.label}</span>` : '';
+    claimsHtml += `<div class="claim-row">
+      <div class="claim-meta">
+        <span class="tag tag-id">${c.id}</span>
+        <span class="tag tag-type">${TYPE_LABELS[c.type] || c.type}</span>
+        ${badgeHtml}
+      </div>
+      <div class="claim-text">${esc(c.text)}</div>
+      <div class="claim-explain">${esc(c.explanation)}</div>
+    </div>`;
+  });
+
+  // Confidence
+  const cf = r.confidenceFactors || {};
+  claimsHtml += `<div class="section-card" style="margin-top:4px">
+    <div class="section-title">Confidence calibration</div>
+    <div class="conf-grid">
+      <div>
+        <div class="conf-col-label" style="color:var(--green)">↑ Increasing</div>
+        ${(cf.increasing || []).map(f => `<div class="conf-item">· ${esc(f)}</div>`).join('')}
+      </div>
+      <div>
+        <div class="conf-col-label" style="color:var(--red)">↓ Decreasing</div>
+        ${(cf.decreasing || []).map(f => `<div class="conf-item">· ${esc(f)}</div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  if (r.counterfactual) {
+    claimsHtml += `<div class="counterfactual"><div class="counterfactual-label">🧪 What would make this true?</div><p>${esc(r.counterfactual)}</p></div>`;
+  }
+
+  document.getElementById('tab-claims').innerHTML = claimsHtml;
+
+  // Flags tab
+  let flagsHtml = '';
+  if (!r.redFlags || r.redFlags.length === 0) {
+    flagsHtml = `<div class="no-flags"><div class="no-flags-icon">✅</div>No significant red flags detected.</div>`;
+  } else {
+    (r.redFlags || []).forEach(f => {
+      const ss = SEVERITY_STYLES[f.severity] || SEVERITY_STYLES.Minor;
+      flagsHtml += `<div class="flag-row">
+        <div class="flag-meta">
+          <span class="flag-code">${esc(f.code)}</span>
+          <span class="flag-name">${esc(f.name)}</span>
+          <span class="severity-tag" style="color:${ss.color};background:${ss.bg}">${f.severity}</span>
+        </div>
+        <div class="flag-explain">${esc(f.explanation)}</div>
+      </div>`;
+    });
+  }
+  if (r.sources && r.sources.length) {
+    flagsHtml += `<div class="section-card" style="margin-top:4px"><div class="section-title">Sources evaluated</div>`;
+    r.sources.forEach(s => {
+      flagsHtml += `<div class="source-row">
+        <div class="tier-badge">T${s.tier}</div>
+        <div><div class="source-name">${esc(s.name)}</div><div class="source-note">${esc(s.note)}</div></div>
+      </div>`;
+    });
+    flagsHtml += `</div>`;
+  }
+  document.getElementById('tab-flags').innerHTML = flagsHtml;
+
+  // Learn tab
+  let learnHtml = '';
+  if (r.manipulationTechnique) {
+    const mt = r.manipulationTechnique;
+    learnHtml += `<div class="edu-card">
+      <div class="edu-card-title">🧠 Manipulation technique detected</div>
+      <div style="font-size:15px;font-weight:500;color:var(--navy);margin-bottom:8px">${esc(mt.name)}</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">${esc(mt.howItWorks)}</div>
+      <div class="defense-box"><div class="defense-label">Your defense</div><div class="defense-text">${esc(mt.defense)}</div></div>
+    </div>`;
+  }
+  learnHtml += `<div class="edu-card">
+    <div class="edu-card-title">↔ The lateral reading method</div>
+    <div class="lateral-step"><div class="lateral-step-label">1. Stop</div><div class="lateral-step-desc">Don't read deeply into the source. Note the claim and where it comes from.</div></div>
+    <div class="lateral-step"><div class="lateral-step-label">2. Leave the page</div><div class="lateral-step-desc">Open a new tab. Search for information <em>about</em> the source, not just the claim.</div></div>
+    <div class="lateral-step"><div class="lateral-step-label">3. Check others</div><div class="lateral-step-desc">Look up the outlet on Media Bias/Fact Check, Wikipedia, and EUvsDisinfo.</div></div>
+    <div class="lateral-step"><div class="lateral-step-label">4. Find better coverage</div><div class="lateral-step-desc">Search the claim in different words. If reputable sources don't cover it, that's a significant signal.</div></div>
+  </div>
+  <div class="section-card">
+    <div class="section-title">5 questions for any source</div>
+    ${["WHO is behind this?","WHAT is their track record?","DO they cite evidence?","WHO ELSE is reporting this?","WHAT is the purpose?"].map((q,i)=>`<div class="q-row"><div class="q-num">${i+1}.</div><div class="q-text">${q}</div></div>`).join('')}
+  </div>`;
+  document.getElementById('tab-learn').innerHTML = learnHtml;
+
+  // Share tab
+  let shareHtml = `<div class="section-card">
+    <div class="section-title">Share-safe summary</div>
+    <div class="share-summary">${esc(r.shareSafeSummary)}</div>
+    <button class="btn btn-ghost" onclick="copyToClipboard()">Copy to clipboard</button>
+  </div>
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This fact-check was generated by an AI system using the Fact-Check Skill v2.1. Treat it as a starting point, not a final authority. For high-stakes decisions, consult professional fact-checkers and primary sources.
+  </div>
+  <button class="btn btn-ghost reset-btn" onclick="resetApp()">← Check another claim</button>`;
+  document.getElementById('tab-share').innerHTML = shareHtml;
+  window._shareSummary = r.shareSafeSummary;
+
+  document.getElementById('results').classList.add('show');
+  switchTab('claims', document.querySelector('.tab-btn'));
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copyToClipboard() {
+  if (navigator.clipboard && window._shareSummary) {
+    navigator.clipboard.writeText(window._shareSummary);
+  }
+}
+
+function resetApp() {
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('claim-input').value = '';
+  updateCharCount();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// On load
+updateKeyStatus();
+if (!sessionStorage.getItem('anthropic_key')) {
+  setTimeout(openKeyModal, 400);
+}
+</script>
+</body>
+</html>
