@@ -13,20 +13,12 @@
     --navy: #1a2e4a;
     --navy-light: #243b55;
     --accent: #2d7dd2;
-    --accent-dim: #e8f2fb;
-    --green: #16a34a;
-    --green-bg: #f0fdf4;
-    --lime: #65a30d;
-    --lime-bg: #f7fee7;
-    --yellow: #ca8a04;
-    --yellow-bg: #fefce8;
-    --orange: #ea580c;
-    --orange-bg: #fff7ed;
-    --red: #dc2626;
-    --red-bg: #fef2f2;
+    --green: #16a34a; --green-bg: #f0fdf4;
+    --lime: #65a30d;  --lime-bg: #f7fee7;
+    --yellow: #ca8a04; --yellow-bg: #fefce8;
+    --orange: #ea580c; --orange-bg: #fff7ed;
+    --red: #dc2626;   --red-bg: #fef2f2;
     --darkred: #991b1b;
-    --gray: #6b7280;
-    --gray-bg: #f9fafb;
     --surface: #ffffff;
     --surface2: #f8f9fb;
     --border: #e5e7eb;
@@ -37,170 +29,61 @@
     --radius-sm: 6px;
   }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: #f0f4f8;
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
-  }
+  body { font-family: 'DM Sans', sans-serif; background: #f0f4f8; color: var(--text); min-height: 100vh; line-height: 1.6; }
 
-  /* noise texture overlay */
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
   }
 
   header {
-    background: var(--navy);
-    color: #fff;
-    padding: 0 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 1px 12px rgba(0,0,0,0.15);
+    background: var(--navy); color: #fff; padding: 0 2rem;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 12px rgba(0,0,0,0.15);
   }
+  .header-inner { max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 58px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: 'DM Serif Display', serif; font-size: 1.2rem; }
+  .logo-icon { width: 30px; height: 30px; background: rgba(255,255,255,0.12); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .version-badge { font-family: 'DM Mono', monospace; font-size: 11px; background: rgba(255,255,255,0.12); padding: 2px 8px; border-radius: 20px; color: rgba(255,255,255,0.7); }
 
-  .header-inner {
-    max-width: 760px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 58px;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.2rem;
-    letter-spacing: -0.01em;
-  }
-
-  .logo-icon {
-    width: 30px;
-    height: 30px;
-    background: rgba(255,255,255,0.12);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-  }
-
-  .version-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    background: rgba(255,255,255,0.12);
-    padding: 2px 8px;
-    border-radius: 20px;
-    color: rgba(255,255,255,0.7);
-  }
-
-  #key-status {
-    font-size: 12px;
-    color: rgba(255,255,255,0.6);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 20px;
-    transition: background 0.15s;
-  }
+  #key-status { font-size: 12px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; border-radius: 20px; transition: background 0.15s; }
   #key-status:hover { background: rgba(255,255,255,0.1); }
   #key-status .dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; }
-  #key-status.has-key .dot { background: #4ade80; }
-  #key-status.has-key { color: rgba(255,255,255,0.8); }
+  #key-status.free-mode .dot { background: #facc15; }
+  #key-status.own-key .dot { background: #4ade80; }
+  #key-status.free-mode, #key-status.own-key { color: rgba(255,255,255,0.85); }
 
-  main {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 4rem;
-    position: relative;
-    z-index: 1;
-  }
+  main { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; position: relative; z-index: 1; }
 
-  /* API key modal */
-  #key-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
+  /* Free tier banner */
+  #free-banner {
+    background: linear-gradient(135deg, #1a2e4a 0%, #243b55 100%);
+    border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    box-shadow: 0 2px 12px rgba(26,46,74,0.15);
   }
+  #free-banner.hidden { display: none; }
+  .banner-text { color: rgba(255,255,255,0.85); font-size: 13px; line-height: 1.5; }
+  .banner-text strong { color: #fff; }
+  .banner-pip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; background: rgba(255,255,255,0.1); padding: 3px 10px; border-radius: 20px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  .banner-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-size: 13px; padding: 7px 16px; border-radius: var(--radius-sm); cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; transition: background 0.15s; }
+  .banner-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* Key modal */
+  #key-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 1.5rem; }
   #key-modal.open { display: flex; }
-
-  .modal-box {
-    background: var(--surface);
-    border-radius: 14px;
-    padding: 2rem;
-    max-width: 480px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  }
-
-  .modal-box h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.4rem;
-    color: var(--navy);
-    margin-bottom: 0.5rem;
-  }
-
-  .modal-box p {
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-    line-height: 1.6;
-  }
-
+  .modal-box { background: var(--surface); border-radius: 14px; padding: 2rem; max-width: 480px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal-box h2 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--navy); margin-bottom: 0.5rem; }
+  .modal-box p { font-size: 14px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
   .modal-box a { color: var(--accent); }
-
-  .key-input-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .key-input-row input {
-    flex: 1;
-    padding: 10px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  .key-input-row { display: flex; gap: 8px; }
+  .key-input-row input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); outline: none; transition: border-color 0.15s; }
   .key-input-row input:focus { border-color: var(--accent); }
+  .privacy-note { font-size: 12px; color: var(--faint); margin-top: 10px; line-height: 1.5; }
+  .modal-divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+  .modal-skip { font-size: 13px; color: var(--faint); text-align: center; }
+  .modal-skip button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; font-family: 'DM Sans', sans-serif; }
 
-  .privacy-note {
-    font-size: 12px;
-    color: var(--faint);
-    margin-top: 10px;
-    line-height: 1.5;
-  }
-
-  /* Buttons */
-  .btn {
-    padding: 9px 20px;
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: opacity 0.15s, transform 0.1s;
-  }
+  .btn { padding: 9px 20px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s, transform 0.1s; }
   .btn:active { transform: scale(0.98); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .btn-primary { background: var(--navy); color: #fff; }
@@ -208,317 +91,107 @@
   .btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
   .btn-ghost:hover { background: var(--surface2); }
 
-  /* Input card */
-  .input-card {
-    background: var(--surface);
-    border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-  }
-
-  .input-card textarea {
-    width: 100%;
-    min-height: 130px;
-    padding: 1.25rem 1.5rem;
-    border: none;
-    outline: none;
-    resize: vertical;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    line-height: 1.65;
-    color: var(--text);
-    background: transparent;
-  }
-
+  .input-card { background: var(--surface); border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; }
+  .input-card textarea { width: 100%; min-height: 130px; padding: 1.25rem 1.5rem; border: none; outline: none; resize: vertical; font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.65; color: var(--text); background: transparent; }
   .input-card textarea::placeholder { color: var(--faint); }
-
-  .input-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1.25rem;
-    border-top: 1px solid var(--border);
-    background: var(--surface2);
-  }
-
+  .input-footer { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface2); }
   .char-count { font-size: 12px; color: var(--faint); font-family: 'DM Mono', monospace; }
 
-  /* Examples */
   .examples-label { font-size: 12px; color: var(--faint); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
-
   .example-pills { display: flex; flex-direction: column; gap: 6px; margin-bottom: 2rem; }
-
-  .example-pill {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    font-size: 13px;
-    color: var(--muted);
-    cursor: pointer;
-    text-align: left;
-    font-family: 'DM Sans', sans-serif;
-    line-height: 1.45;
-    transition: border-color 0.15s, color 0.15s;
-  }
+  .example-pill { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--muted); cursor: pointer; text-align: left; font-family: 'DM Sans', sans-serif; line-height: 1.45; transition: border-color 0.15s, color 0.15s; }
   .example-pill:hover { border-color: var(--accent); color: var(--text); }
 
-  /* Loader */
-  #loader {
-    display: none;
-    text-align: center;
-    padding: 3rem 0;
-  }
+  #loader { display: none; text-align: center; padding: 3rem 0; }
   #loader.show { display: block; }
-
-  .spinner {
-    width: 38px; height: 38px;
-    border: 3px solid var(--border);
-    border-top-color: var(--navy);
-    border-radius: 50%;
-    margin: 0 auto 1rem;
-    animation: spin 0.75s linear infinite;
-  }
+  .spinner { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--navy); border-radius: 50%; margin: 0 auto 1rem; animation: spin 0.75s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .loader-text { font-size: 14px; color: var(--muted); }
   .loader-sub { font-size: 12px; color: var(--faint); margin-top: 4px; }
 
-  /* Results */
   #results { display: none; }
   #results.show { display: block; }
 
-  .result-card {
-    background: var(--surface);
-    border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .verdict-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
+  .result-card { background: var(--surface); border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1rem; }
+  .verdict-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
   .verdict-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); margin-bottom: 6px; }
-
-  .verdict-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 18px;
-    border-radius: 30px;
-    font-size: 15px;
-    font-weight: 500;
-    border: 1.5px solid;
-  }
-
-  .confidence-tag {
-    display: inline-block;
-    font-size: 12px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    background: var(--surface2);
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
+  .verdict-badge { display: inline-flex; align-items: center; gap: 7px; padding: 7px 18px; border-radius: 30px; font-size: 15px; font-weight: 500; border: 1.5px solid; }
+  .confidence-tag { display: inline-block; font-size: 12px; padding: 4px 12px; border-radius: 20px; background: var(--surface2); color: var(--muted); margin-top: 6px; }
   .mfs-block { text-align: right; }
-
   .mfs-number { font-size: 32px; font-weight: 500; font-family: 'DM Serif Display', serif; }
-
-  .mfs-track {
-    width: 150px;
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    margin: 6px 0 4px auto;
-    overflow: hidden;
-  }
-
+  .mfs-track { width: 150px; height: 6px; background: var(--border); border-radius: 3px; margin: 6px 0 4px auto; overflow: hidden; }
   .mfs-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-
   .mfs-components { font-size: 11px; color: var(--faint); font-family: 'DM Mono', monospace; }
-
   .summary-text { font-size: 14px; color: var(--muted); line-height: 1.65; padding-top: 1rem; border-top: 1px solid var(--border); }
 
-  /* Tabs */
   .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
-
-  .tab-btn {
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: color 0.15s;
-    margin-bottom: -1px;
-  }
+  .tab-btn { padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: color 0.15s; margin-bottom: -1px; }
   .tab-btn:hover { color: var(--text); }
   .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
-
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
-  /* Claim rows */
-  .claim-row {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    margin-bottom: 8px;
-  }
-
+  .claim-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 8px; }
   .claim-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
-
-  .tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 9px;
-    border-radius: 20px;
-  }
-
+  .tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 20px; }
   .tag-id { background: #e0e7ff; color: #3730a3; font-family: 'DM Mono', monospace; }
   .tag-type { background: var(--surface2); color: var(--muted); }
-
   .claim-text { font-size: 14px; color: var(--text); line-height: 1.55; margin-bottom: 6px; }
   .claim-explain { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .mini-verdict { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; border: 1px solid; margin-left: auto; white-space: nowrap; }
 
-  .mini-verdict {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 3px 10px;
-    border-radius: 20px;
-    border: 1px solid;
-    margin-left: auto;
-    white-space: nowrap;
-  }
-
-  /* Confidence block */
   .conf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .conf-col-label { font-size: 12px; font-weight: 500; margin-bottom: 6px; }
   .conf-item { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 4px; }
 
-  /* Counterfactual */
-  .counterfactual {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    margin-top: 8px;
-  }
+  .counterfactual { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 8px; }
   .counterfactual-label { font-size: 12px; font-weight: 500; color: #1e40af; margin-bottom: 5px; }
   .counterfactual p { font-size: 13px; color: #1e40af; line-height: 1.55; }
 
-  /* Flag rows */
-  .flag-row {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    margin-bottom: 8px;
-  }
+  .flag-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 8px; }
   .flag-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .flag-code { font-family: 'DM Mono', monospace; font-size: 12px; background: var(--surface2); color: var(--muted); padding: 2px 8px; border-radius: var(--radius-sm); }
   .flag-name { font-size: 13px; font-weight: 500; }
   .severity-tag { font-size: 11px; font-weight: 500; padding: 2px 10px; border-radius: 20px; margin-left: auto; }
   .flag-explain { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
-  /* Source rows */
   .source-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .source-row:last-child { border-bottom: none; }
   .tier-badge { width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: var(--navy); color: #fff; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; }
   .source-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
   .source-note { font-size: 12px; color: var(--muted); }
 
-  /* Education tab */
-  .edu-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 10px;
-  }
+  .edu-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 10px; }
   .edu-card-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 10px; }
   .defense-box { background: var(--green-bg); border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 10px; }
   .defense-label { font-size: 12px; font-weight: 500; color: var(--green); margin-bottom: 3px; }
   .defense-text { font-size: 13px; color: #166534; line-height: 1.5; }
-
   .lateral-step { display: flex; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
   .lateral-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   .lateral-step-label { font-size: 12px; font-weight: 500; color: var(--navy); min-width: 68px; flex-shrink: 0; }
   .lateral-step-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
   .q-row { display: flex; gap: 8px; margin-bottom: 6px; }
   .q-num { font-size: 13px; font-weight: 500; color: var(--navy); }
   .q-text { font-size: 13px; color: var(--muted); }
 
-  /* Share tab */
-  .share-summary {
-    font-size: 14px;
-    color: var(--text);
-    line-height: 1.65;
-    padding: 1rem 1.25rem;
-    background: var(--surface2);
-    border-left: 3px solid var(--navy);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    margin-bottom: 1rem;
-  }
-
-  .disclaimer {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    font-size: 12px;
-    color: #1e40af;
-    line-height: 1.55;
-  }
-
+  .share-summary { font-size: 14px; color: var(--text); line-height: 1.65; padding: 1rem 1.25rem; background: var(--surface2); border-left: 3px solid var(--navy); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 1rem; }
+  .disclaimer { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 1rem 1.25rem; font-size: 12px; color: #1e40af; line-height: 1.55; }
   .reset-btn { display: block; width: 100%; margin-top: 1rem; }
 
-  /* No flags */
   .no-flags { text-align: center; padding: 2rem; color: var(--faint); font-size: 14px; }
   .no-flags-icon { font-size: 28px; margin-bottom: 8px; }
 
-  /* Error */
-  .error-box {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    color: #991b1b;
-    font-size: 14px;
-    margin-bottom: 1rem;
-    display: none;
-  }
+  .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: 1rem 1.25rem; color: #991b1b; font-size: 14px; margin-bottom: 1rem; display: none; }
   .error-box.show { display: block; }
 
-  /* section card wrapper */
-  .section-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 10px;
-  }
+  .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 10px; }
   .section-title { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+
+  /* Used-up state */
+  #limit-wall { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; text-align: center; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  #limit-wall.show { display: block; }
+  #limit-wall h3 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--navy); margin-bottom: 0.5rem; }
+  #limit-wall p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 1.25rem; }
 
   @media (max-width: 600px) {
     .conf-grid { grid-template-columns: 1fr; }
@@ -539,28 +212,51 @@
     </div>
     <div id="key-status" onclick="openKeyModal()">
       <span class="dot"></span>
-      <span id="key-label">No API key</span>
+      <span id="key-label">1 free check</span>
     </div>
   </div>
 </header>
 
-<!-- API key modal -->
+<!-- Key modal -->
 <div id="key-modal">
   <div class="modal-box">
-    <h2>Enter your Anthropic API key</h2>
+    <h2>Use your own API key</h2>
     <p>
-      Your key is used only in your browser to call the Anthropic API directly — it's never sent to any server and disappears when you close the tab.<br><br>
-      Get a key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Usage will count against your account.
+      Enter your Anthropic API key for unlimited checks. Your key is stored only in your browser's session memory — it's never sent to any server and disappears when you close this tab.<br><br>
+      Get a key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.
     </p>
     <div class="key-input-row">
       <input type="password" id="key-input" placeholder="sk-ant-…" autocomplete="off">
       <button class="btn btn-primary" onclick="saveKey()">Save</button>
     </div>
-    <p class="privacy-note">🔒 Stored only in <code>sessionStorage</code> — cleared automatically when you close this tab.</p>
+    <p class="privacy-note">🔒 Stored only in <code>sessionStorage</code> — cleared when you close this tab.</p>
+    <hr class="modal-divider">
+    <p class="modal-skip">Just browsing? <button onclick="closeKeyModal()">Continue with free check</button></p>
   </div>
 </div>
 
 <main>
+
+  <!-- Free tier banner -->
+  <div id="free-banner">
+    <div class="banner-text">
+      <strong>Try it free — no account needed.</strong><br>
+      You get 1 free fact-check. After that, add your own Anthropic API key for unlimited checks.
+      <div><span class="banner-pip">✦ 1 free check remaining</span></div>
+    </div>
+    <button class="banner-btn" onclick="openKeyModal()">Add my key →</button>
+  </div>
+
+  <!-- Limit wall (shown after free check is used) -->
+  <div id="limit-wall">
+    <h3>You've used your free check</h3>
+    <p>Add your own Anthropic API key to keep going — it's pay-as-you-go with no subscription, and each check costs less than a cent.</p>
+    <button class="btn btn-primary" onclick="openKeyModal()">Add my API key</button>
+    <p style="font-size:12px;color:var(--faint);margin-top:10px">Get a key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a></p>
+  </div>
+
+  <div id="error-box" class="error-box"></div>
+
   <div class="input-card">
     <textarea id="claim-input" placeholder="Paste a claim, headline, social media post, or article excerpt here…" oninput="updateCharCount()"></textarea>
     <div class="input-footer">
@@ -576,7 +272,6 @@
     <button class="example-pill" onclick="loadExample(2)">"Studies show 30 minutes of moderate exercise per day significantly reduces cardiovascular disease risk."</button>
   </div>
 
-  <div id="error-box" class="error-box"></div>
   <div id="loader">
     <div class="spinner"></div>
     <p class="loader-text">Running 11-step fact-check pipeline…</p>
@@ -584,7 +279,6 @@
   </div>
 
   <div id="results">
-    <!-- Verdict card -->
     <div class="result-card">
       <div class="verdict-row">
         <div>
@@ -602,22 +296,27 @@
       <div id="summary-text" class="summary-text"></div>
     </div>
 
-    <!-- Tabs -->
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('claims', this)">Claims</button>
-      <button class="tab-btn" onclick="switchTab('flags', this)">Red Flags</button>
-      <button class="tab-btn" onclick="switchTab('learn', this)">Learn</button>
-      <button class="tab-btn" onclick="switchTab('share', this)">Share</button>
+      <button class="tab-btn active" onclick="switchTab('claims',this)">Claims</button>
+      <button class="tab-btn" onclick="switchTab('flags',this)">Red Flags</button>
+      <button class="tab-btn" onclick="switchTab('learn',this)">Learn</button>
+      <button class="tab-btn" onclick="switchTab('share',this)">Share</button>
     </div>
-
     <div id="tab-claims" class="tab-panel active"></div>
     <div id="tab-flags" class="tab-panel"></div>
     <div id="tab-learn" class="tab-panel"></div>
     <div id="tab-share" class="tab-panel"></div>
   </div>
+
 </main>
 
 <script>
+// ─── CONFIG ───────────────────────────────────────────────
+// Replace with your Cloudflare Worker URL after deploying
+const WORKER_URL = "little-bush-891a.raghuram-kanungo.workers.dev
+";
+// ──────────────────────────────────────────────────────────
+
 const EXAMPLES = [
   "Scientists discovered coffee reverses aging — and the pharmaceutical industry is suppressing this information.",
   "NASA confirmed the Earth is flat and the moon landing was filmed in a studio by Stanley Kubrick.",
@@ -625,88 +324,96 @@ const EXAMPLES = [
 ];
 
 const VERDICT_CFG = {
-  "CONFIRMED":   { color: "#16a34a", bg: "#f0fdf4", icon: "✓", label: "Confirmed" },
-  "MOSTLY TRUE": { color: "#65a30d", bg: "#f7fee7", icon: "✓", label: "Mostly True" },
-  "MIXED":       { color: "#ca8a04", bg: "#fefce8", icon: "~", label: "Mixed" },
-  "UNVERIFIED":  { color: "#ea580c", bg: "#fff7ed", icon: "?", label: "Unverified" },
-  "MISLEADING":  { color: "#dc2626", bg: "#fef2f2", icon: "!", label: "Misleading" },
-  "FALSE":       { color: "#991b1b", bg: "#fef2f2", icon: "✕", label: "False" },
-  "N/A":         { color: "#6b7280", bg: "#f9fafb", icon: "—", label: "N/A" },
+  "CONFIRMED":   { color:"#16a34a", bg:"#f0fdf4", icon:"✓", label:"Confirmed" },
+  "MOSTLY TRUE": { color:"#65a30d", bg:"#f7fee7", icon:"✓", label:"Mostly True" },
+  "MIXED":       { color:"#ca8a04", bg:"#fefce8", icon:"~", label:"Mixed" },
+  "UNVERIFIED":  { color:"#ea580c", bg:"#fff7ed", icon:"?", label:"Unverified" },
+  "MISLEADING":  { color:"#dc2626", bg:"#fef2f2", icon:"!", label:"Misleading" },
+  "FALSE":       { color:"#991b1b", bg:"#fef2f2", icon:"✕", label:"False" },
+  "N/A":         { color:"#6b7280", bg:"#f9fafb", icon:"—", label:"N/A" },
 };
-
-const TYPE_LABELS = { F: "Factual", O: "Opinion", P: "Prediction", U: "Unfalsifiable", I: "Implied", S: "Statistical" };
-
+const TYPE_LABELS = { F:"Factual", O:"Opinion", P:"Prediction", U:"Unfalsifiable", I:"Implied", S:"Statistical" };
 const SEVERITY_STYLES = {
-  Serious:  { color: "#991b1b", bg: "#fef2f2" },
-  Moderate: { color: "#ca8a04", bg: "#fefce8" },
-  Minor:    { color: "#374151", bg: "#f3f4f6" },
+  Serious:  { color:"#991b1b", bg:"#fef2f2" },
+  Moderate: { color:"#ca8a04", bg:"#fefce8" },
+  Minor:    { color:"#374151", bg:"#f3f4f6" },
 };
-
 const MFS_ZONES = [
-  { max: 10, color: "#16a34a" }, { max: 25, color: "#65a30d" },
-  { max: 45, color: "#ca8a04" }, { max: 65, color: "#ea580c" },
-  { max: 85, color: "#dc2626" }, { max: 100, color: "#991b1b" },
+  {max:10,color:"#16a34a"},{max:25,color:"#65a30d"},{max:45,color:"#ca8a04"},
+  {max:65,color:"#ea580c"},{max:85,color:"#dc2626"},{max:100,color:"#991b1b"},
 ];
+function getMfsColor(s) { for (const z of MFS_ZONES) if (s<=z.max) return z.color; return "#991b1b"; }
 
-function getMfsColor(s) {
-  for (const z of MFS_ZONES) if (s <= z.max) return z.color;
-  return "#991b1b";
-}
+const SYSTEM_PROMPT = `You are an expert fact-checker. Return ONLY a valid JSON object (no markdown, no preamble) with this schema:
+{"summary":"...","overallVerdict":"CONFIRMED|MOSTLY TRUE|MIXED|UNVERIFIED|MISLEADING|FALSE","confidence":"High|Medium|Low","mfsScore":0-100,"cfsScore":0-100,"mtsScore":0-100,"scdScore":0-100,"mfsLabel":"...","claims":[{"id":"C1","text":"...","type":"F|O|P|U|I|S","verdict":"...","explanation":"..."}],"confidenceFactors":{"increasing":[],"decreasing":[]},"redFlags":[{"code":"A1","name":"...","severity":"Minor|Moderate|Serious","explanation":"..."}],"manipulationTechnique":{"name":"...","howItWorks":"...","defense":"..."},"counterfactual":"...or null","shareSafeSummary":"...","sources":[{"tier":1,"name":"...","note":"..."}]}`;
 
-const SYSTEM_PROMPT = `You are an expert fact-checker following the Fact-Check Skill v2.1 methodology. When given a claim, article, or text to analyze, you perform a rigorous fact-check and return ONLY a valid JSON object (no markdown, no preamble, no backticks).
-
-Your JSON must follow this exact schema:
-{
-  "summary": "2-3 sentence summary of what was checked",
-  "overallVerdict": "CONFIRMED" | "MOSTLY TRUE" | "MIXED" | "UNVERIFIED" | "MISLEADING" | "FALSE",
-  "confidence": "High" | "Medium" | "Low",
-  "mfsScore": <number 0-100>,
-  "cfsScore": <number 0-100>,
-  "mtsScore": <number 0-100>,
-  "scdScore": <number 0-100>,
-  "mfsLabel": "Reliable" | "Mostly Reliable" | "Caution Advised" | "Problematic" | "Highly Misleading" | "Disinformation",
-  "claims": [{"id":"C1","text":"...","type":"F|O|P|U|I|S","verdict":"...","explanation":"..."}],
-  "confidenceFactors": {"increasing": ["..."], "decreasing": ["..."]},
-  "redFlags": [{"code":"A1","name":"...","severity":"Minor|Moderate|Serious","explanation":"..."}],
-  "manipulationTechnique": {"name":"...","howItWorks":"...","defense":"..."},
-  "counterfactual": "If this were true... (null if not applicable)",
-  "shareSafeSummary": "Neutral 2-3 sentence summary",
-  "sources": [{"tier":1,"name":"...","note":"..."}]
-}
-
-Be rigorous and educational. Use real knowledge to evaluate claims. Return ONLY the JSON object.`;
-
-// Key management
-function openKeyModal() {
-  document.getElementById('key-modal').classList.add('open');
-  const stored = sessionStorage.getItem('anthropic_key');
-  if (stored) document.getElementById('key-input').value = stored;
-}
-
-function saveKey() {
-  const val = document.getElementById('key-input').value.trim();
-  if (!val.startsWith('sk-')) { alert('Key should start with sk-'); return; }
-  sessionStorage.setItem('anthropic_key', val);
-  document.getElementById('key-modal').classList.remove('open');
-  updateKeyStatus();
-}
+// State
+let freeCheckUsed = sessionStorage.getItem('free_used') === '1';
 
 function updateKeyStatus() {
   const el = document.getElementById('key-status');
   const lbl = document.getElementById('key-label');
   const key = sessionStorage.getItem('anthropic_key');
-  if (key) { el.classList.add('has-key'); lbl.textContent = 'Key active'; }
-  else { el.classList.remove('has-key'); lbl.textContent = 'No API key'; }
+  if (key) {
+    el.className = 'own-key'; lbl.textContent = 'Own key active';
+  } else if (freeCheckUsed) {
+    el.className = ''; lbl.textContent = 'Add API key';
+    el.querySelector('.dot').style.background = '#ef4444';
+  } else {
+    el.className = 'free-mode'; lbl.textContent = '1 free check';
+  }
 }
 
-// Close modal clicking outside
+function updateUI() {
+  const key = sessionStorage.getItem('anthropic_key');
+  const banner = document.getElementById('free-banner');
+  const wall = document.getElementById('limit-wall');
+  const inputCard = document.querySelector('.input-card');
+  const examples = document.querySelector('.example-pills');
+  const exLabel = document.querySelector('.examples-label');
+
+  if (key) {
+    // Own key mode — hide everything extra
+    banner.classList.add('hidden');
+    wall.classList.remove('show');
+    inputCard.style.display = '';
+    examples.style.display = '';
+    exLabel.style.display = '';
+  } else if (freeCheckUsed) {
+    // Used up free check, no key
+    banner.classList.add('hidden');
+    wall.classList.add('show');
+    inputCard.style.display = 'none';
+    examples.style.display = 'none';
+    exLabel.style.display = 'none';
+  } else {
+    // Free check available
+    banner.classList.remove('hidden');
+    wall.classList.remove('show');
+    inputCard.style.display = '';
+    examples.style.display = '';
+    exLabel.style.display = '';
+  }
+  updateKeyStatus();
+}
+
+function openKeyModal() { document.getElementById('key-modal').classList.add('open'); }
+function closeKeyModal() { document.getElementById('key-modal').classList.remove('open'); }
+
 document.getElementById('key-modal').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
+  if (e.target === this) closeKeyModal();
 });
 
+function saveKey() {
+  const val = document.getElementById('key-input').value.trim();
+  if (!val.startsWith('sk-')) { alert('Key should start with sk-'); return; }
+  sessionStorage.setItem('anthropic_key', val);
+  closeKeyModal();
+  updateUI();
+}
+
 function updateCharCount() {
-  const len = document.getElementById('claim-input').value.length;
-  document.getElementById('char-count').textContent = len + ' characters';
+  document.getElementById('char-count').textContent = document.getElementById('claim-input').value.length + ' characters';
 }
 
 function loadExample(i) {
@@ -721,53 +428,66 @@ function switchTab(name, btn) {
   document.getElementById('tab-' + name).classList.add('active');
 }
 
-function showError(msg) {
-  const el = document.getElementById('error-box');
-  el.textContent = msg;
-  el.classList.add('show');
-}
-
+function showError(msg) { const el = document.getElementById('error-box'); el.textContent = msg; el.classList.add('show'); }
 function hideError() { document.getElementById('error-box').classList.remove('show'); }
 
 async function analyze() {
-  const key = sessionStorage.getItem('anthropic_key');
-  if (!key) { openKeyModal(); return; }
-
   const text = document.getElementById('claim-input').value.trim();
   if (!text) return;
+
+  const ownKey = sessionStorage.getItem('anthropic_key');
 
   hideError();
   document.getElementById('loader').classList.add('show');
   document.getElementById('results').classList.remove('show');
   document.getElementById('analyze-btn').disabled = true;
 
+  const payload = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1000,
+    system: SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: 'Fact-check this content:\n\n' + text }],
+  };
+
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(WORKER_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: 'Fact-check this content:\n\n' + text }],
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload, apiKey: ownKey || null }),
     });
+
+    if (res.status === 429) {
+      // Free limit hit
+      freeCheckUsed = true;
+      sessionStorage.setItem('free_used', '1');
+      updateUI();
+      showError('You\'ve used your free check. Add your own API key to continue.');
+      return;
+    }
+
+    if (res.status === 401) {
+      showError('Invalid API key. Click the key indicator in the header to update it.');
+      return;
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      if (res.status === 401) throw new Error('Invalid API key. Click the key indicator in the header to update it.');
-      throw new Error(err.error?.message || 'API request failed (' + res.status + ')');
+      throw new Error(err.error?.message || 'Request failed (' + res.status + ')');
     }
 
     const data = await res.json();
     const raw = (data.content || []).map(b => b.text || '').join('').trim();
     const clean = raw.replace(/```json|```/g, '').trim();
     const result = JSON.parse(clean);
+
+    // Mark free check used (if they didn't use own key)
+    if (!ownKey) {
+      freeCheckUsed = true;
+      sessionStorage.setItem('free_used', '1');
+    }
+
     renderResult(result);
+    updateUI();
   } catch (e) {
     showError('⚠ ' + (e.message || 'Something went wrong. Please try again.'));
   } finally {
@@ -780,140 +500,64 @@ function renderResult(r) {
   const vc = VERDICT_CFG[r.overallVerdict] || VERDICT_CFG['UNVERIFIED'];
   const mfsColor = getMfsColor(r.mfsScore);
 
-  // Verdict
-  document.getElementById('verdict-badge').innerHTML = `<span>${vc.icon}</span> ${vc.label}`;
-  document.getElementById('verdict-badge').style.cssText = `color:${vc.color};background:${vc.bg};border-color:${vc.color}44;display:inline-flex;align-items:center;gap:7px;padding:7px 18px;border-radius:30px;font-size:15px;font-weight:500;border:1.5px solid`;
+  const badge = document.getElementById('verdict-badge');
+  badge.innerHTML = `${vc.icon} ${vc.label}`;
+  badge.style.cssText = `color:${vc.color};background:${vc.bg};border-color:${vc.color}44`;
+
   document.getElementById('confidence-tag').textContent = r.confidence + ' confidence';
   document.getElementById('summary-text').textContent = r.summary;
-
-  // MFS
   document.getElementById('mfs-number').textContent = Math.round(r.mfsScore);
   document.getElementById('mfs-number').style.color = mfsColor;
-  document.getElementById('mfs-fill').style.width = Math.min(100, r.mfsScore) + '%';
-  document.getElementById('mfs-fill').style.background = mfsColor;
+  document.getElementById('mfs-fill').style.cssText = `width:${Math.min(100,r.mfsScore)}%;background:${mfsColor}`;
   document.getElementById('mfs-components').textContent = `CFS ${Math.round(r.cfsScore)} · MTS ${Math.round(r.mtsScore)} · SCD ${Math.round(r.scdScore)}`;
 
-  // Claims tab
-  let claimsHtml = '';
-  (r.claims || []).forEach(c => {
-    const cv = VERDICT_CFG[c.verdict] || VERDICT_CFG['N/A'];
-    const badgeHtml = c.verdict && c.verdict !== 'N/A'
-      ? `<span class="mini-verdict" style="color:${cv.color};background:${cv.bg};border-color:${cv.color}33">${cv.icon} ${cv.label}</span>` : '';
-    claimsHtml += `<div class="claim-row">
-      <div class="claim-meta">
-        <span class="tag tag-id">${c.id}</span>
-        <span class="tag tag-type">${TYPE_LABELS[c.type] || c.type}</span>
-        ${badgeHtml}
-      </div>
-      <div class="claim-text">${esc(c.text)}</div>
-      <div class="claim-explain">${esc(c.explanation)}</div>
-    </div>`;
-  });
+  // Claims
+  let claimsHtml = (r.claims||[]).map(c => {
+    const cv = VERDICT_CFG[c.verdict]||VERDICT_CFG['N/A'];
+    const badge = c.verdict&&c.verdict!=='N/A' ? `<span class="mini-verdict" style="color:${cv.color};background:${cv.bg};border-color:${cv.color}33">${cv.icon} ${cv.label}</span>` : '';
+    return `<div class="claim-row"><div class="claim-meta"><span class="tag tag-id">${esc(c.id)}</span><span class="tag tag-type">${TYPE_LABELS[c.type]||c.type}</span>${badge}</div><div class="claim-text">${esc(c.text)}</div><div class="claim-explain">${esc(c.explanation)}</div></div>`;
+  }).join('');
 
-  // Confidence
-  const cf = r.confidenceFactors || {};
-  claimsHtml += `<div class="section-card" style="margin-top:4px">
-    <div class="section-title">Confidence calibration</div>
-    <div class="conf-grid">
-      <div>
-        <div class="conf-col-label" style="color:var(--green)">↑ Increasing</div>
-        ${(cf.increasing || []).map(f => `<div class="conf-item">· ${esc(f)}</div>`).join('')}
-      </div>
-      <div>
-        <div class="conf-col-label" style="color:var(--red)">↓ Decreasing</div>
-        ${(cf.decreasing || []).map(f => `<div class="conf-item">· ${esc(f)}</div>`).join('')}
-      </div>
-    </div>
-  </div>`;
-
-  if (r.counterfactual) {
-    claimsHtml += `<div class="counterfactual"><div class="counterfactual-label">🧪 What would make this true?</div><p>${esc(r.counterfactual)}</p></div>`;
-  }
-
+  const cf = r.confidenceFactors||{};
+  claimsHtml += `<div class="section-card" style="margin-top:4px"><div class="section-title">Confidence calibration</div><div class="conf-grid"><div><div class="conf-col-label" style="color:var(--green)">↑ Increasing</div>${(cf.increasing||[]).map(f=>`<div class="conf-item">· ${esc(f)}</div>`).join('')}</div><div><div class="conf-col-label" style="color:var(--red)">↓ Decreasing</div>${(cf.decreasing||[]).map(f=>`<div class="conf-item">· ${esc(f)}</div>`).join('')}</div></div></div>`;
+  if (r.counterfactual) claimsHtml += `<div class="counterfactual"><div class="counterfactual-label">🧪 What would make this true?</div><p>${esc(r.counterfactual)}</p></div>`;
   document.getElementById('tab-claims').innerHTML = claimsHtml;
 
-  // Flags tab
-  let flagsHtml = '';
-  if (!r.redFlags || r.redFlags.length === 0) {
-    flagsHtml = `<div class="no-flags"><div class="no-flags-icon">✅</div>No significant red flags detected.</div>`;
-  } else {
-    (r.redFlags || []).forEach(f => {
-      const ss = SEVERITY_STYLES[f.severity] || SEVERITY_STYLES.Minor;
-      flagsHtml += `<div class="flag-row">
-        <div class="flag-meta">
-          <span class="flag-code">${esc(f.code)}</span>
-          <span class="flag-name">${esc(f.name)}</span>
-          <span class="severity-tag" style="color:${ss.color};background:${ss.bg}">${f.severity}</span>
-        </div>
-        <div class="flag-explain">${esc(f.explanation)}</div>
-      </div>`;
-    });
-  }
-  if (r.sources && r.sources.length) {
-    flagsHtml += `<div class="section-card" style="margin-top:4px"><div class="section-title">Sources evaluated</div>`;
-    r.sources.forEach(s => {
-      flagsHtml += `<div class="source-row">
-        <div class="tier-badge">T${s.tier}</div>
-        <div><div class="source-name">${esc(s.name)}</div><div class="source-note">${esc(s.note)}</div></div>
-      </div>`;
-    });
-    flagsHtml += `</div>`;
+  // Flags
+  let flagsHtml = !r.redFlags||r.redFlags.length===0
+    ? `<div class="no-flags"><div class="no-flags-icon">✅</div>No significant red flags detected.</div>`
+    : (r.redFlags||[]).map(f=>{const ss=SEVERITY_STYLES[f.severity]||SEVERITY_STYLES.Minor;return`<div class="flag-row"><div class="flag-meta"><span class="flag-code">${esc(f.code)}</span><span class="flag-name">${esc(f.name)}</span><span class="severity-tag" style="color:${ss.color};background:${ss.bg}">${f.severity}</span></div><div class="flag-explain">${esc(f.explanation)}</div></div>`;}).join('');
+  if (r.sources&&r.sources.length) {
+    flagsHtml+=`<div class="section-card" style="margin-top:4px"><div class="section-title">Sources evaluated</div>${r.sources.map(s=>`<div class="source-row"><div class="tier-badge">T${s.tier}</div><div><div class="source-name">${esc(s.name)}</div><div class="source-note">${esc(s.note)}</div></div></div>`).join('')}</div>`;
   }
   document.getElementById('tab-flags').innerHTML = flagsHtml;
 
-  // Learn tab
+  // Learn
   let learnHtml = '';
   if (r.manipulationTechnique) {
-    const mt = r.manipulationTechnique;
-    learnHtml += `<div class="edu-card">
-      <div class="edu-card-title">🧠 Manipulation technique detected</div>
-      <div style="font-size:15px;font-weight:500;color:var(--navy);margin-bottom:8px">${esc(mt.name)}</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6">${esc(mt.howItWorks)}</div>
-      <div class="defense-box"><div class="defense-label">Your defense</div><div class="defense-text">${esc(mt.defense)}</div></div>
-    </div>`;
+    const mt=r.manipulationTechnique;
+    learnHtml+=`<div class="edu-card"><div class="edu-card-title">🧠 Manipulation technique detected</div><div style="font-size:15px;font-weight:500;color:var(--navy);margin-bottom:8px">${esc(mt.name)}</div><div style="font-size:13px;color:var(--muted);line-height:1.6">${esc(mt.howItWorks)}</div><div class="defense-box"><div class="defense-label">Your defense</div><div class="defense-text">${esc(mt.defense)}</div></div></div>`;
   }
-  learnHtml += `<div class="edu-card">
-    <div class="edu-card-title">↔ The lateral reading method</div>
-    <div class="lateral-step"><div class="lateral-step-label">1. Stop</div><div class="lateral-step-desc">Don't read deeply into the source. Note the claim and where it comes from.</div></div>
-    <div class="lateral-step"><div class="lateral-step-label">2. Leave the page</div><div class="lateral-step-desc">Open a new tab. Search for information <em>about</em> the source, not just the claim.</div></div>
-    <div class="lateral-step"><div class="lateral-step-label">3. Check others</div><div class="lateral-step-desc">Look up the outlet on Media Bias/Fact Check, Wikipedia, and EUvsDisinfo.</div></div>
-    <div class="lateral-step"><div class="lateral-step-label">4. Find better coverage</div><div class="lateral-step-desc">Search the claim in different words. If reputable sources don't cover it, that's a significant signal.</div></div>
-  </div>
-  <div class="section-card">
-    <div class="section-title">5 questions for any source</div>
-    ${["WHO is behind this?","WHAT is their track record?","DO they cite evidence?","WHO ELSE is reporting this?","WHAT is the purpose?"].map((q,i)=>`<div class="q-row"><div class="q-num">${i+1}.</div><div class="q-text">${q}</div></div>`).join('')}
-  </div>`;
+  learnHtml+=`<div class="edu-card"><div class="edu-card-title">↔ The lateral reading method</div><div class="lateral-step"><div class="lateral-step-label">1. Stop</div><div class="lateral-step-desc">Don't read deeply into the source. Note the claim and where it comes from.</div></div><div class="lateral-step"><div class="lateral-step-label">2. Leave the page</div><div class="lateral-step-desc">Open a new tab. Search for information <em>about</em> the source, not just the claim.</div></div><div class="lateral-step"><div class="lateral-step-label">3. Check others</div><div class="lateral-step-desc">Look up the outlet on Media Bias/Fact Check, Wikipedia, and EUvsDisinfo.</div></div><div class="lateral-step"><div class="lateral-step-label">4. Find better coverage</div><div class="lateral-step-desc">Search the claim in different words. If reputable sources don't cover it, that's a significant signal.</div></div></div><div class="section-card"><div class="section-title">5 questions for any source</div>${["WHO is behind this?","WHAT is their track record?","DO they cite evidence?","WHO ELSE is reporting this?","WHAT is the purpose?"].map((q,i)=>`<div class="q-row"><div class="q-num">${i+1}.</div><div class="q-text">${q}</div></div>`).join('')}</div>`;
   document.getElementById('tab-learn').innerHTML = learnHtml;
 
-  // Share tab
-  let shareHtml = `<div class="section-card">
-    <div class="section-title">Share-safe summary</div>
-    <div class="share-summary">${esc(r.shareSafeSummary)}</div>
-    <button class="btn btn-ghost" onclick="copyToClipboard()">Copy to clipboard</button>
-  </div>
-  <div class="disclaimer">
-    <strong>Disclaimer:</strong> This fact-check was generated by an AI system using the Fact-Check Skill v2.1. Treat it as a starting point, not a final authority. For high-stakes decisions, consult professional fact-checkers and primary sources.
-  </div>
-  <button class="btn btn-ghost reset-btn" onclick="resetApp()">← Check another claim</button>`;
-  document.getElementById('tab-share').innerHTML = shareHtml;
+  // Share
   window._shareSummary = r.shareSafeSummary;
+  document.getElementById('tab-share').innerHTML = `<div class="section-card"><div class="section-title">Share-safe summary</div><div class="share-summary">${esc(r.shareSafeSummary)}</div><button class="btn btn-ghost" onclick="copyToClipboard()">Copy to clipboard</button></div><div class="disclaimer"><strong>Disclaimer:</strong> This fact-check was generated by an AI system using the Fact-Check Skill v2.1. Treat it as a starting point, not a final authority. For high-stakes decisions, consult professional fact-checkers and primary sources.</div><button class="btn btn-ghost reset-btn" onclick="resetApp()">← Check another claim</button>`;
 
   document.getElementById('results').classList.add('show');
   switchTab('claims', document.querySelector('.tab-btn'));
-  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-function copyToClipboard() {
-  if (navigator.clipboard && window._shareSummary) {
-    navigator.clipboard.writeText(window._shareSummary);
-  }
-}
+function copyToClipboard() { if (navigator.clipboard && window._shareSummary) navigator.clipboard.writeText(window._shareSummary); }
 
 function resetApp() {
   document.getElementById('results').classList.remove('show');
   document.getElementById('claim-input').value = '';
   updateCharCount();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateUI();
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
 
 function esc(str) {
@@ -921,11 +565,7 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// On load
-updateKeyStatus();
-if (!sessionStorage.getItem('anthropic_key')) {
-  setTimeout(openKeyModal, 400);
-}
+updateUI();
 </script>
 </body>
 </html>
