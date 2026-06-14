@@ -1,0 +1,739 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="icon" type="image/x-icon" href="favicon.png">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="The Ultimate Coding Voyage - A personal website about coding, games, and projects">
+<meta name="keywords" content="coding, games, pong, snake, projects, devlog, programming">
+<title>The Ultimate Coding Voyage :: Home</title>
+<style type="text/css">
+/* ================================================================
+   THE ULTIMATE CODING VOYAGE
+   Fusing Snoopy.com (2003) + Nintendo.com (2001)
+   Real Y2K / Web 1.0 techniques only
+   ================================================================ */
+
+body {
+    background-color: #1a237e;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%231a237e'/%3E%3Crect width='1' height='1' x='0' y='0' fill='%23283593' opacity='0.6'/%3E%3Crect width='1' height='1' x='2' y='2' fill='%23283593' opacity='0.6'/%3E%3C/svg%3E");
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+}
+
+/* TABLE RESETS */
+table { border-collapse: collapse; }
+td { vertical-align: top; padding: 0; }
+a { color: #000066; }
+a:hover { color: #cc3300; }
+a:visited { color: #551a8b; }
+
+/* TOP MARQUEE BAR */
+.topbar {
+    background-color: #111833;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Ccircle cx='1' cy='1' r='0.8' fill='%23223' /%3E%3C/svg%3E");
+    border-bottom: 2px solid #ff9900;
+    height: 28px;
+    font-size: 11px;
+    color: #aabbcc;
+    font-family: "Courier New", Courier, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.topbar-inner {
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+}
+
+/* HEADER CHROME PANEL — Nintendo brushed periwinkle metal */
+.header-panel {
+    background: #7986cb;
+    background-image: linear-gradient(180deg,
+        #9fa8da 0%,
+        #7986cb 35%,
+        #3f51b5 70%,
+        #283593 100%
+    );
+    border-bottom: 3px solid #ff9900;
+    padding: 0;
+}
+
+/* LOGO — Arial Black outlined box like Nintendo wordmarks */
+.logo-text {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: #ff9900;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0px #000000, -1px -1px 0px #000000;
+    line-height: 1;
+}
+.logo-sub {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 11px;
+    color: #aaff00;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+}
+.logo-box {
+    background-color: #0d1b3e;
+    border: 3px solid #ff9900;
+    padding: 7px 14px;
+    display: inline-block;
+}
+
+/* AD BOXES — dark panel style like Nintendo's promo modules */
+.ad-box {
+    background-color: #0d1b3e;
+    border: 2px solid #5c6bc0;
+    width: 116px;
+    height: 66px;
+    font-size: 9px;
+    text-align: center;
+    padding: 4px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+.ad-box:hover { border-color: #ff9900; }
+.ad-box-title {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 10px;
+    color: #aaff00;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 2px;
+}
+.ad-box-sub { color: #9fa8da; font-size: 9px; display: block; margin-bottom: 3px; }
+.ad-box-cta {
+    background-color: #ff9900;
+    color: #000000;
+    font-size: 9px;
+    font-family: "Arial Black", Arial, sans-serif;
+    font-weight: 900;
+    padding: 1px 6px;
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+/* OUTER WRAPPER — fixed 780px like the era */
+.outer-wrap {
+    width: 780px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-left: 2px solid #3f51b5;
+    border-right: 2px solid #3f51b5;
+}
+
+/* LEFT SIDEBAR — Snoopy.com yellow, Nintendo chrome on the buttons */
+.sidebar {
+    width: 148px;
+    background-color: #ffd600;
+    background-image: linear-gradient(180deg, #ffe033 0%, #ffd600 100%);
+    border-right: 2px solid #e6a800;
+    padding: 8px 6px 16px 6px;
+}
+
+/* NAV BUTTONS — Snoopy raised green buttons */
+.nav-btn {
+    display: block;
+    width: 134px;
+    background-color: #4caf50;
+    background-image: linear-gradient(180deg, #66bb6a 0%, #388e3c 100%);
+    color: #ffffff;
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 8px;
+    margin-bottom: 3px;
+    /* raised bevel — exact Web 1.0 technique */
+    border-top:    2px solid #a5d6a7;
+    border-left:   2px solid #a5d6a7;
+    border-right:  2px solid #1b5e20;
+    border-bottom: 2px solid #1b5e20;
+    text-shadow: 1px 1px 0 #1b5e20;
+}
+.nav-btn:hover, .nav-btn.active {
+    background-color: #ff9900;
+    background-image: linear-gradient(180deg, #ffb300 0%, #e65100 100%);
+    color: #ffffff;
+    border-top:    2px solid #ffe082;
+    border-left:   2px solid #ffe082;
+    border-right:  2px solid #bf360c;
+    border-bottom: 2px solid #bf360c;
+    text-shadow: 1px 1px 0 #bf360c;
+}
+.nav-btn:visited { color: #ffffff; }
+
+.nav-divider {
+    width: 134px;
+    height: 1px;
+    background-color: #e6a800;
+    margin: 5px 0;
+    border: none;
+}
+
+.nav-arrow-link {
+    display: block;
+    color: #333333;
+    font-size: 11px;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 3px 2px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.nav-arrow-link:before { content: ">> "; color: #555; }
+.nav-arrow-link:hover { color: #cc0000; text-decoration: underline; }
+
+/* VISITOR COUNTER */
+.counter-wrap {
+    background-color: #000000;
+    border: 2px inset #333333;
+    padding: 3px 6px;
+    text-align: center;
+    margin-top: 6px;
+    width: 110px;
+}
+.counter-num {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 16px;
+    color: #00ff41;
+    letter-spacing: 3px;
+    text-shadow: 0 0 4px #00ff41;
+}
+.counter-label {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 8px;
+    color: #ffd600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: block;
+    margin-top: 1px;
+}
+
+/* NEW badge — blink era */
+.badge-new {
+    background-color: #cc0000;
+    color: #ffff00;
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 0px 4px;
+    text-transform: uppercase;
+    display: inline-block;
+    animation: blink-it 0.8s step-start infinite;
+}
+@keyframes blink-it { 50% { opacity: 0; } }
+
+.badge-updated {
+    background-color: #003399;
+    color: #ffffff;
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 9px;
+    padding: 0px 4px;
+    display: inline-block;
+}
+
+/* MAIN CONTENT */
+.main-content {
+    padding: 10px 14px;
+    background-color: #ffffff;
+}
+
+/* SECTION TITLE — Snoopy yellow underbar + Nintendo Arial Black */
+.section-title {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+    color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 4px solid #ffd600;
+    padding-bottom: 1px;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+/* NEWS LIST — Snoopy.com bullet style */
+.news-list { margin: 0; padding: 0; list-style: none; }
+.news-list li {
+    padding: 4px 0;
+    border-bottom: 1px dotted #cccccc;
+    font-size: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.news-list li:before { content: "\00B7  "; font-size: 16px; color: #888; }
+.news-list li a { color: #000066; text-decoration: none; }
+.news-list li a:hover { text-decoration: underline; color: #cc3300; }
+.news-more { font-size: 11px; color: #555; margin-top: 4px; }
+.news-more a { color: #000066; }
+
+/* STRIP/DEVLOG AREA */
+.strip-meta {
+    font-size: 11px;
+    color: #555555;
+    margin-bottom: 5px;
+}
+.strip-meta a { color: #000066; text-decoration: none; font-size: 11px; }
+.strip-meta a:hover { text-decoration: underline; }
+.strip-frame {
+    border: 2px inset #cccccc;
+    background-color: #f5f5ff;
+    height: 88px;
+    text-align: center;
+    vertical-align: middle;
+    color: #888888;
+    font-size: 11px;
+    font-style: italic;
+    font-family: "Courier New", monospace;
+    padding: 10px;
+}
+
+/* HIGHLIGHTS — 3-col like Snoopy */
+.hl-table { width: 100%; border-spacing: 6px; border-collapse: separate; }
+.hl-cell {
+    width: 33%;
+    border: 1px solid #cccccc;
+    border-top: 3px solid #ff9900;
+    background-color: #f8f9ff;
+    padding: 0;
+    vertical-align: top;
+}
+.hl-thumb {
+    background: #0d1b3e;
+    background-image: linear-gradient(135deg, #283593 0%, #0d1b3e 100%);
+    width: 100%;
+    height: 46px;
+    text-align: center;
+    vertical-align: middle;
+    padding-top: 14px;
+}
+.hl-thumb-label {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 9px;
+    color: #aaff00;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.hl-body { padding: 5px 7px; font-size: 11px; color: #333; line-height: 1.4; }
+.hl-body a {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 11px;
+    color: #0d1b3e;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 2px;
+}
+.hl-body a:hover { color: #cc3300; text-decoration: underline; }
+
+/* PROJECTS / CHARACTERS GRID — Snoopy green tiles, Nintendo chrome inside */
+.projects-table { border-spacing: 3px; border-collapse: separate; }
+.proj-tile {
+    width: 86px;
+    height: 72px;
+    background-color: #e8f5e9;
+    background-image: linear-gradient(180deg, #f1f8f2 0%, #c8e6c9 100%);
+    border-top:    2px solid #a5d6a7;
+    border-left:   2px solid #a5d6a7;
+    border-right:  2px solid #2e7d32;
+    border-bottom: 2px solid #2e7d32;
+    text-align: center;
+    vertical-align: middle;
+    padding: 6px 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: table-cell;
+    color: #000000;
+}
+.proj-tile:hover {
+    background-color: #ffd600;
+    background-image: linear-gradient(180deg, #ffe033 0%, #ffc400 100%);
+    border-top:    2px solid #fff176;
+    border-left:   2px solid #fff176;
+    border-right:  2px solid #e65100;
+    border-bottom: 2px solid #e65100;
+}
+.pt-thumb {
+    width: 32px;
+    height: 24px;
+    background-color: #0d1b3e;
+    border: 1px solid #3f51b5;
+    margin: 0 auto 4px;
+    font-family: "Courier New", monospace;
+    font-size: 8px;
+    color: #aaff00;
+    text-align: center;
+    line-height: 24px;
+}
+.pt-name {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 9px;
+    color: #0d1b3e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+/* HORIZONTAL RULE / SEPARATOR */
+.sep {
+    border: none;
+    border-top: 1px solid #3f51b5;
+    border-bottom: 1px solid #9fa8da;
+    margin: 10px 0;
+}
+
+/* FOOTER */
+.footer-bar {
+    background-color: #111833;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Ccircle cx='1' cy='1' r='0.8' fill='%23223' /%3E%3C/svg%3E");
+    border-top: 2px solid #ff9900;
+    text-align: center;
+    padding: 8px;
+    font-size: 10px;
+    color: #7986cb;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.footer-links a {
+    color: #9fa8da;
+    text-decoration: none;
+    font-size: 10px;
+    margin: 0 5px;
+}
+.footer-links a:hover { color: #ff9900; text-decoration: underline; }
+.footer-copy { color: #5c6bc0; font-size: 10px; margin-top: 3px; }
+.best-viewed {
+    color: #5c6bc0;
+    font-size: 9px;
+    font-style: italic;
+    margin-top: 3px;
+}
+
+/* ONLINE dot */
+.online-dot {
+    color: #aaff00;
+    animation: blink-it 1.2s step-start infinite;
+}
+
+/* AWARD BADGES in sidebar */
+.award-box {
+    width: 110px;
+    background-color: #0d1b3e;
+    border: 2px solid #5c6bc0;
+    text-align: center;
+    padding: 4px;
+    margin-top: 6px;
+    font-size: 9px;
+    color: #9fa8da;
+}
+.award-stars { color: #ff9900; font-size: 11px; letter-spacing: 1px; }
+.award-title { color: #ffd600; font-family: "Arial Black", sans-serif; font-size: 8px; text-transform: uppercase; }
+
+/* LINK BUTTON — small beveled rectangle, common in early 2000s sidebars */
+.link-btn {
+    display: inline-block;
+    background-color: #3f51b5;
+    background-image: linear-gradient(180deg, #5c6bc0 0%, #283593 100%);
+    color: #ffffff;
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 3px 7px;
+    border-top:   1px solid #9fa8da;
+    border-left:  1px solid #9fa8da;
+    border-right: 1px solid #0d1b3e;
+    border-bottom:1px solid #0d1b3e;
+    letter-spacing: 0.5px;
+    margin: 1px 1px 2px;
+}
+.link-btn:hover { background-color: #ff9900; background-image: none; color: #000; border-top-color: #ffcc02; border-left-color: #ffcc02; }
+
+/* LAST UPDATED */
+.last-updated {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    color: #888888;
+    margin-top: 8px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TOP DOT-TEXTURE NAV BAR — Nintendo.com carbon strip style
+     ============================================================ -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <span style="font-family:'Arial Black',Arial,sans-serif; font-size:12px; color:#ff9900; letter-spacing:2px; text-transform:uppercase; text-shadow:0 0 6px rgba(255,153,0,0.5);">VOYAGE.DEV</span>
+    &nbsp;|&nbsp;
+    <a href="index.html" class="link-btn">Home</a>
+    <a href="forum.html" class="link-btn">Forum</a>
+    <a href="projects.html" class="link-btn">Projects</a>
+    <a href="#" class="link-btn">Devlog</a>
+    <a href="#" class="link-btn">About</a>
+    <a href="#" class="link-btn">Reading</a>
+    &nbsp;
+    <marquee scrollamount="4" style="font-size:10px; color:#7986cb; width:280px; display:inline-block; vertical-align:middle;">
+      ** SYSTEM ONLINE ** NEW: PONG CLONE v2 OUT NOW! ** CS50x WEEK 3 DONE ** FORUM NOW OPEN - COME SAY HI **
+    </marquee>
+    &nbsp;&nbsp;
+    <a href="#" style="color:#ff9900; font-size:10px; font-weight:bold; text-decoration:none; border:1px solid #cc6600; padding:1px 5px;">Privacy Policy</a>
+  </div>
+</div>
+
+<!-- ============================================================
+     SITE HEADER — Nintendo brushed periwinkle chrome panel
+     ============================================================ -->
+<div class="header-panel">
+  <table width="780" border="0" cellspacing="0" cellpadding="10" align="center">
+    <tr>
+      <td width="170" valign="middle">
+        <div class="logo-box">
+          <div class="logo-text">VOYAGE</div>
+          <div class="logo-sub">.DEV</div>
+        </div>
+      </td>
+      <td valign="middle" style="color:#e8eaf6; font-size:13px; font-style:italic; text-shadow:1px 1px 2px #000;">
+        A journey through pixels, logic &amp; time.<br>
+        <span style="font-size:10px; color:#9fa8da;">By Schulz &mdash; by <em>me</em>.</span>
+      </td>
+      <td valign="middle" align="right" nowrap>
+        <table border="0" cellspacing="4" cellpadding="0">
+          <tr>
+            <td>
+              <div class="ad-box">
+                <span class="ad-box-title">New Game</span>
+                <span class="ad-box-sub">Pong Clone v2<br>is live now</span>
+                <span class="ad-box-cta">Play Now</span>
+              </div>
+            </td>
+            <td>
+              <div class="ad-box">
+                <span class="ad-box-title">Reading</span>
+                <span class="ad-box-sub">My current<br>book list</span>
+                <span class="ad-box-cta">View List</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================================
+     MAIN TABLE LAYOUT — 780px fixed, left sidebar + content
+     ============================================================ -->
+<div class="outer-wrap">
+<table width="780" border="0" cellspacing="0" cellpadding="0">
+<tr>
+
+  <!-- ===================== LEFT SIDEBAR ===================== -->
+  <td class="sidebar" width="148" valign="top">
+
+    <!-- Nav buttons — Snoopy.com green raised style -->
+    <a href="index.html" class="nav-btn active">Home</a>
+    <a href="forum.html" class="nav-btn">Forum</a>
+    <a href="projects.html" class="nav-btn">My Projects</a>
+    <a href="#" class="nav-btn">Devlog</a>
+    <a href="#" class="nav-btn">About Me</a>
+    <a href="#" class="nav-btn">Reading List</a>
+
+    <hr class="nav-divider">
+
+    <a href="#" class="nav-arrow-link">FAQ / Contact</a>
+    <a href="#" class="nav-arrow-link">Site Map</a>
+    <a href="#" class="nav-arrow-link">Guestbook</a>
+
+    <hr class="nav-divider">
+
+    <!-- Visitor counter — exact 1999-2002 style -->
+    <div align="center">
+      <div class="counter-wrap">
+        <div class="counter-num">001337</div>
+        <span class="counter-label">Visitors</span>
+      </div>
+      <div class="last-updated">Last updated:<br>13-Jun-2026</div>
+    </div>
+
+    <hr class="nav-divider">
+
+    <!-- Site award badges — every 2000s personal site had these -->
+    <div class="award-box">
+      <div class="award-stars">* * * * *</div>
+      <div class="award-title">Site of the Week</div>
+      <div style="font-size:8px; color:#7986cb; margin-top:2px;">CodingRing.net</div>
+    </div>
+    <div class="award-box" style="margin-top:4px;">
+      <div class="award-title" style="color:#9fa8da;">Member of</div>
+      <div style="color:#aaff00; font-family:'Arial Black',sans-serif; font-size:9px; text-transform:uppercase;">Web Dev Ring</div>
+      <div style="font-size:8px; color:#5c6bc0;">[prev] [next]</div>
+    </div>
+
+    <hr class="nav-divider">
+    <!-- Small link buttons — exact 2001 style "88x31" alternatives -->
+    <div align="center" style="margin-top:4px;">
+      <div style="font-family:'Arial Black',sans-serif; font-size:8px; color:#333; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px;">Link To Me</div>
+      <div style="background:#0d1b3e; border:2px solid #3f51b5; width:88px; height:31px; text-align:center; padding-top:8px; margin:0 auto;">
+        <span style="font-family:'Arial Black',sans-serif; font-size:8px; color:#ff9900; letter-spacing:1px;">VOYAGE.DEV</span>
+      </div>
+    </div>
+
+  </td>
+
+  <!-- ===================== MAIN CONTENT ===================== -->
+  <td class="main-content" valign="top">
+
+    <!-- NEWS -->
+    <div class="section-title">Coding News</div>
+    <ul class="news-list">
+      <li>
+        <span class="badge-new">NEW</span>
+        <a href="#">Pong Clone v2 is live &mdash; now with AI opponent!</a>
+      </li>
+      <li>
+        <span class="badge-updated">UPDATE</span>
+        <a href="#">Joined CS50x &mdash; week 3 complete</a>
+      </li>
+      <li>
+        <a href="#">Forum is now open &mdash; come say hi and sign the guestbook</a>
+      </li>
+      <li>
+        <a href="#">Reading List updated &mdash; 3 new books added this month</a>
+      </li>
+    </ul>
+    <div class="news-more">&gt;&gt; <a href="#">More news</a></div>
+
+    <hr class="sep">
+
+    <!-- DEVLOG / TODAY'S STRIP EQUIVALENT -->
+    <div class="section-title">Latest Devlog Entry</div>
+    <div class="strip-meta">
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="16" height="12" alt="mail" style="vertical-align:middle; background:#cc0000; display:inline-block;">
+      <a href="#">Send this entry to a friend</a>
+      &nbsp;&nbsp;
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="16" height="12" alt="cal" style="vertical-align:middle; background:#003399; display:inline-block;">
+      <a href="#">A month of devlogs</a>
+      &nbsp;&nbsp;
+      Originally posted: <strong>13-JUN-2026</strong>
+    </div>
+    <div class="strip-frame">
+      [ devlog entry renders here &mdash; drop in an &lt;img&gt; or paste your latest entry text ]
+    </div>
+
+    <hr class="sep">
+
+    <!-- HIGHLIGHTS — 3 col, Snoopy style -->
+    <div class="section-title">Highlights</div>
+    <table class="hl-table">
+      <tr>
+        <td class="hl-cell">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr><td class="hl-thumb"><span class="hl-thumb-label">Games</span></td></tr>
+            <tr><td class="hl-body">
+              <a href="projects.html">My Games</a>
+              Every game I've built so far. Pong, Snake and more on the way. <a href="projects.html">Play</a>
+            </td></tr>
+          </table>
+        </td>
+        <td class="hl-cell">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr><td class="hl-thumb"><span class="hl-thumb-label">Forum</span></td></tr>
+            <tr><td class="hl-body">
+              <a href="forum.html">Message Board</a>
+              Talk code, games or whatever. Sign up and post a thread today. <a href="forum.html">Post</a>
+            </td></tr>
+          </table>
+        </td>
+        <td class="hl-cell">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr><td class="hl-thumb"><span class="hl-thumb-label">Books</span></td></tr>
+            <tr><td class="hl-body">
+              <a href="#">Reading List</a>
+              Books I've read &mdash; rated and reviewed for fellow learners. <a href="#">View</a>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <hr class="sep">
+
+    <!-- PROJECTS GRID — Snoopy characters row style, Nintendo chrome inside -->
+    <div class="section-title">My Projects</div>
+    <table class="projects-table" border="0" cellspacing="3" cellpadding="0" style="margin-top:8px;">
+      <tr>
+        <td><a href="#" class="proj-tile">
+          <div class="pt-thumb">PONG</div>
+          <div class="pt-name">Pong Clone</div>
+        </a></td>
+        <td><a href="#" class="proj-tile">
+          <div class="pt-thumb">SNEK</div>
+          <div class="pt-name">Snake</div>
+        </a></td>
+        <td><a href="#" class="proj-tile">
+          <div class="pt-thumb">&lt;/&gt;</div>
+          <div class="pt-name">This Site</div>
+        </a></td>
+        <td><a href="#" class="proj-tile">
+          <div class="pt-thumb">A.I.</div>
+          <div class="pt-name">AI Stuff</div>
+        </a></td>
+        <td><a href="#" class="proj-tile">
+          <div class="pt-thumb">1+1</div>
+          <div class="pt-name">Calculator</div>
+        </a></td>
+        <td><a href="#" class="proj-tile">
+          <div class="pt-thumb">CSS</div>
+          <div class="pt-name">CSS Art</div>
+        </a></td>
+        <td><a href="#" class="proj-tile">
+          <div class="pt-thumb">[x]</div>
+          <div class="pt-name">To-Do App</div>
+        </a></td>
+        <td><a href="#" class="proj-tile" style="background:#f5f5f5; background-image:none; border-color:#ccc #999 #999 #ccc;">
+          <div class="pt-thumb" style="border-color:#555; color:#555;">???</div>
+          <div class="pt-name" style="color:#aaa;">Coming Soon</div>
+        </a></td>
+      </tr>
+    </table>
+
+  </td><!-- /main-content -->
+</tr>
+</table>
+</div><!-- /outer-wrap -->
+
+<!-- ============================================================
+     FOOTER — dot texture, Nintendo dark bar
+     ============================================================ -->
+<div class="footer-bar">
+  <div class="footer-links">
+    <a href="#">Terms of Use</a> |
+    <a href="#">Reprint Info</a> |
+    <a href="#">Contact Us</a> |
+    <a href="#">Privacy Statement</a> |
+    <a href="#">Site Map</a> |
+    <a href="#">Guestbook</a>
+  </div>
+  <div class="footer-copy">
+    &copy; 2026 My Coding Voyage &nbsp;::&nbsp;
+    <span class="online-dot">&#9679;</span> ONLINE
+  </div>
+  <div class="best-viewed">
+    Best viewed in Internet Explorer 6.0 or Netscape 7.0 at 800x600 resolution
+  </div>
+</div>
+
+</body>
+</html>
