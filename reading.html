@@ -124,11 +124,13 @@ a:visited { color: #551a8b; }
     color: #9fa8da;
 }
 .gate-title { font-family: "Arial Black", sans-serif; font-size: 10px; color: #ff9900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-#pw-input { background: #000; border: 1px solid #3f51b5; color: #00ff41; font-family: "Courier New", monospace; font-size: 12px; padding: 3px 6px; width: 160px; letter-spacing: 2px; }
-#pw-input:focus { outline: none; border-color: #ff9900; }
-.gate-btn { background-color: #3f51b5; background-image: linear-gradient(180deg, #5c6bc0 0%, #283593 100%); color: #ffffff; font-family: "Arial Black", Arial, sans-serif; font-size: 9px; font-weight: 900; text-transform: uppercase; border-top: 1px solid #9fa8da; border-left: 1px solid #9fa8da; border-right: 1px solid #0d1b3e; border-bottom: 1px solid #0d1b3e; padding: 3px 10px; cursor: pointer; margin-left: 4px; }
+.gate-field-label { display: block; font-size: 9px; color: #7986cb; text-transform: uppercase; letter-spacing: 1px; margin: 8px 0 2px; font-family: "Arial Black", sans-serif; }
+.gate-input { background: #000; border: 1px solid #3f51b5; color: #00ff41; font-family: "Courier New", monospace; font-size: 12px; padding: 3px 6px; width: 260px; letter-spacing: 1px; }
+.gate-input:focus { outline: none; border-color: #ff9900; }
+.gate-btn { background-color: #3f51b5; background-image: linear-gradient(180deg, #5c6bc0 0%, #283593 100%); color: #ffffff; font-family: "Arial Black", Arial, sans-serif; font-size: 9px; font-weight: 900; text-transform: uppercase; border-top: 1px solid #9fa8da; border-left: 1px solid #9fa8da; border-right: 1px solid #0d1b3e; border-bottom: 1px solid #0d1b3e; padding: 3px 10px; cursor: pointer; margin-top: 10px; display: block; }
 .gate-btn:hover { background-color: #ff9900; background-image: none; color: #000; }
-#gate-error { color: #ff4444; font-size: 10px; margin-top: 4px; display: none; }
+#gate-error { color: #ff4444; font-size: 10px; margin-top: 6px; display: none; }
+.gate-hint { font-size: 9px; color: #5c6bc0; margin-top: 4px; line-height: 1.5; }
 
 /* ---- ADMIN PANEL ---- */
 #admin-panel {
@@ -141,7 +143,6 @@ a:visited { color: #551a8b; }
 }
 .admin-title { font-family: "Arial Black", sans-serif; font-size: 11px; color: #0d1b3e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; border-bottom: 2px solid #ffd600; padding-bottom: 2px; display: inline-block; }
 .logout-link { font-family: "Courier New", monospace; font-size: 10px; color: #cc0000; cursor: pointer; text-decoration: underline; margin-left: 12px; }
-
 .admin-field-label { font-family: "Arial Black", sans-serif; font-size: 9px; color: #283593; text-transform: uppercase; letter-spacing: 1px; display: block; margin: 7px 0 2px; }
 .admin-input { border: 1px inset #aaaaaa; background: #ffffff; font-family: Arial, sans-serif; font-size: 12px; padding: 3px 5px; width: 300px; color: #000; }
 .admin-input:focus { outline: none; border-color: #3f51b5; }
@@ -149,10 +150,9 @@ a:visited { color: #551a8b; }
 .admin-select:focus { outline: none; border-color: #3f51b5; }
 .admin-textarea { border: 1px inset #aaaaaa; background: #ffffff; font-family: Arial, sans-serif; font-size: 12px; padding: 3px 5px; width: 300px; height: 48px; color: #000; resize: vertical; }
 .admin-textarea:focus { outline: none; border-color: #3f51b5; }
-
 .add-btn { background-color: #2e7d32; background-image: linear-gradient(180deg, #4caf50 0%, #1b5e20 100%); color: #ffffff; font-family: "Arial Black", Arial, sans-serif; font-size: 10px; font-weight: 900; text-transform: uppercase; border-top: 2px solid #a5d6a7; border-left: 2px solid #a5d6a7; border-right: 2px solid #1b5e20; border-bottom: 2px solid #1b5e20; padding: 5px 14px; cursor: pointer; margin-top: 10px; text-shadow: 1px 1px 0 #1b5e20; }
-.add-btn:hover { background-color: #ff9900; background-image: linear-gradient(180deg,#ffb300 0%,#e65100 100%); border-top-color: #ffe082; border-left-color: #ffe082; border-right-color: #bf360c; border-bottom-color: #bf360c; }
-
+.add-btn:hover { background-color: #ff9900; background-image: linear-gradient(180deg,#ffb300 0%,#e65100 100%); border-top-color: #ffe082; border-left-color: #ffe082; border-right-color: #bf360c; border-bottom-color: #bf360c; text-shadow: none; }
+.add-btn:disabled { background: #aaa; background-image: none; border-color: #888; cursor: not-allowed; text-shadow: none; }
 #add-status { font-size: 11px; margin-top: 5px; font-family: "Courier New", monospace; color: #2e7d32; display: none; }
 </style>
 </head>
@@ -229,10 +229,22 @@ a:visited { color: #551a8b; }
     <!-- ADMIN GATE -->
     <div id="admin-gate">
       <div class="gate-title">[ Webmaster Login ]</div>
-      <span style="color:#9fa8da; font-size:10px;">Admin only &mdash; log in to add or remove books:</span><br><br>
-      <input type="password" id="pw-input" placeholder="password" onkeydown="if(event.key==='Enter')tryLogin()">
+      <span style="color:#9fa8da; font-size:10px;">Log in to add or remove books from the list.</span>
+
+      <label class="gate-field-label">Password</label>
+      <input class="gate-input" type="password" id="pw-input" placeholder="your site password" onkeydown="if(event.key==='Enter')document.getElementById('tok-input').focus()">
+
+      <label class="gate-field-label">GitHub Personal Access Token</label>
+      <input class="gate-input" type="password" id="tok-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" onkeydown="if(event.key==='Enter')tryLogin()">
+
+      <div class="gate-hint">
+        Token needed to save books to GitHub so all visitors see the same list.<br>
+        Generate one at: github.com &rarr; Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Tokens (classic)<br>
+        Scopes needed: tick <strong style="color:#9fa8da;">repo</strong> only. Token is never stored &mdash; you enter it each session.
+      </div>
+
       <button class="gate-btn" onclick="tryLogin()">Login</button>
-      <div id="gate-error">Incorrect password. Access denied.</div>
+      <div id="gate-error"></div>
     </div>
 
     <!-- ADMIN ADD PANEL -->
@@ -252,10 +264,8 @@ a:visited { color: #551a8b; }
         <option value="reading">Currently Reading</option>
         <option value="queued">In Queue</option>
       </select>
-
       &nbsp;&nbsp;
-
-      <label class="admin-field-label" style="display:inline-block; margin-right:6px; vertical-align:top;">Rating</label>
+      <label class="admin-field-label" style="display:inline-block; margin-right:4px;">Rating</label>
       <select class="admin-select" id="inp-rating">
         <option value="5">***** 5 stars</option>
         <option value="4">****  4 stars</option>
@@ -269,7 +279,7 @@ a:visited { color: #551a8b; }
       <textarea class="admin-textarea" id="inp-notes" placeholder="Any thoughts, quotes, highlights..."></textarea>
 
       <br>
-      <button class="add-btn" onclick="addBook()">Add to List</button>
+      <button class="add-btn" id="add-btn" onclick="addBook()">Add to List</button>
       <div id="add-status"></div>
     </div>
 
@@ -309,92 +319,206 @@ a:visited { color: #551a8b; }
 <script type="text/javascript">
 // ================================================================
 //  VOYAGE.DEV — READING LIST
-//  No API. Password-gated admin form. Books saved in storage.
+//  Books stored as books.json in GitHub repo.
+//  GitHub API used to read + write. Token entered at login, never stored.
 // ================================================================
 
-// ---- CHANGE THIS before publishing ----
-var ADMIN_PASSWORD = "voyage2026";
-// ---------------------------------------
+var GITHUB_USER   = "raghuramcoding";
+var GITHUB_REPO   = "raghuramcoding.github.io";
+var GITHUB_FILE   = "books.json";
+var GITHUB_BRANCH = "main";
+var ADMIN_PASSWORD = "voyage2026"; // change this before publishing
 
-var isAdmin = false;
+var isAdmin    = false;
+var ghToken    = "";
+var fileSha    = "";   // GitHub requires the current file SHA to update it
 
 // ---- AUTH ----
 
 function tryLogin() {
-    var val = document.getElementById("pw-input").value;
-    if (val === ADMIN_PASSWORD) {
-        isAdmin = true;
-        document.getElementById("admin-gate").style.display  = "none";
-        document.getElementById("admin-panel").style.display = "block";
-        renderBooks();
-    } else {
-        document.getElementById("gate-error").style.display = "block";
+    var pw  = document.getElementById("pw-input").value;
+    var tok = document.getElementById("tok-input").value.trim();
+
+    if (pw !== ADMIN_PASSWORD) {
+        showGateError("Incorrect password. Access denied.");
         document.getElementById("pw-input").value = "";
+        return;
     }
+    if (!tok || tok.length < 10) {
+        showGateError("Please enter your GitHub Personal Access Token.");
+        return;
+    }
+
+    ghToken = tok;
+    isAdmin = true;
+    document.getElementById("admin-gate").style.display  = "none";
+    document.getElementById("admin-panel").style.display = "block";
+    document.getElementById("gate-error").style.display  = "none";
+    renderBooks();
+}
+
+function showGateError(msg) {
+    var el = document.getElementById("gate-error");
+    el.style.display = "block";
+    el.style.color   = "#ff4444";
+    el.innerText     = msg;
 }
 
 function logout() {
     isAdmin = false;
+    ghToken = "";
+    fileSha = "";
     document.getElementById("admin-panel").style.display = "none";
     document.getElementById("admin-gate").style.display  = "block";
-    document.getElementById("pw-input").value = "";
+    document.getElementById("pw-input").value  = "";
+    document.getElementById("tok-input").value = "";
     renderBooks();
 }
 
-// ---- STORAGE ----
+// ---- GITHUB API ----
 
-async function loadBooks() {
-    try {
-        var r = await window.storage.get("reading-list-books");
-        return r ? JSON.parse(r.value) : [];
-    } catch(e) { return []; }
+var API = "https://api.github.com/repos/" + GITHUB_USER + "/" + GITHUB_REPO + "/contents/" + GITHUB_FILE;
+
+// Fetch books.json from GitHub (public, no token needed for reads)
+function fetchBooks(callback) {
+    var xhr = new XMLHttpRequest();
+    // Add cache-busting so we always get the latest version
+    xhr.open("GET", API + "?ref=" + GITHUB_BRANCH + "&t=" + Date.now(), true);
+    xhr.setRequestHeader("Accept", "application/vnd.github.v3+json");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+            fileSha = data.sha;
+            // content is base64 encoded
+            var decoded = decodeBase64Unicode(data.content.replace(/\n/g, ""));
+            var books   = JSON.parse(decoded);
+            callback(null, books);
+        } else if (xhr.status === 404) {
+            // File doesn't exist yet — start with empty list
+            fileSha = "";
+            callback(null, []);
+        } else {
+            callback("GitHub error " + xhr.status + ": " + xhr.responseText, []);
+        }
+    };
+    xhr.send();
 }
 
-async function saveBooks(books) {
-    await window.storage.set("reading-list-books", JSON.stringify(books));
+// Write books.json to GitHub (requires token)
+function saveBooks(books, commitMsg, callback) {
+    var content = encodeBase64Unicode(JSON.stringify(books, null, 2));
+    var body    = {
+        message: commitMsg || "Update reading list",
+        content: content,
+        branch:  GITHUB_BRANCH
+    };
+    if (fileSha) body.sha = fileSha;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("PUT", API, true);
+    xhr.setRequestHeader("Accept", "application/vnd.github.v3+json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", "token " + ghToken);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status === 200 || xhr.status === 201) {
+            var resp = JSON.parse(xhr.responseText);
+            fileSha  = resp.content.sha;
+            callback(null);
+        } else {
+            callback("Save failed (" + xhr.status + "): " + xhr.responseText);
+        }
+    };
+    xhr.send(JSON.stringify(body));
 }
 
-// ---- ADD ----
+// Base64 helpers that handle Unicode safely
+function encodeBase64Unicode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+function decodeBase64Unicode(str) {
+    return decodeURIComponent(escape(atob(str)));
+}
 
-async function addBook() {
+// ---- ADD BOOK ----
+
+function addBook() {
     var title  = document.getElementById("inp-title").value.trim();
     var author = document.getElementById("inp-author").value.trim();
     var status = document.getElementById("inp-status").value;
-    var rating = document.getElementById("inp-rating").value;
+    var rating = parseInt(document.getElementById("inp-rating").value);
     var notes  = document.getElementById("inp-notes").value.trim();
 
     if (!title) { alert("Title is required."); return; }
 
+    var btn      = document.getElementById("add-btn");
+    var statusEl = document.getElementById("add-status");
+    btn.disabled         = true;
+    statusEl.style.display = "block";
+    statusEl.style.color   = "#283593";
+    statusEl.innerText     = "Saving to GitHub...";
+
+    fetchBooks(function(err, books) {
+        if (err) {
+            statusEl.style.color = "#cc0000";
+            statusEl.innerText   = "Error loading current list: " + err;
+            btn.disabled = false;
+            return;
+        }
+        books.push({ title: title, author: author, status: status, rating: rating, notes: notes });
+        saveBooks(books, "Add book: " + title, function(saveErr) {
+            btn.disabled = false;
+            if (saveErr) {
+                statusEl.style.color = "#cc0000";
+                statusEl.innerText   = "Error: " + saveErr;
+                return;
+            }
+            // Clear form
+            document.getElementById("inp-title").value  = "";
+            document.getElementById("inp-author").value = "";
+            document.getElementById("inp-notes").value  = "";
+            document.getElementById("inp-status").value = "read";
+            document.getElementById("inp-rating").value = "5";
+
+            statusEl.style.color = "#2e7d32";
+            statusEl.innerText   = "Book saved to GitHub!";
+            setTimeout(function(){ statusEl.style.display = "none"; }, 3000);
+            renderBooks();
+        });
+    });
+}
+
+// ---- DELETE BOOK ----
+
+function deleteBook(idx) {
+    if (!confirm("Remove this book from the list?")) return;
+
     var statusEl = document.getElementById("add-status");
     statusEl.style.display = "block";
     statusEl.style.color   = "#283593";
-    statusEl.innerText     = "Saving...";
+    statusEl.innerText     = "Removing...";
 
-    var books = await loadBooks();
-    books.push({ title: title, author: author, status: status, rating: parseInt(rating), notes: notes });
-    await saveBooks(books);
-
-    document.getElementById("inp-title").value  = "";
-    document.getElementById("inp-author").value = "";
-    document.getElementById("inp-notes").value  = "";
-    document.getElementById("inp-status").value = "read";
-    document.getElementById("inp-rating").value = "5";
-
-    statusEl.style.color = "#2e7d32";
-    statusEl.innerText   = "Book added!";
-    setTimeout(function(){ statusEl.style.display = "none"; }, 2500);
-
-    renderBooks();
-}
-
-// ---- DELETE ----
-
-async function deleteBook(idx) {
-    if (!confirm("Remove this book?")) return;
-    var books = await loadBooks();
-    books.splice(idx, 1);
-    await saveBooks(books);
-    renderBooks();
+    fetchBooks(function(err, books) {
+        if (err) {
+            statusEl.style.color = "#cc0000";
+            statusEl.innerText   = "Error: " + err;
+            return;
+        }
+        var removed = books[idx] ? books[idx].title : "book";
+        books.splice(idx, 1);
+        saveBooks(books, "Remove book: " + removed, function(saveErr) {
+            if (saveErr) {
+                statusEl.style.color = "#cc0000";
+                statusEl.innerText   = "Error: " + saveErr;
+                return;
+            }
+            statusEl.style.color = "#2e7d32";
+            statusEl.innerText   = "Removed.";
+            setTimeout(function(){ statusEl.style.display = "none"; }, 2000);
+            renderBooks();
+        });
+    });
 }
 
 // ---- RENDER ----
@@ -420,41 +544,50 @@ function escHtml(str) {
         .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-async function renderBooks() {
-    var books = await loadBooks();
-    document.getElementById("loading-msg").style.display = "none";
-    document.getElementById("book-count").innerText = books.length;
+function renderBooks() {
+    document.getElementById("loading-msg").style.display = "block";
+    document.getElementById("loading-msg").innerText     = "Loading...";
+    document.getElementById("book-list").innerHTML       = "";
 
-    var c = document.getElementById("book-list");
-    if (books.length === 0) {
-        c.innerHTML = '<p style="font-size:12px; color:#888; padding:8px 0; font-style:italic;">No books on the list yet.</p>';
-        return;
-    }
+    fetchBooks(function(err, books) {
+        document.getElementById("loading-msg").style.display = "none";
+        document.getElementById("book-count").innerText      = books.length;
 
-    var html = '<table width="100%" border="0" cellspacing="0" cellpadding="0">';
-    for (var i = 0; i < books.length; i++) {
-        var b = books[i];
-        html += '<tr><td class="book-row">';
-        html += '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr>';
-        html += '<td valign="top" width="14" style="color:#888; font-size:14px; padding-top:1px;">&middot;</td>';
-        html += '<td valign="top">';
-        html += '<span class="book-title-text">' + escHtml(b.title) + '</span>';
-        html += '&nbsp;&nbsp;' + statusBadge(b.status);
-        html += '&nbsp;<span style="font-size:11px;">' + starsHtml(b.rating) + '</span>';
-        if (b.author) {
-            html += '<div class="book-author">by ' + escHtml(b.author) + '</div>';
+        var c = document.getElementById("book-list");
+        if (err) {
+            c.innerHTML = '<p style="font-size:12px; color:#cc0000; padding:8px 0;">Could not load books: ' + escHtml(err) + '</p>';
+            return;
         }
-        if (b.notes) {
-            html += '<div class="book-notes">' + escHtml(b.notes) + '</div>';
+        if (books.length === 0) {
+            c.innerHTML = '<p style="font-size:12px; color:#888; padding:8px 0; font-style:italic;">No books on the list yet.</p>';
+            return;
         }
-        if (isAdmin) {
-            html += '<br><button class="delete-btn" onclick="deleteBook(' + i + ')">Remove</button>';
+
+        var html = '<table width="100%" border="0" cellspacing="0" cellpadding="0">';
+        for (var i = 0; i < books.length; i++) {
+            var b = books[i];
+            html += '<tr><td class="book-row">';
+            html += '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr>';
+            html += '<td valign="top" width="14" style="color:#888; font-size:14px; padding-top:1px;">&middot;</td>';
+            html += '<td valign="top">';
+            html += '<span class="book-title-text">' + escHtml(b.title) + '</span>';
+            html += '&nbsp;&nbsp;' + statusBadge(b.status);
+            html += '&nbsp;<span style="font-size:11px;">' + starsHtml(b.rating) + '</span>';
+            if (b.author) {
+                html += '<div class="book-author">by ' + escHtml(b.author) + '</div>';
+            }
+            if (b.notes) {
+                html += '<div class="book-notes">' + escHtml(b.notes) + '</div>';
+            }
+            if (isAdmin) {
+                html += '<br><button class="delete-btn" onclick="deleteBook(' + i + ')">Remove</button>';
+            }
+            html += '</td></tr></table>';
+            html += '</td></tr>';
         }
-        html += '</td></tr></table>';
-        html += '</td></tr>';
-    }
-    html += '</table>';
-    c.innerHTML = html;
+        html += '</table>';
+        c.innerHTML = html;
+    });
 }
 
 window.onload = function() { renderBooks(); };
