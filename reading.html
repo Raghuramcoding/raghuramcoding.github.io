@@ -1,0 +1,463 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="icon" type="image/x-icon" href="favicon.png">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ultimate Coding Voyage :: Reading List</title>
+<style type="text/css">
+
+body {
+    background-color: #1a237e;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%231a237e'/%3E%3Crect width='1' height='1' x='0' y='0' fill='%23283593' opacity='0.6'/%3E%3Crect width='1' height='1' x='2' y='2' fill='%23283593' opacity='0.6'/%3E%3C/svg%3E");
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+}
+table { border-collapse: collapse; }
+td { vertical-align: top; padding: 0; }
+a { color: #000066; }
+a:hover { color: #cc3300; }
+a:visited { color: #551a8b; }
+
+.topbar {
+    background-color: #111833;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Ccircle cx='1' cy='1' r='0.8' fill='%23223' /%3E%3C/svg%3E");
+    border-bottom: 2px solid #ff9900;
+    height: 28px;
+    font-size: 11px;
+    color: #aabbcc;
+    font-family: "Courier New", Courier, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.topbar-inner {
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+}
+.link-btn {
+    display: inline-block;
+    background-color: #3f51b5;
+    background-image: linear-gradient(180deg, #5c6bc0 0%, #283593 100%);
+    color: #ffffff;
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 3px 7px;
+    border-top:   1px solid #9fa8da;
+    border-left:  1px solid #9fa8da;
+    border-right: 1px solid #0d1b3e;
+    border-bottom:1px solid #0d1b3e;
+    letter-spacing: 0.5px;
+    margin: 1px 1px 2px;
+}
+.link-btn:hover { background-color: #ff9900; background-image: none; color: #000; }
+
+.header-panel {
+    background: #7986cb;
+    background-image: linear-gradient(180deg, #9fa8da 0%, #7986cb 35%, #3f51b5 70%, #283593 100%);
+    border-bottom: 3px solid #ff9900;
+    padding: 0;
+}
+.logo-box { background-color: #0d1b3e; border: 3px solid #ff9900; padding: 7px 14px; display: inline-block; }
+.logo-text { font-family: "Arial Black", Arial, sans-serif; font-size: 28px; font-weight: 900; color: #ff9900; letter-spacing: 4px; text-transform: uppercase; text-shadow: 2px 2px 0px #000, -1px -1px 0px #000; line-height: 1; }
+.logo-sub  { font-family: "Arial Black", Arial, sans-serif; font-size: 11px; color: #aaff00; letter-spacing: 5px; text-transform: uppercase; }
+
+.outer-wrap { width: 780px; margin: 0 auto; background-color: #ffffff; border-left: 2px solid #3f51b5; border-right: 2px solid #3f51b5; }
+
+.sidebar { width: 148px; background-color: #ffd600; background-image: linear-gradient(180deg, #ffe033 0%, #ffd600 100%); border-right: 2px solid #e6a800; padding: 8px 6px 16px 6px; }
+.nav-btn { display: block; width: 134px; background-color: #4caf50; background-image: linear-gradient(180deg, #66bb6a 0%, #388e3c 100%); color: #ffffff; font-family: "Arial Black", Arial, sans-serif; font-size: 11px; font-weight: 900; text-decoration: none; text-transform: uppercase; padding: 6px 8px; margin-bottom: 3px; border-top: 2px solid #a5d6a7; border-left: 2px solid #a5d6a7; border-right: 2px solid #1b5e20; border-bottom: 2px solid #1b5e20; text-shadow: 1px 1px 0 #1b5e20; }
+.nav-btn:hover, .nav-btn.active { background-color: #ff9900; background-image: linear-gradient(180deg, #ffb300 0%, #e65100 100%); color: #fff; border-top: 2px solid #ffe082; border-left: 2px solid #ffe082; border-right: 2px solid #bf360c; border-bottom: 2px solid #bf360c; text-shadow: 1px 1px 0 #bf360c; }
+.nav-btn:visited { color: #ffffff; }
+.nav-divider { width: 134px; height: 1px; background-color: #e6a800; margin: 5px 0; border: none; }
+.nav-arrow-link { display: block; color: #333333; font-size: 11px; font-weight: bold; text-decoration: none; padding: 3px 2px; }
+.nav-arrow-link:before { content: ">> "; color: #555; }
+.nav-arrow-link:hover { color: #cc0000; text-decoration: underline; }
+.counter-wrap { background-color: #000; border: 2px inset #333; padding: 3px 6px; text-align: center; margin-top: 6px; width: 110px; }
+.counter-num { font-family: "Courier New", monospace; font-size: 16px; color: #00ff41; letter-spacing: 3px; text-shadow: 0 0 4px #00ff41; }
+.counter-label { font-family: "Arial Black", sans-serif; font-size: 8px; color: #ffd600; text-transform: uppercase; letter-spacing: 2px; display: block; margin-top: 1px; }
+.last-updated { font-family: "Courier New", monospace; font-size: 10px; color: #888; margin-top: 8px; }
+
+.main-content { padding: 10px 14px; background-color: #ffffff; }
+.section-title { font-family: "Arial Black", Arial, sans-serif; font-size: 15px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 1px; border-bottom: 4px solid #ffd600; padding-bottom: 1px; margin-bottom: 8px; display: inline-block; }
+.sep { border: none; border-top: 1px solid #3f51b5; border-bottom: 1px solid #9fa8da; margin: 10px 0; }
+
+.footer-bar { background-color: #111833; border-top: 2px solid #ff9900; text-align: center; padding: 8px; font-size: 10px; color: #7986cb; }
+.footer-links a { color: #9fa8da; text-decoration: none; font-size: 10px; margin: 0 5px; }
+.footer-links a:hover { color: #ff9900; text-decoration: underline; }
+.footer-copy { color: #5c6bc0; font-size: 10px; margin-top: 3px; }
+.best-viewed { color: #5c6bc0; font-size: 9px; font-style: italic; margin-top: 3px; }
+.online-dot { color: #aaff00; }
+
+@keyframes blink-it { 50% { opacity: 0; } }
+.blink { animation: blink-it 0.8s step-start infinite; }
+
+/* ---- READING LIST ---- */
+.book-row { border-bottom: 1px dotted #cccccc; padding: 7px 4px; font-size: 12px; }
+.book-row:hover { background-color: #fffbe6; }
+.book-title-text { font-family: "Arial Black", Arial, sans-serif; font-size: 12px; color: #0d1b3e; font-weight: 900; }
+.book-author { color: #555555; font-size: 11px; margin-top: 1px; }
+.book-notes  { color: #333333; font-size: 11px; margin-top: 3px; font-style: italic; }
+.stars-full  { color: #ff9900; }
+.stars-empty { color: #cccccc; }
+.status-read    { background: #2e7d32; color: #fff; font-family: "Arial Black",sans-serif; font-size: 8px; padding: 1px 5px; text-transform: uppercase; display: inline-block; }
+.status-reading { background: #1565c0; color: #fff; font-family: "Arial Black",sans-serif; font-size: 8px; padding: 1px 5px; text-transform: uppercase; display: inline-block; }
+.status-queued  { background: #666;    color: #fff; font-family: "Arial Black",sans-serif; font-size: 8px; padding: 1px 5px; text-transform: uppercase; display: inline-block; }
+.delete-btn { background-color: #b71c1c; color: #fff; font-family: "Arial Black", sans-serif; font-size: 8px; text-transform: uppercase; border-top: 1px solid #ff6666; border-left: 1px solid #ff6666; border-right: 1px solid #660000; border-bottom: 1px solid #660000; padding: 1px 6px; cursor: pointer; margin-left: 6px; }
+.delete-btn:hover { background-color: #ff0000; }
+
+/* ---- ADMIN GATE ---- */
+#admin-gate {
+    background: #0d1b3e;
+    border: 2px solid #ff9900;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 11px;
+    color: #9fa8da;
+}
+.gate-title { font-family: "Arial Black", sans-serif; font-size: 10px; color: #ff9900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+#pw-input { background: #000; border: 1px solid #3f51b5; color: #00ff41; font-family: "Courier New", monospace; font-size: 12px; padding: 3px 6px; width: 160px; letter-spacing: 2px; }
+#pw-input:focus { outline: none; border-color: #ff9900; }
+.gate-btn { background-color: #3f51b5; background-image: linear-gradient(180deg, #5c6bc0 0%, #283593 100%); color: #ffffff; font-family: "Arial Black", Arial, sans-serif; font-size: 9px; font-weight: 900; text-transform: uppercase; border-top: 1px solid #9fa8da; border-left: 1px solid #9fa8da; border-right: 1px solid #0d1b3e; border-bottom: 1px solid #0d1b3e; padding: 3px 10px; cursor: pointer; margin-left: 4px; }
+.gate-btn:hover { background-color: #ff9900; background-image: none; color: #000; }
+#gate-error { color: #ff4444; font-size: 10px; margin-top: 4px; display: none; }
+
+/* ---- ADMIN PANEL ---- */
+#admin-panel {
+    background: #f0f4ff;
+    border: 2px solid #3f51b5;
+    border-left: 4px solid #ff9900;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: none;
+}
+.admin-title { font-family: "Arial Black", sans-serif; font-size: 11px; color: #0d1b3e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; border-bottom: 2px solid #ffd600; padding-bottom: 2px; display: inline-block; }
+.logout-link { font-family: "Courier New", monospace; font-size: 10px; color: #cc0000; cursor: pointer; text-decoration: underline; margin-left: 12px; }
+
+.admin-field-label { font-family: "Arial Black", sans-serif; font-size: 9px; color: #283593; text-transform: uppercase; letter-spacing: 1px; display: block; margin: 7px 0 2px; }
+.admin-input { border: 1px inset #aaaaaa; background: #ffffff; font-family: Arial, sans-serif; font-size: 12px; padding: 3px 5px; width: 300px; color: #000; }
+.admin-input:focus { outline: none; border-color: #3f51b5; }
+.admin-select { border: 1px inset #aaaaaa; background: #fff; font-family: Arial, sans-serif; font-size: 12px; padding: 3px 5px; color: #000; }
+.admin-select:focus { outline: none; border-color: #3f51b5; }
+.admin-textarea { border: 1px inset #aaaaaa; background: #ffffff; font-family: Arial, sans-serif; font-size: 12px; padding: 3px 5px; width: 300px; height: 48px; color: #000; resize: vertical; }
+.admin-textarea:focus { outline: none; border-color: #3f51b5; }
+
+.add-btn { background-color: #2e7d32; background-image: linear-gradient(180deg, #4caf50 0%, #1b5e20 100%); color: #ffffff; font-family: "Arial Black", Arial, sans-serif; font-size: 10px; font-weight: 900; text-transform: uppercase; border-top: 2px solid #a5d6a7; border-left: 2px solid #a5d6a7; border-right: 2px solid #1b5e20; border-bottom: 2px solid #1b5e20; padding: 5px 14px; cursor: pointer; margin-top: 10px; text-shadow: 1px 1px 0 #1b5e20; }
+.add-btn:hover { background-color: #ff9900; background-image: linear-gradient(180deg,#ffb300 0%,#e65100 100%); border-top-color: #ffe082; border-left-color: #ffe082; border-right-color: #bf360c; border-bottom-color: #bf360c; }
+
+#add-status { font-size: 11px; margin-top: 5px; font-family: "Courier New", monospace; color: #2e7d32; display: none; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <span style="font-family:'Arial Black',Arial,sans-serif; font-size:12px; color:#ff9900; letter-spacing:2px; text-transform:uppercase;">VOYAGE.DEV</span>
+    &nbsp;|&nbsp;
+    <a href="index.html" class="link-btn">Home</a>
+    <a href="forum.html" class="link-btn">Forum</a>
+    <a href="projects.html" class="link-btn">Projects</a>
+    <a href="#" class="link-btn">Devlog</a>
+    <a href="#" class="link-btn">About</a>
+    <a href="reading.html" class="link-btn">Reading</a>
+    &nbsp;
+    <marquee scrollamount="4" style="font-size:10px; color:#7986cb; width:280px; display:inline-block; vertical-align:middle;">
+      ** READING LIST UPDATED ** 3 NEW BOOKS ADDED THIS MONTH **
+    </marquee>
+    &nbsp;&nbsp;
+    <a href="#" style="color:#ff9900; font-size:10px; font-weight:bold; text-decoration:none; border:1px solid #cc6600; padding:1px 5px;">Privacy Policy</a>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header-panel">
+  <table width="780" border="0" cellspacing="0" cellpadding="10" align="center">
+    <tr>
+      <td width="170" valign="middle">
+        <div class="logo-box">
+          <div class="logo-text">VOYAGE</div>
+          <div class="logo-sub">.DEV</div>
+        </div>
+      </td>
+      <td valign="middle" style="color:#e8eaf6; font-size:13px; font-style:italic; text-shadow:1px 1px 2px #000;">
+        A journey through pixels, logic &amp; time.<br>
+        <span style="font-size:10px; color:#9fa8da;">Reading List &mdash; books that shaped the voyage.</span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="outer-wrap">
+<table width="780" border="0" cellspacing="0" cellpadding="0">
+<tr>
+
+  <!-- SIDEBAR -->
+  <td class="sidebar" width="148" valign="top">
+    <a href="index.html" class="nav-btn">Home</a>
+    <a href="forum.html" class="nav-btn">Forum</a>
+    <a href="projects.html" class="nav-btn">My Projects</a>
+    <a href="#" class="nav-btn">Devlog</a>
+    <a href="#" class="nav-btn">About Me</a>
+    <a href="reading.html" class="nav-btn active">Reading List</a>
+    <hr class="nav-divider">
+    <a href="#" class="nav-arrow-link">FAQ / Contact</a>
+    <a href="#" class="nav-arrow-link">Site Map</a>
+    <a href="#" class="nav-arrow-link">Guestbook</a>
+    <hr class="nav-divider">
+    <div align="center">
+      <div class="counter-wrap">
+        <div class="counter-num">001337</div>
+        <span class="counter-label">Visitors</span>
+      </div>
+      <div class="last-updated">Last updated:<br>13-Jun-2026</div>
+    </div>
+  </td>
+
+  <!-- MAIN CONTENT -->
+  <td class="main-content" valign="top">
+
+    <!-- ADMIN GATE -->
+    <div id="admin-gate">
+      <div class="gate-title">[ Webmaster Login ]</div>
+      <span style="color:#9fa8da; font-size:10px;">Admin only &mdash; log in to add or remove books:</span><br><br>
+      <input type="password" id="pw-input" placeholder="password" onkeydown="if(event.key==='Enter')tryLogin()">
+      <button class="gate-btn" onclick="tryLogin()">Login</button>
+      <div id="gate-error">Incorrect password. Access denied.</div>
+    </div>
+
+    <!-- ADMIN ADD PANEL -->
+    <div id="admin-panel">
+      <div class="admin-title">Add Book</div>
+      <span class="logout-link" onclick="logout()">[ logout ]</span>
+
+      <label class="admin-field-label">Title *</label>
+      <input class="admin-input" type="text" id="inp-title" placeholder="e.g. The Pragmatic Programmer">
+
+      <label class="admin-field-label">Author</label>
+      <input class="admin-input" type="text" id="inp-author" placeholder="e.g. David Thomas">
+
+      <label class="admin-field-label">Status</label>
+      <select class="admin-select" id="inp-status">
+        <option value="read">Read</option>
+        <option value="reading">Currently Reading</option>
+        <option value="queued">In Queue</option>
+      </select>
+
+      &nbsp;&nbsp;
+
+      <label class="admin-field-label" style="display:inline-block; margin-right:6px; vertical-align:top;">Rating</label>
+      <select class="admin-select" id="inp-rating">
+        <option value="5">***** 5 stars</option>
+        <option value="4">****  4 stars</option>
+        <option value="3">***   3 stars</option>
+        <option value="2">**    2 stars</option>
+        <option value="1">*     1 star</option>
+        <option value="0">Unrated</option>
+      </select>
+
+      <label class="admin-field-label">Notes</label>
+      <textarea class="admin-textarea" id="inp-notes" placeholder="Any thoughts, quotes, highlights..."></textarea>
+
+      <br>
+      <button class="add-btn" onclick="addBook()">Add to List</button>
+      <div id="add-status"></div>
+    </div>
+
+    <!-- READING LIST -->
+    <div class="section-title">Reading List</div>
+    <p style="font-size:11px; color:#555555; margin-bottom:8px;">Books I have read, am reading, or plan to read.</p>
+
+    <div id="loading-msg" style="font-family:'Courier New',monospace; font-size:11px; color:#555; padding:8px 0;">Loading...</div>
+    <div id="book-list"></div>
+
+    <hr class="sep">
+    <p style="font-size:10px; color:#888888; text-align:right; font-family:'Courier New',monospace;">
+      Total: <span id="book-count">0</span> books
+    </p>
+
+  </td>
+</tr>
+</table>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-bar">
+  <div class="footer-links">
+    <a href="#">Terms of Use</a> |
+    <a href="#">Contact Us</a> |
+    <a href="#">Privacy Statement</a> |
+    <a href="#">Site Map</a> |
+    <a href="#">Guestbook</a>
+  </div>
+  <div class="footer-copy">
+    &copy; 2026 My Coding Voyage &nbsp;::&nbsp;
+    <span class="online-dot blink">&#9679;</span> ONLINE
+  </div>
+  <div class="best-viewed">Best viewed in Internet Explorer 6.0 or Netscape 7.0 at 800x600 resolution</div>
+</div>
+
+<script type="text/javascript">
+// ================================================================
+//  VOYAGE.DEV — READING LIST
+//  No API. Password-gated admin form. Books saved in storage.
+// ================================================================
+
+// ---- CHANGE THIS before publishing ----
+var ADMIN_PASSWORD = "voyage2026";
+// ---------------------------------------
+
+var isAdmin = false;
+
+// ---- AUTH ----
+
+function tryLogin() {
+    var val = document.getElementById("pw-input").value;
+    if (val === ADMIN_PASSWORD) {
+        isAdmin = true;
+        document.getElementById("admin-gate").style.display  = "none";
+        document.getElementById("admin-panel").style.display = "block";
+        renderBooks();
+    } else {
+        document.getElementById("gate-error").style.display = "block";
+        document.getElementById("pw-input").value = "";
+    }
+}
+
+function logout() {
+    isAdmin = false;
+    document.getElementById("admin-panel").style.display = "none";
+    document.getElementById("admin-gate").style.display  = "block";
+    document.getElementById("pw-input").value = "";
+    renderBooks();
+}
+
+// ---- STORAGE ----
+
+async function loadBooks() {
+    try {
+        var r = await window.storage.get("reading-list-books");
+        return r ? JSON.parse(r.value) : [];
+    } catch(e) { return []; }
+}
+
+async function saveBooks(books) {
+    await window.storage.set("reading-list-books", JSON.stringify(books));
+}
+
+// ---- ADD ----
+
+async function addBook() {
+    var title  = document.getElementById("inp-title").value.trim();
+    var author = document.getElementById("inp-author").value.trim();
+    var status = document.getElementById("inp-status").value;
+    var rating = document.getElementById("inp-rating").value;
+    var notes  = document.getElementById("inp-notes").value.trim();
+
+    if (!title) { alert("Title is required."); return; }
+
+    var statusEl = document.getElementById("add-status");
+    statusEl.style.display = "block";
+    statusEl.style.color   = "#283593";
+    statusEl.innerText     = "Saving...";
+
+    var books = await loadBooks();
+    books.push({ title: title, author: author, status: status, rating: parseInt(rating), notes: notes });
+    await saveBooks(books);
+
+    document.getElementById("inp-title").value  = "";
+    document.getElementById("inp-author").value = "";
+    document.getElementById("inp-notes").value  = "";
+    document.getElementById("inp-status").value = "read";
+    document.getElementById("inp-rating").value = "5";
+
+    statusEl.style.color = "#2e7d32";
+    statusEl.innerText   = "Book added!";
+    setTimeout(function(){ statusEl.style.display = "none"; }, 2500);
+
+    renderBooks();
+}
+
+// ---- DELETE ----
+
+async function deleteBook(idx) {
+    if (!confirm("Remove this book?")) return;
+    var books = await loadBooks();
+    books.splice(idx, 1);
+    await saveBooks(books);
+    renderBooks();
+}
+
+// ---- RENDER ----
+
+function starsHtml(n) {
+    if (!n || n === 0) return '<span style="color:#aaa; font-size:10px;">unrated</span>';
+    var s = "";
+    for (var i = 1; i <= 5; i++) {
+        s += i <= n ? '<span class="stars-full">*</span>' : '<span class="stars-empty">*</span>';
+    }
+    return s;
+}
+
+function statusBadge(s) {
+    if (s === "reading") return '<span class="status-reading">Reading Now</span>';
+    if (s === "queued")  return '<span class="status-queued">Queued</span>';
+    return '<span class="status-read">Read</span>';
+}
+
+function escHtml(str) {
+    return String(str || "")
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+async function renderBooks() {
+    var books = await loadBooks();
+    document.getElementById("loading-msg").style.display = "none";
+    document.getElementById("book-count").innerText = books.length;
+
+    var c = document.getElementById("book-list");
+    if (books.length === 0) {
+        c.innerHTML = '<p style="font-size:12px; color:#888; padding:8px 0; font-style:italic;">No books on the list yet.</p>';
+        return;
+    }
+
+    var html = '<table width="100%" border="0" cellspacing="0" cellpadding="0">';
+    for (var i = 0; i < books.length; i++) {
+        var b = books[i];
+        html += '<tr><td class="book-row">';
+        html += '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr>';
+        html += '<td valign="top" width="14" style="color:#888; font-size:14px; padding-top:1px;">&middot;</td>';
+        html += '<td valign="top">';
+        html += '<span class="book-title-text">' + escHtml(b.title) + '</span>';
+        html += '&nbsp;&nbsp;' + statusBadge(b.status);
+        html += '&nbsp;<span style="font-size:11px;">' + starsHtml(b.rating) + '</span>';
+        if (b.author) {
+            html += '<div class="book-author">by ' + escHtml(b.author) + '</div>';
+        }
+        if (b.notes) {
+            html += '<div class="book-notes">' + escHtml(b.notes) + '</div>';
+        }
+        if (isAdmin) {
+            html += '<br><button class="delete-btn" onclick="deleteBook(' + i + ')">Remove</button>';
+        }
+        html += '</td></tr></table>';
+        html += '</td></tr>';
+    }
+    html += '</table>';
+    c.innerHTML = html;
+}
+
+window.onload = function() { renderBooks(); };
+</script>
+</body>
+</html>
