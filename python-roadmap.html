@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Python Roadmap — For a Polyglot Dev</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14151a;
+    --bg-raised: #1b1c22;
+    --line: #2a2c34;
+    --text: #dde1e6;
+    --text-dim: #8b8f9a;
+    --done: #7fb77e;
+    --amber: #e8a33d;
+    --bridge: #b592c9;
+    --gutter-w: 52px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    line-height:1.5;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:48px 24px 100px;}
+
+  header{margin-bottom:44px;border-bottom:1px solid var(--line);padding-bottom:28px;}
+  .eyebrow{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;}
+  h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:clamp(28px,4vw,40px);
+    margin:0 0 12px;
+    color:#fff;
+  }
+  .sub{color:var(--text-dim);font-size:14px;max-width:560px;}
+
+  .progress-row{display:flex;align-items:center;gap:14px;margin-top:26px;}
+  .progress-track{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--done),var(--amber));width:0%;transition:width .4s ease;}
+  .progress-label{font-size:13px;color:var(--text-dim);white-space:nowrap;}
+
+  .phase{
+    display:flex;
+    margin-bottom:6px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--bg-raised);
+    overflow:hidden;
+  }
+  .phase + .phase{margin-top:18px;}
+  .gutter{
+    width:var(--gutter-w);
+    flex-shrink:0;
+    background:#101116;
+    color:var(--text-dim);
+    font-size:12px;
+    padding:20px 0;
+    text-align:center;
+    border-right:1px solid var(--line);
+    user-select:none;
+  }
+  .phase-body{flex:1;padding:20px 22px 22px;}
+  .phase-title-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .phase-title{
+    font-family:'Source Serif 4', serif;
+    font-size:19px;
+    font-weight:600;
+    color:#fff;
+    margin:0;
+  }
+  .phase-meta{font-size:12px;color:var(--text-dim);white-space:nowrap;}
+  .phase-note{font-size:13px;color:var(--text-dim);margin:6px 0 14px;}
+
+  .item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:8px 0;
+    border-top:1px dashed var(--line);
+    font-size:14px;
+  }
+  .item:first-of-type{border-top:none;}
+  .checkbox{
+    flex-shrink:0;
+    width:16px;height:16px;
+    margin-top:2px;
+    border:1px solid var(--text-dim);
+    border-radius:3px;
+    cursor:pointer;
+    position:relative;
+    background:transparent;
+  }
+  .checkbox.checked{background:var(--done);border-color:var(--done);}
+  .checkbox.checked::after{
+    content:"✓";
+    position:absolute;top:-3px;left:2px;
+    font-size:11px;color:#0f1115;
+  }
+  .item-text{cursor:pointer;flex:1;}
+  .item.done .item-text{color:var(--text-dim);text-decoration:line-through;text-decoration-color:var(--line);}
+  .diffmark{font-weight:700;margin-right:4px;}
+  .diffmark.plus{color:var(--done);}
+  .diffmark.pending{color:var(--text-dim);}
+
+  .bridge{
+    margin-top:14px;
+    padding:10px 12px;
+    border-left:3px solid var(--bridge);
+    background:rgba(181,146,201,0.08);
+    font-size:12.5px;
+    color:#cbb9d9;
+    border-radius:0 6px 6px 0;
+  }
+  .bridge b{color:var(--bridge);font-weight:700;}
+
+  footer{margin-top:40px;text-align:center;color:var(--text-dim);font-size:12px;}
+  .reset-btn{
+    background:none;border:1px solid var(--line);color:var(--text-dim);
+    font-family:inherit;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;
+    margin-top:14px;
+  }
+  .reset-btn:hover{border-color:var(--amber);color:var(--amber);}
+  .loading{color:var(--text-dim);font-size:13px;padding:20px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">roadmap · rev 1</div>
+    <h1>Python, for someone who already ships in JS/TS &amp; Rust</h1>
+    <div class="sub">A few hours a week, sequenced so you spend time on what's actually new to you — not re-learning "what is a variable." Bridge notes call out where your existing instincts transfer and where Python breaks the pattern.</div>
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 / 0 done</div>
+    </div>
+    <button class="reset-btn" id="resetBtn">Reset progress</button>
+  </header>
+
+  <div id="phases" class="loading">Loading your progress…</div>
+
+  <footer>Progress is saved automatically to this artifact.</footer>
+</div>
+
+<script>
+const ROADMAP = [
+  {
+    id: "p1",
+    title: "Fast-track fluency",
+    weeks: "Weeks 1–2",
+    note: "Finish what you started, then patch the syntax gaps that trip up devs coming from curly-brace languages.",
+    bridge: "Indentation-as-syntax and dynamic typing are the two things most likely to bite you out of old habits — that recursion bug you hit was a symptom of the former.",
+    items: [
+      "Finish the remaining Kaggle Python micro-course exercises",
+      "Read through Python's own tutorial sections on control flow & data structures (skim — you know the concepts, just map the syntax)",
+      "Deliberately break things: mutable default arguments, late-binding closures, `is` vs `==`",
+      "Write a one-page personal cheat sheet: 'Python syntax vs JS/TS/Rust'",
+      "Comfortably use list/dict/set comprehensions instead of map/filter chains"
+    ]
+  },
+  {
+    id: "p2",
+    title: "Pythonic idioms & stdlib",
+    weeks: "Weeks 3–4",
+    note: "This is where Python stops feeling like 'JS with whitespace' and starts feeling like its own language.",
+    bridge: "Context managers (`with`) are Python's answer to Rust's Drop / JS's try-finally. Decorators are closer to Rust macros in spirit than to anything in JS.",
+    items: [
+      "Generators & iterators — build one from scratch with `yield`",
+      "Context managers — use `with`, then write your own via `__enter__`/`__exit__`",
+      "Decorators — write a simple timing/logging decorator",
+      "`itertools` and `functools` — skim the docs, use each at least once",
+      "`collections` — `defaultdict`, `Counter`, `namedtuple`/`dataclass`",
+      "Type hints + `mypy` — should feel familiar coming from TypeScript"
+    ]
+  },
+  {
+    id: "p3",
+    title: "Tooling & testing",
+    weeks: "Week 5",
+    note: "Get your Python setup as tight as your Node/Rust setup already is.",
+    bridge: "`uv` is the closest thing Python has to `cargo`/`npm` for speed — worth adopting over plain pip+venv.",
+    items: [
+      "Set up a project with `uv` (or venv + pip if you prefer the classic route)",
+      "`pyproject.toml` basics — dependencies, project metadata",
+      "`pytest` — write tests with fixtures, compare mentally to your JS test setup",
+      "`ruff` for linting/formatting (one tool, does both — faster than flake8+black)",
+      "Basic `pdb` / debugger workflow in your editor"
+    ]
+  },
+  {
+    id: "p4",
+    title: "Build something real",
+    weeks: "Weeks 6–8",
+    note: "Apply everything above to a project with actual moving parts, not another to-do app.",
+    bridge: "`asyncio` will feel familiar from JS's event loop — but Python's async is explicit everywhere (no implicit microtask queue), which trips people up at first.",
+    items: [
+      "Build a small CLI tool with `argparse` or `click`",
+      "Call a real HTTP API with `httpx` (sync first, then async)",
+      "Handle config with JSON/YAML/TOML — pick one, load & validate it",
+      "Try `asyncio` for one concurrent task (e.g. fetch multiple URLs at once)",
+      "Package it properly: entry point, `pyproject.toml`, installable with `uv pip install -e .`"
+    ]
+  },
+  {
+    id: "p5",
+    title: "Python for AI/automation work",
+    weeks: "Weeks 9–10",
+    note: "Given where your other projects are headed (aicoder, GitHub automation), this is the payoff phase.",
+    bridge: "You've already built a multi-provider AI coding agent in Node — porting a slice of it to Python is the fastest way to learn the ecosystem's idioms by direct comparison.",
+    items: [
+      "`numpy`/`pandas` fundamentals — just enough to read other people's data code",
+      "Use the Anthropic Python SDK (or an OpenAI-compatible client) to make a basic completion call",
+      "Write a small script that shells out / touches the filesystem — compare to aicoder's Node tool implementations",
+      "Try a Python-based GitHub Action (or call the GitHub API from a Python script) to compare against your existing CodeQL/Actions setup"
+    ]
+  },
+  {
+    id: "p6",
+    title: "Capstone",
+    weeks: "Weeks 11–12",
+    note: "One project that forces you to use most of the above without a tutorial holding your hand.",
+    bridge: "Porting your own prior work is ideal: you already know the correct behavior, so bugs are obviously bugs, not ambiguous spec questions.",
+    items: [
+      "Pick a scope: a Python port of one aicoder tool, OR a standalone Python coding-assistant CLI",
+      "Include tests (`pytest`), typing (`mypy`), and linting (`ruff`) from day one",
+      "Write a README as if someone else needs to run it",
+      "Optional: publish to PyPI or share the repo publicly"
+    ]
+  }
+];
+
+const STORAGE_KEY = "python-roadmap-progress-v1";
+let state = {};
+
+function computeProgress(){
+  let total = 0, done = 0;
+  ROADMAP.forEach(p => p.items.forEach((_, i) => {
+    total++;
+    if(state[p.id + ':' + i]) done++;
+  }));
+  return {total, done};
+}
+
+function updateProgressUI(){
+  const {total, done} = computeProgress();
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} / ${total} done`;
+}
+
+function render(){
+  const container = document.getElementById('phases');
+  container.classList.remove('loading');
+  container.innerHTML = '';
+  ROADMAP.forEach((phase, pIdx) => {
+    const phaseEl = document.createElement('div');
+    phaseEl.className = 'phase';
+
+    const gutter = document.createElement('div');
+    gutter.className = 'gutter';
+    gutter.textContent = String(pIdx + 1).padStart(2, '0');
+    phaseEl.appendChild(gutter);
+
+    const body = document.createElement('div');
+    body.className = 'phase-body';
+
+    body.innerHTML = `
+      <div class="phase-title-row">
+        <h2 class="phase-title">${phase.title}</h2>
+        <span class="phase-meta">${phase.weeks}</span>
+      </div>
+      <div class="phase-note">${phase.note}</div>
+    `;
+
+    phase.items.forEach((text, iIdx) => {
+      const key = phase.id + ':' + iIdx;
+      const checked = !!state[key];
+      const item = document.createElement('div');
+      item.className = 'item' + (checked ? ' done' : '');
+      item.innerHTML = `
+        <div class="checkbox ${checked ? 'checked' : ''}" data-key="${key}"></div>
+        <div class="item-text" data-key="${key}"><span class="diffmark ${checked ? 'plus' : 'pending'}">${checked ? '+' : '·'}</span>${text}</div>
+      `;
+      body.appendChild(item);
+    });
+
+    const bridge = document.createElement('div');
+    bridge.className = 'bridge';
+    bridge.innerHTML = `<b>bridge —</b> ${phase.bridge}`;
+    body.appendChild(bridge);
+
+    phaseEl.appendChild(body);
+    container.appendChild(phaseEl);
+  });
+  updateProgressUI();
+}
+
+async function toggleItem(key){
+  state[key] = !state[key];
+  render();
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.error('Failed to save progress', e);
+  }
+}
+
+document.getElementById('phases').addEventListener('click', (e) => {
+  const target = e.target.closest('[data-key]');
+  if(target){
+    toggleItem(target.getAttribute('data-key'));
+  }
+});
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  state = {};
+  render();
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.error('Failed to reset progress', e);
+  }
+});
+
+async function init(){
+  try{
+    const result = await window.storage.get(STORAGE_KEY);
+    if(result && result.value){
+      state = JSON.parse(result.value);
+    }
+  }catch(e){
+    state = {};
+  }
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
