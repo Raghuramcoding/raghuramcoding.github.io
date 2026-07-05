@@ -42,6 +42,41 @@
   .wrap {
     width: 100%;
     max-width: 1100px;
+    position: relative;
+  }
+
+  /* Free trial popup */
+  .free-trial {
+    display: none;
+    position: absolute;
+    width: 170px;
+    padding: 12px 14px;
+    background: #1C1812;
+    border: 2px solid var(--cyan);
+    color: var(--cyan);
+    text-align: center;
+    z-index: 50;
+    box-shadow: 0 0 16px rgba(111, 211, 199, 0.35);
+    animation: trial-pulse 1.4s ease-in-out infinite;
+  }
+  .free-trial:hover { background: #24302E; }
+  .free-trial-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .free-trial-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  @keyframes trial-pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(111, 211, 199, 0.25); }
+    50% { box-shadow: 0 0 22px rgba(111, 211, 199, 0.55); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .free-trial { animation: none; }
   }
 
   button {
@@ -364,6 +399,11 @@
 <body>
 
 <div class="wrap">
+  <button id="free-trial" class="free-trial" type="button">
+    <div class="free-trial-title" id="free-trial-title">FREE TRIAL</div>
+    <div class="free-trial-sub" id="free-trial-sub">claim now — instant 10x LOC</div>
+  </button>
+
   <div class="header">
     <div class="header-left">
       <span class="term-icon">&gt;_</span>
@@ -488,6 +528,16 @@
   var AMBIENT_MS = 25000;
   var MAX_LOG_ENTRIES = 40;
 
+  var FREE_TRIAL_NAMES = [
+    'Enterprise IDE Pro', 'CloudScale Compute', 'PremiumLint AI',
+    'TurboBuild CI', 'Quantum Autocomplete', 'DevOps Unlimited'
+  ];
+  var FREE_TRIAL_MIN_MS = 45000;
+  var FREE_TRIAL_MAX_MS = 110000;
+  var FREE_TRIAL_VISIBLE_MS = 12000;
+  var FREE_TRIAL_WIDTH = 170;
+  var FREE_TRIAL_HEIGHT = 80;
+
   // ---------- Helpers ----------
 
   function formatNumber(n) {
@@ -572,6 +622,8 @@
   var prestigeArmed = false;
   var prestigeArmTimeout = null;
   var pulseTimeout = null;
+  var freeTrialSpawnTimeout = null;
+  var freeTrialHideTimeout = null;
 
   // ---------- Persistence ----------
 
@@ -803,6 +855,56 @@
     renderShop();
   }
 
+  // ---------- Free trial popup ----------
+
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function scheduleFreeTrial() {
+    if (freeTrialSpawnTimeout) clearTimeout(freeTrialSpawnTimeout);
+    freeTrialSpawnTimeout = setTimeout(showFreeTrial, randomBetween(FREE_TRIAL_MIN_MS, FREE_TRIAL_MAX_MS));
+  }
+
+  function showFreeTrial() {
+    var wrap = document.querySelector('.wrap');
+    var badge = document.getElementById('free-trial');
+    var name = FREE_TRIAL_NAMES[Math.floor(Math.random() * FREE_TRIAL_NAMES.length)];
+
+    document.getElementById('free-trial-title').textContent = name.toUpperCase() + ' \u2014 FREE TRIAL';
+    document.getElementById('free-trial-sub').textContent = 'claim now \u2014 instant 10x LOC';
+    badge.dataset.name = name;
+
+    var maxLeft = Math.max(wrap.clientWidth - FREE_TRIAL_WIDTH - 8, 8);
+    var maxTop = Math.max(wrap.scrollHeight - FREE_TRIAL_HEIGHT - 8, 90);
+    badge.style.left = randomBetween(8, maxLeft) + 'px';
+    badge.style.top = randomBetween(90, maxTop) + 'px';
+    badge.style.display = 'block';
+
+    if (freeTrialHideTimeout) clearTimeout(freeTrialHideTimeout);
+    freeTrialHideTimeout = setTimeout(function () {
+      badge.style.display = 'none';
+      pushLog('a ' + name + ' free trial expired, unused');
+      scheduleFreeTrial();
+    }, FREE_TRIAL_VISIBLE_MS);
+  }
+
+  function claimFreeTrial() {
+    var badge = document.getElementById('free-trial');
+    if (badge.style.display === 'none') return;
+    var name = badge.dataset.name || 'Free Trial';
+    badge.style.display = 'none';
+    if (freeTrialHideTimeout) clearTimeout(freeTrialHideTimeout);
+
+    var gain = Math.max(state.loc * 9, 50);
+    state.loc += gain;
+    state.totalLocEarned += gain;
+    state.allTimeLoc += gain;
+    pushLog('FREE TRIAL CLAIMED (' + name + ') \u2014 +' + formatNumber(gain) + ' LOC. auto-renews at full price next month.');
+    render();
+    scheduleFreeTrial();
+  }
+
   // ---------- Init ----------
 
   function init() {
@@ -840,6 +942,8 @@
     el.buyMultGroup.querySelectorAll('.mult-btn').forEach(function (btn) {
       btn.addEventListener('click', function () { setBuyMult(btn.getAttribute('data-mult')); });
     });
+    document.getElementById('free-trial').addEventListener('click', claimFreeTrial);
+    scheduleFreeTrial();
 
     // Game tick
     setInterval(function () {
