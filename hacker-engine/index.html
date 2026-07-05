@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>hacker-engine</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="crt-flicker"></div>
+<div class="wrap">
+  <header class="top">
+    <h1>hacker-engine</h1>
+    <a class="nav-link" href="../commit-engine/index.html">← commit-engine</a>
+  </header>
+
+  <div id="setupScreen" class="setup-screen">
+    <div class="box panel">
+      <h2>register handle</h2>
+      <p style="color:var(--text-dim); font-size:0.85rem;">Pick a handle. No password. Your stats sync live to the public leaderboard.</p>
+      <input type="text" id="usernameInput" placeholder="e.g. sh4dow_byte" maxlength="20" />
+      <div style="height:10px"></div>
+      <button id="createAccountBtn">Jack in</button>
+      <div id="setupError" style="color:var(--danger); font-size:0.8rem; margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="hidden">
+    <div class="panel">
+      <div class="stat-grid">
+        <div class="stat"><div class="value" id="powerCount">10</div><div class="label">power</div></div>
+        <div class="stat"><div class="value" id="creditsCount">0</div><div class="label">credits</div></div>
+        <div class="stat"><div class="value" id="successCount">0</div><div class="label">successful hacks</div></div>
+        <div class="stat"><div class="value" id="stolenCount">0</div><div class="label">total stolen</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>targets — from commit-engine</h2>
+      <p style="color:var(--text-dim); font-size:0.8rem; margin-top:-6px;">Higher defense means lower odds. Credits earned from successful breaches fund your tools.</p>
+      <table class="targets">
+        <thead><tr><th>dev</th><th>commits</th><th>defense</th><th></th></tr></thead>
+        <tbody id="targetsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>tool arsenal</h2>
+      <div class="tool-list" id="toolList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>intrusion log — logged in as <span id="usernameLabel"></span></h2>
+      <div class="terminal-log" id="terminalLog"></div>
+    </div>
+
+    <div class="panel">
+      <h2>hacker leaderboard</h2>
+      <table class="leaderboard">
+        <thead><tr><th></th><th>handle</th><th>power</th><th>hacks</th><th>stolen</th></tr></thead>
+        <tbody id="leaderboardBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="gamestate.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
