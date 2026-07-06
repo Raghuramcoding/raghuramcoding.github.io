@@ -54,7 +54,7 @@ const ACHIEVEMENTS = [
   { id: "night_owl", name: "Night Shift", how: "Have the game open past midnight local time.", check: () => { const h = new Date().getHours(); return h === 0; } },
   { id: "typo", name: "git commit -m \"fix typo\"", how: "Make at least 3 commits in one session.", check: (s) => (s.manualClicks || 0) >= 3 },
   { id: "no_ff", name: "Merge Conflict Survivor", how: "Get hacked, then keep playing and earn 1000 more commits.", check: (s) => s.hack_count_against >= 1 && s.commits >= 1000 },
-  { id: "speedrunner", name: "Speedrunner", how: "Reach 1,000 commits within 5 minutes of creating your account.", check: (s) => s.commits >= 1000 && s.accountAgeSeconds !== undefined && s.accountAgeSeconds <= 300 },
+  { id: "speedrunner", name: "Speedrunner", how: "Reach 1,000 commits within 16 and a half minutes  of creating your account.", check: (s) => s.commits >= 1000 && s.accountAgeSeconds !== undefined && s.accountAgeSeconds <= 600},
   { id: "completionist_50", name: "Halfway There", how: "Unlock 50 achievements.", check: (s) => Object.keys(s.achievements).length >= 50 },
   { id: "completionist_all", name: "Achievement Hunter", how: "Unlock every other achievement in the game.", check: (s) => Object.keys(s.achievements).length >= ACHIEVEMENTS_TOTAL_MINUS_ONE() },
 ];
