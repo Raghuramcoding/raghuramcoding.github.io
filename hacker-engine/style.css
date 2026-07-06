@@ -206,6 +206,31 @@ table.leaderboard tr.me { background: rgba(255,59,59,0.08); }
 .progress-bar .fill { height: 100%; background: var(--red); transition: width 0.1s linear; }
 .modal .odds { font-size: 0.8rem; color: var(--text-dim); text-align: center; margin-top: 8px; }
 
+.badge-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge {
+  border: 1px solid var(--red-dim);
+  color: var(--red);
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 3px;
+  background: rgba(255,59,59,0.05);
+}
+.badge.locked { color: var(--text-dim); border-color: var(--panel-border); background: transparent; }
+
+.ach-progress-bar {
+  height: 10px;
+  background: #1a0808;
+  border: 1px solid var(--panel-border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.ach-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red-dim), var(--red-bright));
+  box-shadow: 0 0 8px rgba(255,59,59,0.4);
+  transition: width 0.3s ease;
+}
+
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 4px; }

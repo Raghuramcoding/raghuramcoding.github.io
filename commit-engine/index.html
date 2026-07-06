@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>commit-engine</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="crt-flicker"></div>
+<div class="wrap">
+  <header class="top">
+    <h1>commit-engine</h1>
+    <a class="nav-link" href="../hacker-engine/index.html">⚠ hacker-engine →</a>
+  </header>
+
+  <div id="setupScreen" class="setup-screen">
+    <div class="box panel">
+      <h2>create your dev account</h2>
+      <p style="color:var(--text-dim); font-size:0.85rem;">Pick a username. No password — just don't lose it. Your stats sync live to the public leaderboard.</p>
+      <input type="text" id="usernameInput" placeholder="e.g. raghu_ships_it" maxlength="20" />
+      <div style="height:10px"></div>
+      <button id="createAccountBtn">Initialize repo</button>
+      <div id="setupError" style="color:var(--danger); font-size:0.8rem; margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="hidden">
+    <div class="panel">
+      <div class="stat-grid">
+        <div class="stat"><div class="value" id="commitCount">0</div><div class="label">commits</div></div>
+        <div class="stat"><div class="value" id="cpsCount">0</div><div class="label">commits / sec</div></div>
+        <div class="stat"><div class="value" id="defenseCount">10</div><div class="label">defense</div></div>
+        <div class="stat"><div class="value" id="hackCount">0</div><div class="label">times breached</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <button class="commit-btn" id="commitBtn">git commit -m "progress"</button>
+    </div>
+
+    <div class="panel">
+      <h2>tooling upgrades</h2>
+      <div class="upgrade-list" id="upgradeList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>security upgrades</h2>
+      <p style="color:var(--text-dim); font-size:0.8rem; margin-top:-6px;">Raise your defense directly. Doesn't add to commits/sec.</p>
+      <div class="upgrade-list" id="securityList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>achievements</h2>
+      <div class="badge-list" id="achievementList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>activity log — logged in as <span id="usernameLabel"></span></h2>
+      <div class="terminal-log" id="terminalLog"></div>
+    </div>
+
+    <div class="panel">
+      <h2>global leaderboard</h2>
+      <table class="leaderboard">
+        <thead>
+          <tr><th></th><th>dev</th><th>commits</th><th>rate</th><th>defense</th><th>breaches</th></tr>
+        </thead>
+        <tbody id="leaderboardBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="gamestate.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

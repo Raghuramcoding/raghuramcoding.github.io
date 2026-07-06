@@ -30,6 +30,7 @@
       <div class="stat-grid">
         <div class="stat"><div class="value" id="powerCount">10</div><div class="label">power</div></div>
         <div class="stat"><div class="value" id="creditsCount">0</div><div class="label">credits</div></div>
+        <div class="stat"><div class="value" id="incomeCount">0.1</div><div class="label">credits / sec</div></div>
         <div class="stat"><div class="value" id="successCount">0</div><div class="label">successful hacks</div></div>
         <div class="stat"><div class="value" id="stolenCount">0</div><div class="label">total stolen</div></div>
       </div>
@@ -39,7 +40,7 @@
       <h2>targets — from commit-engine</h2>
       <p style="color:var(--text-dim); font-size:0.8rem; margin-top:-6px;">Higher defense means lower odds. Credits earned from successful breaches fund your tools.</p>
       <table class="targets">
-        <thead><tr><th>dev</th><th>commits</th><th>defense</th><th></th></tr></thead>
+        <thead><tr><th>dev</th><th>commits</th><th>defense</th><th>base odds</th><th></th></tr></thead>
         <tbody id="targetsBody"></tbody>
       </table>
     </div>
@@ -47,6 +48,11 @@
     <div class="panel">
       <h2>tool arsenal</h2>
       <div class="tool-list" id="toolList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>achievements</h2>
+      <div id="achievementList"></div>
     </div>
 
     <div class="panel">

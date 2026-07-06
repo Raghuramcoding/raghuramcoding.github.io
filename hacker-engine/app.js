@@ -99,9 +99,77 @@ el("createAccountBtn").addEventListener("click", async () => {
 function renderAll() {
   el("powerCount").textContent = fmt(state.power);
   el("creditsCount").textContent = fmt(state.credits);
+  el("incomeCount").textContent = state.income.toFixed(1);
   el("successCount").textContent = fmt(state.successful_hacks);
   el("stolenCount").textContent = fmt(state.total_stolen);
   renderTools();
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const container = el("achievementList");
+  if (!container) return;
+  container.innerHTML = "";
+  const unlockedCount = Object.keys(state.achievements).length;
+  const total = ALL_ACHIEVEMENTS.length;
+  const pct = total > 0 ? Math.round((unlockedCount / total) * 100) : 0;
+
+  const progressWrap = document.createElement("div");
+  progressWrap.style.marginBottom = "14px";
+  progressWrap.innerHTML = `
+    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-dim); margin-bottom:6px;">
+      <span>${unlockedCount} / ${total} unlocked</span>
+      <span>${pct}%</span>
+    </div>
+    <div class="ach-progress-bar"><div class="ach-progress-fill" style="width:${pct}%"></div></div>
+  `;
+  container.appendChild(progressWrap);
+
+  const grid = document.createElement("div");
+  grid.className = "badge-list";
+  for (const a of ALL_ACHIEVEMENTS) {
+    const unlockedAt = state.achievements[a.id];
+    const span = document.createElement("span");
+    span.className = "badge" + (unlockedAt ? "" : " locked");
+    span.textContent = unlockedAt ? a.name : "???";
+    span.style.cursor = "pointer";
+    span.addEventListener("click", () => openAchievementModal(a, unlockedAt));
+    grid.appendChild(span);
+  }
+  container.appendChild(grid);
+}
+
+function openAchievementModal(achievement, unlockedAt) {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  const unlocked = !!unlockedAt;
+  const dateStr = unlocked
+    ? new Date(unlockedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+    : null;
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>${unlocked ? achievement.name : "??? (locked)"}</h3>
+      <p style="color:var(--text-dim); font-size:0.85rem;">${achievement.how}</p>
+      ${unlocked
+        ? `<p style="color:var(--good); font-size:0.85rem;">Achieved ${dateStr}</p>`
+        : `<p style="color:var(--text-dim); font-size:0.8rem;">Not yet unlocked.</p>`}
+      <button id="closeAchModal" style="width:100%; margin-top:10px;">Close</button>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.querySelector("#closeAchModal").addEventListener("click", () => backdrop.remove());
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) backdrop.remove();
+  });
+}
+
+function checkAchievements() {
+  const newly = state.checkAchievements();
+  for (const a of newly) {
+    showToast(`Achievement unlocked: ${a.name}`, true);
+    logLine(`achievement unlocked: <b>${a.name}</b>`, true);
+  }
+  if (newly.length) renderAchievements();
 }
 
 function renderTools() {
@@ -126,6 +194,7 @@ function renderTools() {
     btn.addEventListener("click", () => {
       if (state.buyTool(btn.dataset.id)) {
         renderAll();
+        checkAchievements();
         syncState();
       }
     });
@@ -134,18 +203,25 @@ function renderTools() {
 
 // ---------- Targets & leaderboard ----------
 
+let currentTargetsList = [];
+let rawTargetsList = [];
+
 async function refreshTargets() {
   try {
     const rows = await apiTargetList(15);
+    rawTargetsList = rows;
+    currentTargetsList = rows.filter((r) => r.username !== state.username);
     const tbody = el("targetsBody");
     tbody.innerHTML = "";
     rows.forEach((row) => {
       if (row.username === state.username) return;
       const tr = document.createElement("tr");
+      const baseOdds = Math.round((state.power / (state.power + row.defense)) * 100);
       tr.innerHTML = `
         <td>${row.username}</td>
         <td>${fmt(row.commits)}</td>
         <td>${row.defense}</td>
+        <td style="color: ${baseOdds >= 50 ? "var(--good)" : "var(--red-bright)"};">${baseOdds}%</td>
         <td><button class="target-btn" data-name="${row.username}">Hack</button></td>
       `;
       tbody.appendChild(tr);
@@ -227,7 +303,7 @@ function openHackModal(targetName) {
     if (elapsed >= timeLimit && !expired) {
       expired = true;
       clearInterval(timer);
-      resolveAttempt(0, backdrop);
+      resolveAttempt(0, backdrop, false);
     }
   }, 80);
 
@@ -242,10 +318,12 @@ function openHackModal(targetName) {
     const typed = input.value.trim().toUpperCase();
     const accuracy = charAccuracy(typed, key);
     const speedFactor = Math.max(0, 1 - elapsed / timeLimit);
-    const bonus = Math.max(0, Math.min(1, accuracy * 0.7 + speedFactor * 0.3));
+    // Bonus scales with accuracy first - if you didn't actually type anything correct,
+    // speed alone earns you nothing (this used to be exploitable by hitting Execute instantly).
+    const bonus = Math.max(0, Math.min(1, accuracy * (0.7 + 0.3 * speedFactor)));
     expired = true;
     clearInterval(timer);
-    resolveAttempt(bonus, backdrop);
+    resolveAttempt(bonus, backdrop, false);
   });
 
   input.addEventListener("keydown", (e) => {
@@ -261,7 +339,7 @@ function charAccuracy(typed, key) {
   return matches / key.length;
 }
 
-async function resolveAttempt(puzzleBonus, backdrop) {
+async function resolveAttempt(puzzleBonus, backdrop, wasAutoHack) {
   const oddsLine = backdrop.querySelector("#oddsLine");
   const submitBtn = backdrop.querySelector("#submitHackBtn");
   submitBtn.disabled = true;
@@ -269,18 +347,17 @@ async function resolveAttempt(puzzleBonus, backdrop) {
 
   try {
     const result = await apiAttemptHack(state.username, currentTarget, puzzleBonus);
+    const targetWasRank1 = rawTargetsList[0] && rawTargetsList[0].username === currentTarget;
+    state.recordHackResult(result.success, result.stolen || 0, wasAutoHack, targetWasRank1);
     if (result.success) {
-      state.successful_hacks += 1;
-      state.total_stolen += result.stolen;
-      state.credits += result.stolen;
       showToast(`Breach successful! Stole ${fmt(result.stolen)} commits from ${currentTarget}.`, true);
       logLine(`breach on <b>${currentTarget}</b> succeeded (${result.successChance}% odds) — stole ${fmt(result.stolen)}`, true);
     } else {
-      state.failed_hacks += 1;
       showToast(`Breach failed against ${currentTarget}. Defenses held.`);
       logLine(`breach on <b>${currentTarget}</b> failed (${result.successChance}% odds)`, false);
     }
     renderAll();
+    checkAchievements();
     syncState();
     refreshLeaderboard();
     refreshTargets();
@@ -291,14 +368,65 @@ async function resolveAttempt(puzzleBonus, backdrop) {
   }
 }
 
+// ---------- Auto-hack: while the tab is open, attempt a breach every 60s,
+// cycling down the leaderboard in rank order (#1, #2, #3, ... then wraps back to #1) ----------
+
+let autoHackIndex = 0;
+
+async function autoHackTick() {
+  if (!state.username) return;
+  if (!currentTargetsList || currentTargetsList.length === 0) {
+    // no cached list yet (e.g. just loaded) - try a fresh fetch first
+    await refreshTargets();
+    if (!currentTargetsList || currentTargetsList.length === 0) return;
+  }
+
+  const target = currentTargetsList[autoHackIndex % currentTargetsList.length];
+  autoHackIndex = (autoHackIndex + 1) % currentTargetsList.length;
+  if (!target) return;
+
+  try {
+    const result = await apiAttemptHack(state.username, target.username, 0);
+    const targetWasRank1 = rawTargetsList[0] && rawTargetsList[0].username === target.username;
+    state.recordHackResult(result.success, result.stolen || 0, true, targetWasRank1);
+    if (result.success) {
+      showToast(`[AUTO] Breach successful! Stole ${fmt(result.stolen)} commits from ${target.username}.`, true);
+      logLine(`[AUTO] breach on <b>${target.username}</b> succeeded (${result.successChance}% odds) — stole ${fmt(result.stolen)}`, true);
+    } else {
+      logLine(`[AUTO] breach on <b>${target.username}</b> failed (${result.successChance}% odds)`, false);
+    }
+    renderAll();
+    checkAchievements();
+    syncState();
+    refreshLeaderboard();
+    refreshTargets();
+  } catch (e) {
+    // Likely the 60s per-hacker cooldown was already used by a manual hack this cycle - that's fine, just skip.
+    console.warn("auto-hack tick skipped:", e.message);
+  }
+}
+
 // ---------- Sync loop ----------
 
+let lastTick = Date.now();
+
 function startLoop() {
+  lastTick = Date.now();
+  setInterval(() => {
+    const now = Date.now();
+    const dt = (now - lastTick) / 1000;
+    lastTick = now;
+    state.tick(dt);
+    el("creditsCount").textContent = fmt(state.credits);
+  }, 200);
+
   syncTimer = setInterval(() => {
     if (state.dirty) syncState();
   }, 6000);
+  setInterval(checkAchievements, 1500);
   setInterval(refreshTargets, 20000);
   setInterval(refreshLeaderboard, 20000);
+  setInterval(autoHackTick, 60000);
 }
 
 async function syncState() {
