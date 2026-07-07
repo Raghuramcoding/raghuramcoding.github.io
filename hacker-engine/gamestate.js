@@ -1,3 +1,15 @@
+function formatDuration(totalSeconds) {
+  totalSeconds = Math.floor(totalSeconds);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 const TOOLS = [
   { id: "portscanner", name: "Port Scanner", desc: "+1 power, +0.3 credits/sec", baseCost: 20, powerGain: 1, incomeGain: 0.3 },
   { id: "keylogger", name: "Keylogger Kit", desc: "+4 power, +1.2 credits/sec", baseCost: 120, powerGain: 4, incomeGain: 1.2 },
@@ -67,6 +79,9 @@ function totalToolsMilestone(id, name, threshold) {
 }
 function attemptsMilestone(id, name, threshold) {
   return { id, name, how: `Make ${fmtStatic(threshold)} total hack attempts (successful or not).`, check: (s) => (s.successful_hacks + s.failed_hacks) >= threshold };
+}
+function manualHackMilestone(id, name, threshold) {
+  return { id, name, how: `Manually run the hack mini-puzzle ${fmtStatic(threshold)} time${threshold > 1 ? "s" : ""} (not counting auto-hacks).`, check: (s) => (s.manualHacks || 0) >= threshold };
 }
 function autoHackMilestone(id, name, threshold) {
   return { id, name, how: `Land ${fmtStatic(threshold)} successful auto-hack${threshold > 1 ? "s" : ""} (the automatic once-a-minute attempts).`, check: (s) => (s.autoHackSuccesses || 0) >= threshold };
@@ -198,6 +213,14 @@ const AUTO_HACK_TIERS = [
   ["auto_500", "Autopilot Legend", 500],
 ];
 
+const MANUAL_HACK_TIERS = [
+  ["manual_10", "Hands-On Hacker", 10],
+  ["manual_50", "Manual Labor", 50],
+  ["manual_100", "Century of Keystrokes", 100],
+  ["manual_500", "Dedicated Operator", 500],
+  ["manual_1k", "Thousand Keystrokes", 1000],
+];
+
 const TOOL_OWN_TIERS = [5, 10, 25, 50];
 
 const TOTAL_TOOLS_TIERS = [
@@ -218,6 +241,7 @@ function buildAllAchievements() {
   for (const [id, name, t] of CREDITS_TIERS) list.push(creditsMilestone(id, name, t));
   for (const [id, name, t] of INCOME_TIERS) list.push(incomeMilestone(id, name, t));
   for (const [id, name, t] of ATTEMPTS_TIERS) list.push(attemptsMilestone(id, name, t));
+  for (const [id, name, t] of MANUAL_HACK_TIERS) list.push(manualHackMilestone(id, name, t));
   for (const [id, name, t] of AUTO_HACK_TIERS) list.push(autoHackMilestone(id, name, t));
   for (const tool of TOOLS) {
     for (const tier of TOOL_OWN_TIERS) {
@@ -233,7 +257,8 @@ const ALL_ACHIEVEMENTS = buildAllAchievements();
 class HackerState {
   constructor() {
     this.username = null;
-    this.power = 10;
+    this.power = 10; // effective power (includes achievement bonus) - this is what's sent to the server for hack odds
+    this.basePower = 10; // power from tools/base only, before achievement bonus
     this.tools = {}; // { id: count }
     this.successful_hacks = 0;
     this.failed_hacks = 0;
@@ -246,7 +271,29 @@ class HackerState {
     this.autoHackAttempts = 0;
     this.autoHackSuccesses = 0;
     this.hasHackedRank1 = false;
+    this.manualHacks = 0;
+    this.accountCreatedAt = null; // ISO string from server's created_at
     this.dirty = false;
+  }
+
+  get accountAgeSeconds() {
+    if (!this.accountCreatedAt) return undefined;
+    return (Date.now() - new Date(this.accountCreatedAt + "Z").getTime()) / 1000;
+  }
+
+  get accountAgeFormatted() {
+    const secs = this.accountAgeSeconds;
+    if (secs === undefined || isNaN(secs) || secs < 0) return "—";
+    return formatDuration(secs);
+  }
+
+  // Every unlocked achievement permanently adds +0.5% power, cumulative.
+  get achievementBonusMultiplier() {
+    return 1 + 0.005 * Object.keys(this.achievements).length;
+  }
+
+  recomputePower() {
+    this.power = this.basePower * this.achievementBonusMultiplier;
   }
 
   tick(seconds) {
@@ -265,7 +312,8 @@ class HackerState {
     this.credits -= cost;
     this.totalCreditsSpent += cost;
     this.tools[id] = owned + 1;
-    this.power += tool.powerGain;
+    this.basePower += tool.powerGain;
+    this.recomputePower();
     this.income = computeIncome(this.tools);
     this.dirty = true;
     return true;
@@ -273,6 +321,7 @@ class HackerState {
 
   recordHackResult(success, stolen, wasAutoHack, targetWasRank1) {
     if (wasAutoHack) this.autoHackAttempts += 1;
+    else this.manualHacks += 1;
     if (success) {
       this.successful_hacks += 1;
       this.total_stolen += stolen;
@@ -292,15 +341,21 @@ class HackerState {
     for (const a of ALL_ACHIEVEMENTS) {
       if (!this.achievements[a.id] && a.check(this)) {
         this.achievements[a.id] = now;
+        // One-time reward: roughly 30 seconds worth of your current income, minimum 20 credits.
+        const reward = Math.max(20, Math.floor(this.income * 30));
+        this.credits += reward;
+        a.rewardGiven = reward;
         newly.push(a);
       }
     }
-    if (newly.length) this.dirty = true;
+    if (newly.length) {
+      this.recomputePower();
+      this.dirty = true;
+    }
     return newly;
   }
 
   applySnapshot(remote) {
-    this.power = remote.power ?? 10;
     this.tools = remote.tools || {};
     this.income = computeIncome(this.tools);
     this.successful_hacks = remote.successful_hacks ?? 0;
@@ -314,14 +369,24 @@ class HackerState {
     } else {
       this.achievements = remote.achievements || {};
     }
+    // remote.power is the effective (bonus-included) value we last persisted. Back out
+    // basePower using the current achievement multiplier so future tool purchases add
+    // correctly on top - a little rounding drift is possible over many reload cycles but
+    // is negligible in practice.
+    const persistedPower = remote.power ?? 10;
+    this.basePower = persistedPower / this.achievementBonusMultiplier;
+    this.power = persistedPower;
+    this.manualHacks = remote.manual_hacks ?? this.manualHacks ?? 0;
+    this.accountCreatedAt = remote.created_at || this.accountCreatedAt;
   }
 
   toPatch() {
     return {
-      power: Math.floor(this.power),
+      power: this.power,
       tools: this.tools,
       credits: Math.floor(this.credits),
       achievements: this.achievements,
+      manualHacks: Math.floor(this.manualHacks),
     };
   }
 }

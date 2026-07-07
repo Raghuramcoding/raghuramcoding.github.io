@@ -1,3 +1,15 @@
+function formatDuration(totalSeconds) {
+  totalSeconds = Math.floor(totalSeconds);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 const UPGRADES = [
   { id: "linter", name: "Autolinter", desc: "+1 commit/sec", baseCost: 15, cpsGain: 1 },
   { id: "intern", name: "Hire an Intern", desc: "+5 commits/sec", baseCost: 100, cpsGain: 5 },
@@ -48,7 +60,7 @@ function commitMilestone(id, name, threshold) {
   return { id, name, how: `Reach ${fmtStatic(threshold)} total commits.`, check: (s) => s.commits >= threshold };
 }
 function cpsMilestone(id, name, threshold) {
-  return { id, name, how: `Reach ${fmtStatic(threshold)} commits/sec.`, check: (s) => s.cps >= threshold };
+  return { id, name, how: `Reach ${fmtStatic(threshold)} commits/sec.`, check: (s) => s.effectiveCps >= threshold };
 }
 function clickMilestone(id, name, threshold) {
   return { id, name, how: `Manually click "git commit" ${fmtStatic(threshold)} times.`, check: (s) => (s.manualClicks || 0) >= threshold };
@@ -248,7 +260,7 @@ class GameState {
   constructor() {
     this.username = null;
     this.commits = 0;
-    this.cps = 0;
+    this.baseCps = 0; // production from upgrades only, before achievement bonus
     this.upgrades = {}; // { id: count }
     this.securityUpgrades = {}; // { id: count }
     this.achievements = {}; // { id: isoTimestampString }
@@ -266,6 +278,26 @@ class GameState {
     return (Date.now() - new Date(this.accountCreatedAt + "Z").getTime()) / 1000;
   }
 
+  get accountAgeFormatted() {
+    const secs = this.accountAgeSeconds;
+    if (secs === undefined || isNaN(secs) || secs < 0) return "—";
+    return formatDuration(secs);
+  }
+
+  // Every unlocked achievement permanently adds +0.5% production, cumulative.
+  get achievementBonusMultiplier() {
+    return 1 + 0.005 * Object.keys(this.achievements).length;
+  }
+
+  get effectiveCps() {
+    return this.baseCps * this.achievementBonusMultiplier;
+  }
+
+  // Kept for any old code/UI that reads `.cps` directly - always the real, current production rate.
+  get cps() {
+    return this.effectiveCps;
+  }
+
   clickCommit() {
     this.commits += 1;
     this.manualClicks += 1;
@@ -273,8 +305,9 @@ class GameState {
   }
 
   tick(seconds) {
-    if (this.cps > 0) {
-      this.commits += this.cps * seconds;
+    const rate = this.effectiveCps;
+    if (rate > 0) {
+      this.commits += rate * seconds;
       this.dirty = true;
     }
   }
@@ -287,7 +320,7 @@ class GameState {
     if (this.commits < cost) return false;
     this.commits -= cost;
     this.upgrades[id] = owned + 1;
-    this.cps += upg.cpsGain;
+    this.baseCps += upg.cpsGain;
     if (upg.baseCost >= BIG_UPGRADE_COST_THRESHOLD) {
       this.lastBigUpgradeAt = Date.now();
       this.lastBigUpgradeBaseline = this.commits;
@@ -315,6 +348,10 @@ class GameState {
     for (const a of ALL_ACHIEVEMENTS) {
       if (!this.achievements[a.id] && a.check(this)) {
         this.achievements[a.id] = now;
+        // One-time reward: roughly 30 seconds worth of your current production, minimum 50 commits.
+        const reward = Math.max(50, Math.floor(this.effectiveCps * 30));
+        this.commits += reward;
+        a.rewardGiven = reward; // stash on the achievement object so the toast can mention it
         newly.push(a);
       }
     }
@@ -324,7 +361,7 @@ class GameState {
 
   applySnapshot(remote) {
     this.commits = remote.commits;
-    this.cps = remote.cps;
+    this.baseCps = remote.cps ?? 0;
     this.upgrades = remote.upgrades || {};
     this.securityUpgrades = remote.security || {};
     // Backward-compat: older saves stored achievements as an array of ids.
@@ -337,17 +374,19 @@ class GameState {
     }
     this.defense = remote.defense ?? 10;
     this.hack_count_against = remote.hack_count_against ?? 0;
+    this.manualClicks = remote.manual_clicks ?? this.manualClicks ?? 0;
     this.accountCreatedAt = remote.created_at || this.accountCreatedAt;
   }
 
   toPatch() {
     return {
       commits: Math.floor(this.commits),
-      cps: Math.floor(this.cps),
+      cps: Math.floor(this.baseCps),
       upgrades: this.upgrades,
       security: this.securityUpgrades,
       achievements: this.achievements,
       defense: Math.floor(this.defense),
+      manualClicks: Math.floor(this.manualClicks),
     };
   }
 }

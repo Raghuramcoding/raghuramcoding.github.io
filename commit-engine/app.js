@@ -102,6 +102,8 @@ function renderAll() {
   el("cpsCount").textContent = fmt(state.cps);
   el("defenseCount").textContent = fmt(state.defense);
   el("hackCount").textContent = fmt(state.hack_count_against);
+  el("manualClickCount").textContent = fmt(state.manualClicks);
+  el("accountAge").textContent = state.accountAgeFormatted;
   renderUpgrades();
   renderSecurityUpgrades();
   renderAchievements();
@@ -207,6 +209,7 @@ function openAchievementModal(achievement, unlockedAt) {
     <div class="modal">
       <h3>${unlocked ? achievement.name : "??? (locked)"}</h3>
       <p style="color:var(--text-dim); font-size:0.85rem;">${achievement.how}</p>
+      <p style="color:var(--text-dim); font-size:0.75rem;">Every achievement grants a one-time commit bonus plus +0.5% production, permanently.</p>
       ${unlocked
         ? `<p style="color:var(--good); font-size:0.85rem;">Achieved ${dateStr}</p>`
         : `<p style="color:var(--text-dim); font-size:0.8rem;">Not yet unlocked.</p>`}
@@ -223,10 +226,15 @@ function openAchievementModal(achievement, unlockedAt) {
 function checkAchievements() {
   const newly = state.checkAchievements();
   for (const a of newly) {
-    showToast(`Achievement unlocked: ${a.name}`);
-    logLine(`achievement unlocked: <b>${a.name}</b>`);
+    const rewardText = a.rewardGiven ? ` (+${fmt(a.rewardGiven)} commits, +0.5% production forever)` : "";
+    showToast(`Achievement unlocked: ${a.name}${rewardText}`);
+    logLine(`achievement unlocked: <b>${a.name}</b>${rewardText}`);
   }
-  if (newly.length) renderAchievements();
+  if (newly.length) {
+    renderAchievements();
+    el("commitCount").textContent = fmt(state.commits);
+    el("cpsCount").textContent = fmt(state.cps);
+  }
 }
 
 // ---------- Loop ----------
@@ -234,6 +242,7 @@ function checkAchievements() {
 el("commitBtn").addEventListener("click", () => {
   state.clickCommit();
   el("commitCount").textContent = fmt(state.commits);
+  el("manualClickCount").textContent = fmt(state.manualClicks);
   checkAchievements();
   renderUpgrades();
 });
@@ -253,6 +262,10 @@ function startLoop() {
   setInterval(() => {
     checkAchievements();
   }, 1500);
+
+  setInterval(() => {
+    el("accountAge").textContent = state.accountAgeFormatted;
+  }, 1000);
 
   // Combined hack-check + sync cycle. Hack-check MUST run before any outgoing push,
   // otherwise a routine sync could overwrite a server-side theft with our stale local

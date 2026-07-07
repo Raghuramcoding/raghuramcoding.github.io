@@ -150,6 +150,13 @@ button.commit-btn {
   position: relative;
 }
 button.commit-btn:active:not(:disabled) { transform: scale(0.98); }
+.commit-btn-sub {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
 
 input[type="text"] {
   font-family: inherit;

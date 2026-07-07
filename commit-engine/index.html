@@ -32,11 +32,15 @@
         <div class="stat"><div class="value" id="cpsCount">0</div><div class="label">commits / sec</div></div>
         <div class="stat"><div class="value" id="defenseCount">10</div><div class="label">defense</div></div>
         <div class="stat"><div class="value" id="hackCount">0</div><div class="label">times breached</div></div>
+        <div class="stat"><div class="value" id="accountAge" style="font-size:1.1rem;">—</div><div class="label">account age</div></div>
       </div>
     </div>
 
     <div class="panel">
-      <button class="commit-btn" id="commitBtn">git commit -m "progress"</button>
+      <button class="commit-btn" id="commitBtn">
+        git commit -m "progress"
+        <div class="commit-btn-sub">commits: <span id="manualClickCount">0</span></div>
+      </button>
     </div>
 
     <div class="panel">
@@ -52,7 +56,7 @@
 
     <div class="panel">
       <h2>achievements</h2>
-      <div class="badge-list" id="achievementList"></div>
+      <div id="achievementList"></div>
     </div>
 
     <div class="panel">

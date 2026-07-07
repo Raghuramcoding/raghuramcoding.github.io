@@ -102,6 +102,8 @@ function renderAll() {
   el("incomeCount").textContent = state.income.toFixed(1);
   el("successCount").textContent = fmt(state.successful_hacks);
   el("stolenCount").textContent = fmt(state.total_stolen);
+  el("manualHackCount").textContent = fmt(state.manualHacks);
+  el("accountAge").textContent = state.accountAgeFormatted;
   renderTools();
   renderAchievements();
 }
@@ -150,6 +152,7 @@ function openAchievementModal(achievement, unlockedAt) {
     <div class="modal">
       <h3>${unlocked ? achievement.name : "??? (locked)"}</h3>
       <p style="color:var(--text-dim); font-size:0.85rem;">${achievement.how}</p>
+      <p style="color:var(--text-dim); font-size:0.75rem;">Every achievement grants a one-time credit bonus plus +0.5% power, permanently.</p>
       ${unlocked
         ? `<p style="color:var(--good); font-size:0.85rem;">Achieved ${dateStr}</p>`
         : `<p style="color:var(--text-dim); font-size:0.8rem;">Not yet unlocked.</p>`}
@@ -166,10 +169,14 @@ function openAchievementModal(achievement, unlockedAt) {
 function checkAchievements() {
   const newly = state.checkAchievements();
   for (const a of newly) {
-    showToast(`Achievement unlocked: ${a.name}`, true);
-    logLine(`achievement unlocked: <b>${a.name}</b>`, true);
+    const rewardText = a.rewardGiven ? ` (+${fmt(a.rewardGiven)} credits, +0.5% power forever)` : "";
+    showToast(`Achievement unlocked: ${a.name}${rewardText}`, true);
+    logLine(`achievement unlocked: <b>${a.name}</b>${rewardText}`, true);
   }
-  if (newly.length) renderAchievements();
+  if (newly.length) {
+    renderAchievements();
+    renderAll();
+  }
 }
 
 function renderTools() {
@@ -427,6 +434,9 @@ function startLoop() {
   setInterval(refreshTargets, 20000);
   setInterval(refreshLeaderboard, 20000);
   setInterval(autoHackTick, 60000);
+  setInterval(() => {
+    el("accountAge").textContent = state.accountAgeFormatted;
+  }, 1000);
 }
 
 async function syncState() {
