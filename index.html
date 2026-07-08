@@ -265,18 +265,24 @@ a:visited { color: #551a8b; }
 }
 
 /* NEWS LIST — Snoopy.com bullet style */
-.news-list { margin: 0; padding: 0; list-style: none; }
-.news-list li {
-    padding: 4px 0;
-    border-bottom: 1px dotted #cccccc;
-    font-size: 12px;
-    font-family: Arial, Helvetica, sans-serif;
+.announcement-box {
+  background-color: #f9f9f9;
+  border-left: 5px solid #007bff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  font-family: sans-serif;
 }
-.news-list li:before { content: "\00B7  "; font-size: 16px; color: #888; }
-.news-list li a { color: #000066; text-decoration: none; }
-.news-list li a:hover { text-decoration: underline; color: #cc3300; }
-.news-more { font-size: 11px; color: #555; margin-top: 4px; }
-.news-more a { color: #000066; }
+
+.announcement-box h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.announcement-box p {
+  margin-bottom: 0;
+  color: #555;
+}
 
 /* STRIP/DEVLOG AREA */
 .strip-meta {
@@ -506,7 +512,7 @@ a:visited { color: #551a8b; }
       </td>
       <td valign="middle" style="color:#e8eaf6; font-size:13px; font-style:italic; text-shadow:1px 1px 2px #000;">
         A journey through pixels, logic &amp; time.<br>
-        <span style="font-size:10px; color:#9fa8da;">By Schulz &mdash; by <em>me</em>.</span>
+        <span style="font-size:10px; color:#9fa8da;"> by <em>me</em>.</span>
       </td>
       <td valign="middle" align="right" nowrap>
         <table border="0" cellspacing="4" cellpadding="0">
@@ -619,25 +625,19 @@ function swap(showId, hideId) {
   </td>
 
   <!-- ===================== MAIN CONTENT ===================== -->
-  <td class="main-content" valign="top">
+   <div id="cusdis_thread"
+  data-host="https://cusdis.com"
+  data-app-id="47589963-25e8-4c98-9d6a-efd7d162a2a0"
+  data-page-id="{{ latest }}"
+  data-page-url="{{ PAGE_URL }}"
+  data-page-title="{{ PAGE_TITLE }}"
+></div>
+<script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
 
-    <!-- NEWS -->
-    <div class="section-title">Coding News</div>
-    <ul class="news-list">
-      <li>
-        <span class="badge-updated">UPDATE</span>
-        <a href="#">Joined Kaggle Python course &mdash; 38% complete</a>
-      </li>
-      <li>
-        <a href="#">Forum is now open &mdash; come say hi todayk</a>
-      </li>
-      <li>
-        <a href="#">Reading List updated &mdash; 3 new books added this month</a>
-      </li>
-    </ul>
-    
-
-    <hr class="sep">
+ <div class="announcement-box">
+  <h3>📢 Latest Announcements</h3>
+  <p>Welcome to the forum! Please be respectful and follow our community guidelines while posting.</p>
+</div>
 
    
     <hr class="sep">
