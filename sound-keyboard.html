@@ -108,6 +108,20 @@
     background:var(--key-active);
     color:#12141a;
   }
+  .key.looping{
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(90,200,168,0.35);
+  }
+  .key.looping::after{
+    content:'';
+    position:absolute;
+    top:5px;
+    right:5px;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--accent);
+  }
   .key .letter{
     font-size:16px;
     font-weight:bold;
@@ -211,6 +225,35 @@
 <div class="panel">
   <h2>Sound bank</h2>
   <div class="modes" id="modes"></div>
+</div>
+
+<div class="panel">
+  <h2>Settings</h2>
+  <div class="controls" style="flex-direction:column;align-items:flex-start;gap:10px;">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+      <input type="checkbox" id="lockMysteryChk" checked>
+      Lock Mystery sounds after first reveal (press a key twice, get the same sound both times)
+    </label>
+    <div class="controls" style="margin:0;">
+      <button class="action" id="reshuffleMysteryBtn">Reshuffle all Mystery keys</button>
+    </div>
+    <hr style="width:100%;border-color:var(--line);margin:2px 0;">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+      <input type="checkbox" id="enableShuffleChk" checked>
+      Enable Shuffle mode (unchecking hides it from the mode list — any songs you saved while shuffling stay safe in Saved takes)
+    </label>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Layer &amp; loop</h2>
+  <div class="status" style="margin-top:0;">Shift+click a key (or hold Shift and tap its letter) to lock it into a repeating loop. Layer several keys, then play other keys normally on top — like holding "A" while Q, R, T, U, I loop underneath. Shift+click a looping key again to stop just that one.</div>
+  <div class="controls" style="margin-top:10px;">
+    <label style="font-size:13px;">Loop speed:</label>
+    <input type="range" id="loopSpeed" min="150" max="1000" step="10" value="450" style="flex:1;min-width:120px;">
+    <span id="loopSpeedLabel" style="font-size:12px;color:var(--sub);min-width:60px;">450 ms</span>
+    <button class="action" id="stopLoopsBtn">Stop all loops</button>
+  </div>
 </div>
 
 <div class="panel">
@@ -505,22 +548,34 @@ REAL_BANKS.forEach(modeKey=>{
 });
 
 let currentMode = 'piano';
-let mysteryReveal = {}; // key -> {label, bank} for last-triggered mystery sound
+let mysteryAssignments = {}; // key -> locked {label, bank, fn} once revealed (Mystery mode)
+let lockMystery = true;      // if true, a Mystery key keeps the sound it revealed
+let shuffleEnabled = true;   // if false, Shuffle mode is hidden from the mode picker
+let loopIntervals = {};      // key -> intervalId, for Layer & loop
+let loopSpeedMs = 450;
 
 // ---------- Build UI ----------
 const modesEl = document.getElementById('modes');
-Object.keys(MODES).forEach(modeKey=>{
-  const btn = document.createElement('button');
-  btn.className = 'mode-btn' + (modeKey===currentMode?' active':'');
-  btn.textContent = MODES[modeKey].label;
-  btn.onclick = ()=>{
-    currentMode = modeKey;
-    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    renderKeyboard();
-  };
-  modesEl.appendChild(btn);
-});
+
+function renderModeButtons(){
+  modesEl.innerHTML = '';
+  Object.keys(MODES).forEach(modeKey=>{
+    if(modeKey === 'shuffle' && !shuffleEnabled) return; // hidden, but MODES.shuffle itself stays intact for playback
+    const btn = document.createElement('button');
+    btn.className = 'mode-btn' + (modeKey===currentMode?' active':'');
+    btn.textContent = MODES[modeKey].label;
+    btn.dataset.mode = modeKey;
+    btn.onclick = ()=>{
+      currentMode = modeKey;
+      document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      stopAllLoops();
+      renderKeyboard();
+    };
+    modesEl.appendChild(btn);
+  });
+}
+renderModeButtons();
 
 const keyboardEl = document.getElementById('keyboard');
 const keyElements = {};
@@ -533,10 +588,18 @@ function renderKeyboard(){
     const div = document.createElement('div');
     div.className = 'key';
     div.dataset.key = k;
-    div.innerHTML = `<div class="letter">${k.toUpperCase()}</div><div class="label">${mode.keys[k].label}</div>`;
-    div.onmousedown = ()=>triggerKey(k);
+    let label = mode.keys[k].label;
+    if(currentMode === 'mystery' && lockMystery && mysteryAssignments[k]){
+      label = `${mysteryAssignments[k].label} (${mysteryAssignments[k].bank})`;
+    }
+    div.innerHTML = `<div class="letter">${k.toUpperCase()}</div><div class="label">${label}</div>`;
+    div.onmousedown = (e)=>{
+      if(e.shiftKey){ toggleLoop(k); }
+      else { triggerKey(k); }
+    };
     keyboardEl.appendChild(div);
     keyElements[k] = div;
+    if(loopIntervals[k]) div.classList.add('looping');
   });
 }
 renderKeyboard();
@@ -553,7 +616,13 @@ function triggerShuffle(k){
 }
 
 function triggerMystery(k){
-  const pick = ALL_SOUNDS[Math.floor(Math.random()*ALL_SOUNDS.length)];
+  let pick;
+  if(lockMystery && mysteryAssignments[k]){
+    pick = mysteryAssignments[k];
+  } else {
+    pick = ALL_SOUNDS[Math.floor(Math.random()*ALL_SOUNDS.length)];
+    if(lockMystery) mysteryAssignments[k] = pick;
+  }
   pick.fn();
   // Reveal after the sound plays
   const el = keyElements[k];
@@ -576,25 +645,84 @@ function flashKey(k){
   setTimeout(()=>el.classList.remove('pressed'), 110);
 }
 
-function triggerKey(k){
+function triggerKey(k, opts){
   if(actx.state === 'suspended') actx.resume();
   const mode = MODES[currentMode];
   const def = mode.keys[k];
   if(!def) return;
   def.fn();
   flashKey(k);
-  if(isRecording){
+  if(isRecording && !(opts && opts.silent)){
     currentTake.push({t: Date.now()-recordStart, mode: currentMode, key: k});
   }
+}
+
+function toggleLoop(k){
+  if(loopIntervals[k]){
+    clearInterval(loopIntervals[k]);
+    delete loopIntervals[k];
+    if(keyElements[k]) keyElements[k].classList.remove('looping');
+    return;
+  }
+  triggerKey(k);
+  loopIntervals[k] = setInterval(()=>triggerKey(k), loopSpeedMs);
+  if(keyElements[k]) keyElements[k].classList.add('looping');
+}
+
+function stopAllLoops(){
+  Object.keys(loopIntervals).forEach(k=>{
+    clearInterval(loopIntervals[k]);
+    if(keyElements[k]) keyElements[k].classList.remove('looping');
+  });
+  loopIntervals = {};
 }
 
 document.addEventListener('keydown', (e)=>{
   if(e.repeat) return;
   const k = e.key.toLowerCase();
-  if(MODES[currentMode].keys[k]){
-    triggerKey(k);
-  }
+  if(!MODES[currentMode].keys[k]) return;
+  if(e.shiftKey){ toggleLoop(k); }
+  else { triggerKey(k); }
 });
+
+// ---------- Settings wiring ----------
+const lockMysteryChk = document.getElementById('lockMysteryChk');
+lockMysteryChk.onchange = ()=>{
+  lockMystery = lockMysteryChk.checked;
+  if(currentMode === 'mystery') renderKeyboard();
+};
+
+document.getElementById('reshuffleMysteryBtn').onclick = ()=>{
+  mysteryAssignments = {};
+  if(currentMode === 'mystery') renderKeyboard();
+  statusEl.textContent = 'Mystery keys reshuffled — every key will pick a new sound next press.';
+  statusEl.className = 'status';
+};
+
+const enableShuffleChk = document.getElementById('enableShuffleChk');
+enableShuffleChk.onchange = ()=>{
+  shuffleEnabled = enableShuffleChk.checked;
+  if(!shuffleEnabled && currentMode === 'shuffle'){
+    currentMode = 'piano';
+    stopAllLoops();
+  }
+  renderModeButtons();
+  renderKeyboard();
+};
+
+const loopSpeedSlider = document.getElementById('loopSpeed');
+const loopSpeedLabel = document.getElementById('loopSpeedLabel');
+loopSpeedSlider.oninput = ()=>{
+  loopSpeedMs = parseInt(loopSpeedSlider.value, 10);
+  loopSpeedLabel.textContent = `${loopSpeedMs} ms`;
+  // live-update any currently running loops to the new speed
+  Object.keys(loopIntervals).forEach(k=>{
+    clearInterval(loopIntervals[k]);
+    loopIntervals[k] = setInterval(()=>triggerKey(k), loopSpeedMs);
+  });
+};
+
+document.getElementById('stopLoopsBtn').onclick = stopAllLoops;
 
 // ---------- Recording ----------
 let isRecording = false;
