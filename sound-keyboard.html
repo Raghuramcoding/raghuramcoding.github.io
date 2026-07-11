@@ -231,10 +231,28 @@
 </div>
 
 <div class="panel">
+  <h2>Share &amp; export</h2>
+  <div class="controls">
+    <button class="action" id="exportJsonBtn" disabled>Download song (.json)</button>
+    <button class="action" id="exportAudioBtn" disabled>Download audio (.mp3)</button>
+  </div>
+  <div class="status" id="shareStatus">Record and save a take above, then export or share it here.</div>
+  <hr style="border-color:var(--line);margin:14px 0;">
+  <div class="controls">
+    <input type="file" id="importFile" accept=".json" style="color:var(--text);font-size:12px;">
+  </div>
+  <div class="controls" style="margin-top:8px;">
+    <input type="text" id="shareTextArea" placeholder="…or paste a song code from a friend here">
+    <button class="action" id="importTextBtn">Import code</button>
+  </div>
+</div>
+
+<div class="panel">
   <h2>Saved takes</h2>
   <div class="recordings" id="recordings"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
 <script>
 const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
 const actx = new AudioContextCtor();
@@ -476,9 +494,11 @@ const MODES = {
   }
 };
 
-// Flatten every sound across every bank for Mystery mode
+// Flatten every REAL sound across piano/drums/fx/synth for Mystery & Shuffle modes
+// (deliberately excludes 'mystery' and 'shuffle' themselves, or picks would recurse into each other)
 const ALL_SOUNDS = [];
-Object.keys(MODES).forEach(modeKey=>{
+const REAL_BANKS = ['piano','drums','fx','synth'];
+REAL_BANKS.forEach(modeKey=>{
   Object.values(MODES[modeKey].keys).forEach(def=>{
     ALL_SOUNDS.push({label: def.label, bank: MODES[modeKey].label, fn: def.fn});
   });
@@ -587,6 +607,9 @@ const playBtn = document.getElementById('playBtn');
 const saveBtn = document.getElementById('saveBtn');
 const saveName = document.getElementById('saveName');
 const statusEl = document.getElementById('status');
+const exportJsonBtn = document.getElementById('exportJsonBtn');
+const exportAudioBtn = document.getElementById('exportAudioBtn');
+const shareStatus = document.getElementById('shareStatus');
 
 recordBtn.onclick = ()=>{
   if(!isRecording){
@@ -608,6 +631,8 @@ recordBtn.onclick = ()=>{
       statusEl.textContent = `Captured ${lastTake.length} note(s). Play it back or save it.`;
       playBtn.disabled = false;
       saveBtn.disabled = false;
+      exportJsonBtn.disabled = false;
+      exportAudioBtn.disabled = false;
     } else {
       statusEl.textContent = 'No keys pressed — nothing recorded.';
     }
@@ -639,7 +664,169 @@ function playTake(take){
 
 playBtn.onclick = ()=> playTake(lastTake);
 
-// ---------- Save / Load via localStorage ----------
+// ---------- Share: JSON export/import + audio (mp3) export ----------
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+function sanitizeFilename(s){
+  return (s || 'song').replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/\s+/g,'-') || 'song';
+}
+
+function songPayload(name, notes){
+  return { keytarSong:true, version:1, name, notes };
+}
+
+function exportSongJSON(name, notes){
+  const blob = new Blob([JSON.stringify(songPayload(name, notes))], {type:'application/json'});
+  downloadBlob(blob, sanitizeFilename(name) + '.json');
+}
+
+function songAsShareCode(name, notes){
+  return btoa(unescape(encodeURIComponent(JSON.stringify(songPayload(name, notes)))));
+}
+
+function importSongData(data, sourceLabel){
+  if(!data || !Array.isArray(data.notes) || !data.notes.length){
+    throw new Error('not a valid song');
+  }
+  const list = loadRecordings();
+  const name = data.name || sourceLabel || 'Imported take';
+  list.push({name, savedAt: Date.now(), notes: data.notes});
+  saveRecordings(list);
+  renderRecordings();
+  shareStatus.textContent = `Imported "${name}" — find it under Saved takes.`;
+}
+
+// Render a take's audio in real time and capture it, then encode to mp3 (falls back to webm if the encoder isn't available)
+async function exportTakeAudio(take, filenameBase, targetStatusEl){
+  if(!take || !take.length) return;
+  targetStatusEl.textContent = 'Rendering audio…';
+  if(actx.state === 'suspended') await actx.resume();
+
+  const mediaDest = actx.createMediaStreamDestination();
+  master.connect(mediaDest);
+
+  let recorder;
+  try{
+    recorder = new MediaRecorder(mediaDest.stream);
+  }catch(e){
+    targetStatusEl.textContent = 'This browser cannot record audio. Try Chrome, Edge, or Firefox.';
+    master.disconnect(mediaDest);
+    return;
+  }
+
+  const chunks = [];
+  recorder.ondataavailable = (e)=>{ if(e.data.size>0) chunks.push(e.data); };
+  const stopped = new Promise(resolve=> recorder.onstop = resolve);
+
+  recorder.start();
+  playTake(take);
+  const totalDur = take[take.length-1].t + 1000;
+  await new Promise(r=>setTimeout(r, totalDur));
+  recorder.stop();
+  await stopped;
+  master.disconnect(mediaDest);
+
+  const webmBlob = new Blob(chunks, {type:'audio/webm'});
+
+  if(window.lamejs){
+    try{
+      targetStatusEl.textContent = 'Encoding mp3…';
+      const mp3Blob = await webmToMp3(webmBlob);
+      downloadBlob(mp3Blob, filenameBase + '.mp3');
+      targetStatusEl.textContent = `Downloaded ${filenameBase}.mp3`;
+      return;
+    }catch(err){
+      console.error('mp3 encode failed, falling back to webm', err);
+    }
+  }
+  downloadBlob(webmBlob, filenameBase + '.webm');
+  targetStatusEl.textContent = `Mp3 encoder unavailable — downloaded ${filenameBase}.webm instead (plays in any media player, still shareable).`;
+}
+
+function floatTo16BitPCM(float32Array){
+  const out = new Int16Array(float32Array.length);
+  for(let i=0;i<float32Array.length;i++){
+    const s = Math.max(-1, Math.min(1, float32Array[i]));
+    out[i] = s < 0 ? s*0x8000 : s*0x7FFF;
+  }
+  return out;
+}
+
+async function webmToMp3(webmBlob){
+  const arrayBuf = await webmBlob.arrayBuffer();
+  const tempCtx = new AudioContextCtor();
+  const audioBuffer = await tempCtx.decodeAudioData(arrayBuf);
+  const numChannels = Math.min(audioBuffer.numberOfChannels, 2);
+  const sampleRate = audioBuffer.sampleRate;
+  const encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, 128);
+  const left = floatTo16BitPCM(audioBuffer.getChannelData(0));
+  const right = numChannels > 1 ? floatTo16BitPCM(audioBuffer.getChannelData(1)) : null;
+  const blockSize = 1152;
+  const mp3Data = [];
+  for(let i=0; i<left.length; i+=blockSize){
+    const leftChunk = left.subarray(i, i+blockSize);
+    let mp3buf;
+    if(right){
+      const rightChunk = right.subarray(i, i+blockSize);
+      mp3buf = encoder.encodeBuffer(leftChunk, rightChunk);
+    } else {
+      mp3buf = encoder.encodeBuffer(leftChunk);
+    }
+    if(mp3buf.length > 0) mp3Data.push(mp3buf);
+  }
+  const end = encoder.flush();
+  if(end.length > 0) mp3Data.push(end);
+  tempCtx.close();
+  return new Blob(mp3Data, {type:'audio/mpeg'});
+}
+
+exportJsonBtn.onclick = ()=>{
+  if(!lastTake || !lastTake.length) return;
+  const name = saveName.value.trim() || `Take ${new Date().toLocaleString()}`;
+  exportSongJSON(name, lastTake);
+  shareStatus.textContent = `Downloaded "${name}.json" — send that file to a friend, they can import it below.`;
+};
+
+exportAudioBtn.onclick = ()=>{
+  if(!lastTake || !lastTake.length) return;
+  const name = saveName.value.trim() || `take-${Date.now()}`;
+  exportTakeAudio(lastTake, sanitizeFilename(name), shareStatus);
+};
+
+document.getElementById('importFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    importSongData(data, file.name.replace(/\.json$/i,''));
+  }catch(err){
+    shareStatus.textContent = 'Could not read that file — make sure it is a Keytar song export (.json).';
+  }
+  e.target.value = '';
+});
+
+document.getElementById('importTextBtn').onclick = ()=>{
+  const raw = document.getElementById('shareTextArea').value.trim();
+  if(!raw) return;
+  try{
+    const data = JSON.parse(decodeURIComponent(escape(atob(raw))));
+    importSongData(data, 'Pasted take');
+    document.getElementById('shareTextArea').value = '';
+  }catch(err){
+    shareStatus.textContent = 'That code didn\'t look right — make sure it was copied in full.';
+  }
+};
+
+
 const STORAGE_KEY = 'keytar_recordings_v1';
 
 function loadRecordings(){
@@ -692,9 +879,28 @@ function renderRecordings(){
       <div class="name">${rec.name}</div>
       <div class="meta">${rec.notes.length} notes · ${date}</div>
       <button class="play-saved">▶ Play</button>
+      <button class="share-saved">Copy code</button>
+      <button class="json-saved">.json</button>
+      <button class="mp3-saved">.mp3</button>
       <button class="delete">Delete</button>
     `;
     row.querySelector('.play-saved').onclick = ()=> playTake(rec.notes);
+    row.querySelector('.share-saved').onclick = ()=>{
+      const code = songAsShareCode(rec.name, rec.notes);
+      navigator.clipboard.writeText(code).then(()=>{
+        shareStatus.textContent = `Copied "${rec.name}" as a code — paste it to a friend, they can import it above.`;
+      }).catch(()=>{
+        document.getElementById('shareTextArea').value = code;
+        shareStatus.textContent = `Could not auto-copy — the code for "${rec.name}" is in the paste box above, copy it manually.`;
+      });
+    };
+    row.querySelector('.json-saved').onclick = ()=>{
+      exportSongJSON(rec.name, rec.notes);
+      shareStatus.textContent = `Downloaded "${rec.name}.json".`;
+    };
+    row.querySelector('.mp3-saved').onclick = ()=>{
+      exportTakeAudio(rec.notes, sanitizeFilename(rec.name), shareStatus);
+    };
     row.querySelector('.delete').onclick = ()=>{
       const cur = loadRecordings();
       cur.splice(idx,1);
