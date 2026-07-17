@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Commit Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --panel: #121212;
+    --panel2: #181818;
+    --border: #2a2a2a;
+    --amber: #ffb000;
+    --amber-dim: #a06800;
+    --amber-bright: #ffd479;
+    --text: #d7d0c0;
+    --text-dim: #6b6558;
+    --green: #4caf50;
+    --red: #e05252;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--amber-dim); }
+  ::-webkit-scrollbar-track { background: var(--panel); }
+
+  .scanline {
+    pointer-events: none;
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(255,176,0,0.015) 0px, rgba(255,176,0,0.015) 1px, transparent 1px, transparent 3px);
+    z-index: 999;
+  }
+
+  header {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel);
+  }
+
+  header h1 {
+    font-size: 18px; margin: 0; color: var(--amber); letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(255,176,0,0.4);
+  }
+  header h1::before { content: "> "; color: var(--amber-dim); }
+
+  .stats-bar { display: flex; gap: 24px; font-size: 13px; }
+  .stats-bar span b { color: var(--amber-bright); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 16px;
+    padding: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .panel h2 {
+    font-size: 13px; color: var(--amber-dim); text-transform: uppercase;
+    letter-spacing: 1.5px; margin: 0 0 12px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+  }
+
+  .commit-zone { text-align: center; padding: 30px 0; }
+  .commit-count { font-size: 46px; font-weight: 800; color: var(--amber); text-shadow: 0 0 14px rgba(255,176,0,0.35); }
+  .commit-sub { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
+
+  .commit-btn {
+    margin-top: 20px;
+    background: linear-gradient(180deg, var(--amber) 0%, var(--amber-dim) 100%);
+    color: #0a0a0a; border: none; border-radius: 6px;
+    font-family: inherit; font-weight: 800; font-size: 15px;
+    padding: 16px 36px; cursor: pointer; letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(255,176,0,0.25);
+    transition: transform 0.08s ease;
+  }
+  .commit-btn:active { transform: scale(0.96); }
+
+  .float-commit {
+    position: absolute; color: var(--amber); font-size: 13px; font-weight: 700;
+    pointer-events: none; animation: floatUp 0.9s ease-out forwards;
+  }
+  @keyframes floatUp { to { transform: translateY(-50px); opacity: 0; } }
+
+  .hire-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; margin-bottom: 8px;
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 5px;
+  }
+  .hire-info { font-size: 12px; }
+  .hire-info .name { color: var(--amber-bright); font-weight: 700; }
+  .hire-info .desc { color: var(--text-dim); font-size: 11px; }
+  .hire-btn {
+    background: transparent; border: 1px solid var(--amber-dim); color: var(--amber);
+    border-radius: 4px; padding: 8px 12px; font-family: inherit; font-size: 11px;
+    cursor: pointer; white-space: nowrap;
+  }
+  .hire-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .hire-btn:not(:disabled):hover { background: var(--amber); color: #0a0a0a; }
+
+  .prestige-box {
+    text-align: center; padding: 10px; border: 1px dashed var(--amber-dim); border-radius: 6px; margin-top: 12px;
+  }
+  .prestige-btn {
+    background: transparent; border: 1px solid var(--amber); color: var(--amber-bright);
+    padding: 10px 20px; border-radius: 5px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 12px;
+  }
+  .prestige-btn:hover { background: var(--amber); color: #0a0a0a; }
+
+  .add-friend-row {
+    display: flex; gap: 8px; margin-bottom: 12px;
+  }
+  .add-friend-row input {
+    flex: 1; background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-family: inherit; font-size: 12px; padding: 8px 10px;
+  }
+  .add-friend-row input:focus { outline: none; border-color: var(--amber-dim); }
+  .leader-empty {
+    font-size: 11px; color: var(--text-dim); line-height: 1.6; padding: 12px 4px; text-align: center;
+  }
+
+  .leader-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 10px; margin-bottom: 6px; border-radius: 5px; cursor: pointer;
+    background: var(--panel2); border: 1px solid var(--border);
+    transition: border-color 0.15s;
+  }
+  .leader-row:hover { border-color: var(--amber-dim); }
+  .leader-left { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--amber-dim);
+    color: #0a0a0a; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 12px; flex-shrink: 0;
+  }
+  .leader-name { font-size: 12px; color: var(--text); }
+  .leader-name .rank { color: var(--text-dim); margin-right: 6px; }
+  .friend-badge {
+    font-size: 9px; background: var(--amber-dim); color: #0a0a0a; padding: 1px 6px;
+    border-radius: 8px; margin-left: 6px; font-weight: 700;
+  }
+  .leader-score { font-size: 12px; color: var(--amber); font-weight: 700; }
+
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex;
+    align-items: center; justify-content: center; z-index: 1000;
+  }
+  .modal {
+    background: var(--panel); border: 1px solid var(--amber-dim); border-radius: 8px;
+    width: 320px; padding: 20px; box-shadow: 0 0 30px rgba(255,176,0,0.15);
+  }
+  .modal-close {
+    float: right; background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer;
+  }
+  .modal-avatar {
+    width: 64px; height: 64px; border-radius: 50%; background: var(--amber-dim); color: #0a0a0a;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 24px;
+    margin: 0 auto 12px;
+  }
+  .modal-name { text-align: center; font-size: 16px; color: var(--amber-bright); font-weight: 700; }
+  .modal-title { text-align: center; font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
+  .modal-bio { font-size: 11px; color: var(--text); text-align: center; margin-bottom: 14px; line-height: 1.5; }
+  .modal-stats { display: flex; justify-content: space-around; margin-bottom: 16px; font-size: 11px; }
+  .modal-stats div { text-align: center; }
+  .modal-stats b { display: block; color: var(--amber); font-size: 14px; }
+  .friend-btn {
+    width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--amber);
+    background: transparent; color: var(--amber-bright); font-family: inherit; font-weight: 700;
+    font-size: 12px; cursor: pointer;
+  }
+  .friend-btn.friended { background: var(--amber-dim); color: #0a0a0a; border-color: var(--amber-dim); }
+  .friend-btn:hover { opacity: 0.85; }
+
+  .score-edit {
+    display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px;
+  }
+  .score-edit input {
+    width: 110px; text-align: center; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--amber-bright); font-family: inherit; font-size: 13px; padding: 6px;
+  }
+  .score-edit input:focus { outline: none; border-color: var(--amber-dim); }
+  .score-edit-label { font-size: 10px; color: var(--text-dim); text-align: center; margin-bottom: 6px; }
+  .remove-friend-btn {
+    width: 100%; margin-top: 8px; padding: 8px; border-radius: 5px; border: 1px solid var(--border);
+    background: transparent; color: var(--red); font-family: inherit; font-size: 11px; cursor: pointer;
+  }
+  .remove-friend-btn:hover { border-color: var(--red); }
+
+  .trial-popup {
+    position: fixed; bottom: 20px; right: 20px; width: 260px;
+    background: var(--panel); border: 1px solid var(--amber); border-radius: 8px;
+    padding: 16px; box-shadow: 0 0 24px rgba(255,176,0,0.2); z-index: 900;
+  }
+  .trial-popup h3 { margin: 0 0 8px; color: var(--amber-bright); font-size: 13px; }
+  .trial-popup p { font-size: 11px; color: var(--text-dim); margin: 0 0 12px; }
+  .trial-actions { display: flex; gap: 8px; }
+  .trial-actions button {
+    flex: 1; padding: 8px; border-radius: 4px; font-family: inherit; font-size: 11px; cursor: pointer;
+  }
+  .trial-yes { background: var(--amber); border: none; color: #0a0a0a; font-weight: 700; }
+  .trial-no { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+
+  .footer-note { text-align: center; color: var(--text-dim); font-size: 10px; padding: 20px; }
+
+  /* ---------- Auth screen ---------- */
+  .auth-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .auth-box {
+    width: 300px; background: var(--panel); border: 1px solid var(--amber-dim);
+    border-radius: 8px; padding: 24px; box-shadow: 0 0 30px rgba(255,176,0,0.1);
+  }
+  .auth-box h1 { color: var(--amber); font-size: 16px; margin: 0 0 4px; text-align: center; }
+  .auth-box h1::before { content: "> "; color: var(--amber-dim); }
+  .auth-sub { text-align: center; color: var(--text-dim); font-size: 11px; margin-bottom: 18px; }
+  .auth-box input {
+    width: 100%; background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-family: inherit; font-size: 13px; padding: 10px; margin-bottom: 10px;
+  }
+  .auth-box input:focus { outline: none; border-color: var(--amber-dim); }
+  .auth-submit {
+    width: 100%; padding: 11px; border-radius: 5px; border: none;
+    background: linear-gradient(180deg, var(--amber) 0%, var(--amber-dim) 100%);
+    color: #0a0a0a; font-family: inherit; font-weight: 800; font-size: 13px; cursor: pointer;
+  }
+  .auth-toggle { text-align: center; margin-top: 12px; font-size: 11px; color: var(--text-dim); }
+  .auth-toggle a { color: var(--amber); cursor: pointer; text-decoration: underline; }
+  .auth-error { color: var(--red); font-size: 11px; text-align: center; margin-bottom: 8px; min-height: 14px; }
+
+  .user-chip {
+    display: flex; align-items: center; gap: 10px; font-size: 12px;
+  }
+  .logout-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    font-family: inherit; font-size: 11px; padding: 5px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ---------- Tabs ---------- */
+  .tab-row { display: flex; gap: 4px; margin-bottom: 12px; }
+  .tab-btn {
+    flex: 1; background: var(--panel2); border: 1px solid var(--border); color: var(--text-dim);
+    font-family: inherit; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 8px 4px; border-radius: 4px; cursor: pointer;
+  }
+  .tab-btn.active { background: var(--amber-dim); color: #0a0a0a; border-color: var(--amber-dim); font-weight: 700; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ---------- Friend requests / search ---------- */
+  .request-row, .search-result-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 10px; margin-bottom: 5px; border-radius: 5px;
+    background: var(--panel2); border: 1px solid var(--border); font-size: 12px;
+  }
+  .small-btn {
+    background: transparent; border: 1px solid var(--amber-dim); color: var(--amber);
+    border-radius: 4px; padding: 5px 9px; font-family: inherit; font-size: 10px; cursor: pointer;
+  }
+  .small-btn:hover { background: var(--amber); color: #0a0a0a; }
+  .small-btn.reject { border-color: var(--red); color: var(--red); }
+  .small-btn.reject:hover { background: var(--red); color: #fff; }
+  .section-label {
+    font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;
+    margin: 12px 0 6px;
+  }
+
+  /* ---------- Messages ---------- */
+  .convo-row {
+    display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    padding: 8px 10px; margin-bottom: 5px; border-radius: 5px;
+    background: var(--panel2); border: 1px solid var(--border); font-size: 12px;
+  }
+  .convo-row:hover { border-color: var(--amber-dim); }
+  .convo-name { color: var(--amber-bright); font-weight: 700; }
+  .convo-preview { color: var(--text-dim); font-size: 11px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .unread-dot { background: var(--amber); color: #0a0a0a; font-size: 9px; font-weight: 800; border-radius: 8px; padding: 1px 6px; }
+
+  .thread-modal { width: 340px; display: flex; flex-direction: column; }
+  .thread-messages { max-height: 260px; overflow-y: auto; margin: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+  .thread-msg { max-width: 80%; padding: 7px 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; }
+  .thread-msg.mine { align-self: flex-end; background: var(--amber-dim); color: #0a0a0a; }
+  .thread-msg.theirs { align-self: flex-start; background: var(--panel2); border: 1px solid var(--border); }
+  .thread-input-row { display: flex; gap: 6px; }
+  .thread-input-row input {
+    flex: 1; background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-family: inherit; font-size: 12px; padding: 8px;
+  }
+
+  /* ---------- Multiplayer ---------- */
+  .mp-card {
+    padding: 10px; margin-bottom: 8px; border-radius: 5px;
+    background: var(--panel2); border: 1px solid var(--border);
+  }
+  .mp-card-title { font-size: 12px; color: var(--amber-bright); font-weight: 700; margin-bottom: 4px; }
+  .mp-card-meta { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; }
+  .progress-bar-track {
+    height: 6px; background: #000; border-radius: 3px; overflow: hidden; margin-bottom: 3px;
+  }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--amber-dim), var(--amber)); }
+  .progress-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+  .create-form { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .create-form input {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-family: inherit; font-size: 12px; padding: 7px;
+  }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <h1>commit_engine</h1>
+    <div class="auth-sub" id="authSub">sign in to sync your commits everywhere</div>
+    <div class="auth-error" id="authError"></div>
+    <input type="text" id="authUsername" placeholder="username" maxlength="20" autocomplete="username" />
+    <input type="password" id="authPassword" placeholder="password" autocomplete="current-password" />
+    <button class="auth-submit" id="authSubmitBtn">sign in</button>
+    <div class="auth-toggle">
+      <span id="authToggleText">no account? </span><a id="authToggleLink">register</a>
+    </div>
+  </div>
+</div>
+
+<header>
+  <h1>commit_engine</h1>
+  <div class="stats-bar">
+    <span>refactor_pts: <b id="rpDisplay">0</b></span>
+    <span>total_commits: <b id="totalDisplay">0</b></span>
+    <div class="user-chip">
+      <span id="userChipName"></span>
+      <button class="logout-btn" id="logoutBtn">sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <div>
+    <div class="panel commit-zone" style="position:relative; overflow:hidden;">
+      <h2 style="text-align:left;">// main branch</h2>
+      <div class="commit-count" id="commitCount">0</div>
+      <div class="commit-sub">commits per second: <span id="cps">0</span></div>
+      <div style="position:relative;">
+        <button class="commit-btn" id="commitBtn">git commit -m "fix"</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>// hire team</h2>
+      <div id="hireList"></div>
+      <div class="prestige-box">
+        <div style="font-size:11px; color: var(--text-dim); margin-bottom:8px;">
+          Refactor resets commits &amp; hires for permanent multiplier
+        </div>
+        <button class="prestige-btn" id="prestigeBtn">refactor()</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>// social</h2>
+    <div class="tab-row">
+      <button class="tab-btn active" data-tab="friends">Friends</button>
+      <button class="tab-btn" data-tab="messages">Messages</button>
+      <button class="tab-btn" data-tab="races">Races</button>
+      <button class="tab-btn" data-tab="teams">Teams</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-friends">
+      <div class="add-friend-row">
+        <input type="text" id="addFriendInput" placeholder="search username" maxlength="24" />
+        <button class="hire-btn" id="addFriendBtn">search</button>
+      </div>
+      <div id="searchResults"></div>
+      <div id="incomingRequestsWrap" style="display:none;">
+        <div class="section-label">incoming requests</div>
+        <div id="incomingRequests"></div>
+      </div>
+      <div class="section-label">leaderboard</div>
+      <div id="leaderList"></div>
+      <div id="leaderEmpty" class="leader-empty" style="display:none;">
+        No friends yet. Search a username above and send a request.
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-messages">
+      <div id="convoList"></div>
+      <div id="convoEmpty" class="leader-empty" style="display:none;">
+        No conversations yet. Open a friend's profile and hit "message" to start one.
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-races">
+      <div class="create-form">
+        <input type="text" id="raceName" placeholder="race name" maxlength="30" />
+        <input type="number" id="raceGoal" placeholder="commit goal (e.g. 5000)" min="1" />
+        <input type="number" id="raceDuration" placeholder="duration in minutes (e.g. 60)" min="1" />
+        <button class="hire-btn" id="createRaceBtn">start race</button>
+      </div>
+      <div id="raceList"></div>
+    </div>
+
+    <div class="tab-pane" id="tab-teams">
+      <div class="create-form">
+        <input type="text" id="teamName" placeholder="team name" maxlength="30" />
+        <button class="hire-btn" id="createTeamBtn">found team</button>
+      </div>
+      <div id="teamList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">commit_engine v1.1 — state autosaves to localStorage every 2s</div>
+
+<div id="modalRoot"></div>
+<div id="trialRoot"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const SAVE_KEY = 'commitEngine.save.v2';
+  const LEGACY_KEYS = ['commitEngine.save', 'commit-engine-save', 'commitEngineSave'];
+  const TOKEN_KEY = 'commitEngine.authToken';
+
+  // ---------- Backend config ----------
+  // Set this to your deployed Render URL after deploying commit-engine-backend, e.g.
+  // 'https://commit-engine-backend.onrender.com'. Leave as-is for local testing against
+  // `npm start` on the backend (defaults to localhost:3000).
+  const API_BASE_URL = 'http://localhost:3000';
+
+  // ---------- Hires config ----------
+  const HIRE_DEFS = [
+    { id: 'intern',  name: 'Intern',        desc: '0.2 commits/sec', baseCost: 15,   cps: 0.2 },
+    { id: 'junior',  name: 'Junior Dev',    desc: '1 commit/sec',    baseCost: 100,  cps: 1 },
+    { id: 'mid',     name: 'Mid-level Dev', desc: '5 commits/sec',   baseCost: 600,  cps: 5 },
+    { id: 'senior',  name: 'Senior Dev',    desc: '20 commits/sec',  baseCost: 4000, cps: 20 },
+    { id: 'staff',   name: 'Staff Eng',     desc: '90 commits/sec',  baseCost: 25000, cps: 90 },
+    { id: 'principal', name: 'Principal Eng', desc: '400 commits/sec', baseCost: 150000, cps: 400 }
+  ];
+
+  // ---------- State ----------
+  let state = {
+    commits: 0,
+    totalCommits: 0,
+    refactorPoints: 0,
+    hires: {},
+    trialShown: false,
+    trialActive: false,
+    trialDeadline: 0
+  };
+
+  let currentUser = null; // { id, username, total_commits, refactor_points }
+  let authToken = localStorage.getItem(TOKEN_KEY) || null;
+
+  function defaultHires() {
+    const h = {};
+    HIRE_DEFS.forEach(d => h[d.id] = 0);
+    return h;
+  }
+
+  function loadState() {
+    let raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      // attempt legacy migration so old players don't lose progress
+      for (const k of LEGACY_KEYS) {
+        const legacy = localStorage.getItem(k);
+        if (legacy) { raw = legacy; break; }
+      }
+    }
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        state = Object.assign({
+          commits: 0, totalCommits: 0, refactorPoints: 0,
+          hires: defaultHires(), trialShown: false,
+          trialActive: false, trialDeadline: 0
+        }, parsed);
+        if (!state.hires) state.hires = defaultHires();
+        // old local-only "friends" data is superseded by the real backend friend
+        // system; drop it from the save so it doesn't linger unused.
+        delete state.friends;
+      } catch (e) {
+        state.hires = defaultHires();
+      }
+    } else {
+      state.hires = defaultHires();
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    } catch (e) { /* storage full or unavailable, ignore */ }
+  }
+
+  // Save on every meaningful mutation AND on an interval AND on unload,
+  // so a reload never rolls back progress (this fixes the reset-on-reload bug).
+  window.addEventListener('beforeunload', saveState);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveState();
+  });
+  setInterval(saveState, 2000);
+
+  loadState();
+
+  // ---------- API client ----------
+  async function api(method, path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+    const res = await fetch(API_BASE_URL + path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    });
+    let data = null;
+    try { data = await res.json(); } catch (e) { /* empty body */ }
+    if (!res.ok) {
+      const err = new Error((data && data.error) || ('Request failed: ' + res.status));
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  // ---------- Derived values ----------
+  function hireCost(def) {
+    const owned = state.hires[def.id] || 0;
+    return Math.ceil(def.baseCost * Math.pow(1.15, owned));
+  }
+
+  function multiplier() {
+    return 1 + state.refactorPoints * 0.1;
+  }
+
+  function totalCps() {
+    let cps = 0;
+    HIRE_DEFS.forEach(d => { cps += (state.hires[d.id] || 0) * d.cps; });
+    return cps * multiplier();
+  }
+
+  function fmt(n) {
+    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return Math.floor(n).toString();
+  }
+
+  // ---------- Rendering ----------
+  const commitCountEl = document.getElementById('commitCount');
+  const cpsEl = document.getElementById('cps');
+  const rpDisplay = document.getElementById('rpDisplay');
+  const totalDisplay = document.getElementById('totalDisplay');
+  const hireListEl = document.getElementById('hireList');
+  const leaderListEl = document.getElementById('leaderList');
+  const leaderEmptyEl = document.getElementById('leaderEmpty');
+  const modalRoot = document.getElementById('modalRoot');
+  const trialRoot = document.getElementById('trialRoot');
+
+  function renderTopStats() {
+    commitCountEl.textContent = fmt(state.commits);
+    cpsEl.textContent = totalCps().toFixed(1);
+    rpDisplay.textContent = fmt(state.refactorPoints);
+    totalDisplay.textContent = fmt(state.totalCommits);
+  }
+
+  function renderHires() {
+    hireListEl.innerHTML = '';
+    HIRE_DEFS.forEach(def => {
+      const cost = hireCost(def);
+      const owned = state.hires[def.id] || 0;
+      const row = document.createElement('div');
+      row.className = 'hire-row';
+      row.innerHTML = `
+        <div class="hire-info">
+          <div class="name">${def.name} <span style="color:var(--text-dim); font-weight:400;">x${owned}</span></div>
+          <div class="desc">${def.desc}</div>
+        </div>
+        <button class="hire-btn" data-id="${def.id}" ${state.commits < cost ? 'disabled' : ''}>
+          hire — ${fmt(cost)}
+        </button>`;
+      hireListEl.appendChild(row);
+    });
+    hireListEl.querySelectorAll('.hire-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const def = HIRE_DEFS.find(d => d.id === btn.dataset.id);
+        const cost = hireCost(def);
+        if (state.commits >= cost) {
+          state.commits -= cost;
+          state.hires[def.id] = (state.hires[def.id] || 0) + 1;
+          saveState();
+          renderAll();
+        }
+      });
+    });
+  }
+
+  function initials(name) {
+    return name.replace(/^you$/i, 'Y').split(/[\s_.]+/).filter(Boolean).map(p => p[0]).join('').slice(0, 2).toUpperCase() || '?';
+  }
+
+  // ---------- Friends / leaderboard (server-backed) ----------
+  let friendsCache = { friends: [], incomingRequests: [], outgoingRequests: [] };
+
+  async function refreshFriends() {
+    try {
+      friendsCache = await api('GET', '/friends');
+    } catch (e) { /* stay on stale cache if a poll fails */ }
+    renderLeaderboard();
+    renderIncomingRequests();
+  }
+
+  function renderLeaderboard() {
+    const entries = friendsCache.friends.map(f => ({
+      username: f.username, score: Number(f.total_commits) || 0
+    }));
+    entries.push({ username: 'you', score: Math.floor(state.totalCommits) });
+    entries.sort((a, b) => b.score - a.score);
+
+    leaderListEl.innerHTML = '';
+    leaderEmptyEl.style.display = friendsCache.friends.length === 0 ? 'block' : 'none';
+    entries.forEach((e, i) => {
+      const row = document.createElement('div');
+      row.className = 'leader-row';
+      row.innerHTML = `
+        <div class="leader-left">
+          <div class="avatar">${initials(e.username)}</div>
+          <div class="leader-name"><span class="rank">#${i + 1}</span>${e.username}${e.username !== 'you' ? '<span class="friend-badge">FRIEND</span>' : ''}</div>
+        </div>
+        <div class="leader-score">${fmt(e.score)}</div>
+      `;
+      if (e.username !== 'you') {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => openProfile(e.username));
+      }
+      leaderListEl.appendChild(row);
+    });
+  }
+
+  function renderIncomingRequests() {
+    const wrap = document.getElementById('incomingRequestsWrap');
+    const list = document.getElementById('incomingRequests');
+    if (friendsCache.incomingRequests.length === 0) {
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = 'block';
+    list.innerHTML = '';
+    friendsCache.incomingRequests.forEach(username => {
+      const row = document.createElement('div');
+      row.className = 'request-row';
+      row.innerHTML = `
+        <span>${username}</span>
+        <span>
+          <button class="small-btn" data-user="${username}" data-accept="1">accept</button>
+          <button class="small-btn reject" data-user="${username}" data-accept="0">decline</button>
+        </span>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('.small-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await api('POST', '/friends/respond', {
+            requesterUsername: btn.dataset.user,
+            accept: btn.dataset.accept === '1'
+          });
+          await refreshFriends();
+        } catch (e) { alert(e.message); }
+      });
+    });
+  }
+
+  async function searchUsers(query) {
+    const resultsEl = document.getElementById('searchResults');
+    resultsEl.innerHTML = '';
+    if (!query || query.trim().length < 2) return;
+    let users = [];
+    try {
+      const data = await api('GET', '/friends/search?q=' + encodeURIComponent(query.trim()));
+      users = data.users || [];
+    } catch (e) { return; }
+
+    users.forEach(u => {
+      const alreadyFriend = friendsCache.friends.some(f => f.username === u.username);
+      const alreadyOutgoing = friendsCache.outgoingRequests.includes(u.username);
+      const row = document.createElement('div');
+      row.className = 'search-result-row';
+      let action;
+      if (alreadyFriend) action = `<span style="color:var(--text-dim); font-size:10px;">already friends</span>`;
+      else if (alreadyOutgoing) action = `<span style="color:var(--text-dim); font-size:10px;">request sent</span>`;
+      else action = `<button class="small-btn" data-user="${u.username}">+ request</button>`;
+      row.innerHTML = `<span>${u.username}</span><span>${action}</span>`;
+      resultsEl.appendChild(row);
+    });
+    resultsEl.querySelectorAll('.small-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await api('POST', '/friends/request', { username: btn.dataset.user });
+          await refreshFriends();
+          searchUsers(query);
+        } catch (e) { alert(e.message); }
+      });
+    });
+  }
+
+  async function openProfile(username) {
+    const friend = friendsCache.friends.find(f => f.username === username);
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal">
+          <button class="modal-close" id="modalCloseBtn">×</button>
+          <div class="modal-avatar">${initials(username)}</div>
+          <div class="modal-name">${username}</div>
+          <div class="modal-title">Friend</div>
+          <div class="modal-stats">
+            <div><b>${fmt(friend ? friend.total_commits : 0)}</b>commits</div>
+            <div><b>${fmt(friend ? friend.refactor_points : 0)}</b>refactor pts</div>
+          </div>
+          <button class="friend-btn" id="messageFriendBtn">message</button>
+          <button class="remove-friend-btn" id="removeFriendBtn">remove friend</button>
+        </div>
+      </div>`;
+    document.getElementById('modalCloseBtn').addEventListener('click', closeProfile);
+    document.getElementById('modalBackdrop').addEventListener('click', (ev) => {
+      if (ev.target.id === 'modalBackdrop') closeProfile();
+    });
+    document.getElementById('messageFriendBtn').addEventListener('click', () => {
+      closeProfile();
+      switchTab('messages');
+      openThread(username);
+    });
+    document.getElementById('removeFriendBtn').addEventListener('click', async () => {
+      try {
+        await api('DELETE', '/friends/' + encodeURIComponent(username));
+        closeProfile();
+        await refreshFriends();
+      } catch (e) { alert(e.message); }
+    });
+  }
+
+  function closeProfile() {
+    modalRoot.innerHTML = '';
+  }
+
+  // ---------- Messages (server-backed DMs, friends only) ----------
+  async function refreshMessages() {
+    const listEl = document.getElementById('convoList');
+    const emptyEl = document.getElementById('convoEmpty');
+    let data;
+    try {
+      data = await api('GET', '/messages');
+    } catch (e) { return; }
+    const convos = data.conversations || [];
+    emptyEl.style.display = convos.length === 0 ? 'block' : 'none';
+    listEl.innerHTML = '';
+    convos.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'convo-row';
+      row.innerHTML = `
+        <span class="convo-name">${c.username}</span>
+        <span class="convo-preview">${c.sentByMe ? 'you: ' : ''}${(c.lastMessage || '').slice(0, 40)}</span>
+        ${c.unreadCount > 0 ? `<span class="unread-dot">${c.unreadCount}</span>` : ''}
+      `;
+      row.addEventListener('click', () => openThread(c.username));
+      listEl.appendChild(row);
+    });
+  }
+
+  async function openThread(username) {
+    let thread;
+    try {
+      thread = await api('GET', '/messages/with/' + encodeURIComponent(username));
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal thread-modal">
+          <button class="modal-close" id="modalCloseBtn">×</button>
+          <div class="modal-name">${username}</div>
+          <div class="thread-messages" id="threadMessages"></div>
+          <div class="thread-input-row">
+            <input type="text" id="threadInput" placeholder="type a message..." maxlength="2000" />
+            <button class="hire-btn" id="threadSendBtn">send</button>
+          </div>
+        </div>
+      </div>`;
+    const msgWrap = document.getElementById('threadMessages');
+    (thread.messages || []).forEach(m => {
+      const bubble = document.createElement('div');
+      bubble.className = 'thread-msg ' + (m.sender_id === currentUser.id ? 'mine' : 'theirs');
+      bubble.textContent = m.body;
+      msgWrap.appendChild(bubble);
+    });
+    msgWrap.scrollTop = msgWrap.scrollHeight;
+
+    document.getElementById('modalCloseBtn').addEventListener('click', closeProfile);
+    document.getElementById('modalBackdrop').addEventListener('click', (ev) => {
+      if (ev.target.id === 'modalBackdrop') closeProfile();
+    });
+    const input = document.getElementById('threadInput');
+    async function send() {
+      const body = input.value.trim();
+      if (!body) return;
+      try {
+        await api('POST', '/messages', { toUsername: username, body });
+        input.value = '';
+        openThread(username); // refresh thread
+        refreshMessages();
+      } catch (e) { alert(e.message); }
+    }
+    document.getElementById('threadSendBtn').addEventListener('click', send);
+    input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') send(); });
+  }
+
+  // ---------- Races (competitions) ----------
+  async function refreshRaces() {
+    const listEl = document.getElementById('raceList');
+    let data;
+    try {
+      data = await api('GET', '/competitions');
+    } catch (e) { return; }
+    listEl.innerHTML = '';
+    (data.competitions || []).forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'mp-card';
+      const ended = new Date(c.ends_at) < new Date();
+      card.innerHTML = `
+        <div class="mp-card-title">${c.name}</div>
+        <div class="mp-card-meta">goal: ${fmt(c.goal)} commits · ${ended ? 'ended' : 'ends ' + new Date(c.ends_at).toLocaleString()}</div>
+        <div id="race-progress-${c.id}"></div>
+        ${!c.joined && !ended ? `<button class="small-btn" data-join-race="${c.id}">join race</button>` : ''}
+      `;
+      listEl.appendChild(card);
+      if (c.joined) loadRaceProgress(c.id);
+    });
+    listEl.querySelectorAll('[data-join-race]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await api('POST', '/competitions/' + btn.dataset.joinRace + '/join', {});
+          await refreshRaces();
+        } catch (e) { alert(e.message); }
+      });
+    });
+  }
+
+  async function loadRaceProgress(id) {
+    let data;
+    try { data = await api('GET', '/competitions/' + id); } catch (e) { return; }
+    const wrap = document.getElementById('race-progress-' + id);
+    if (!wrap) return;
+    const goal = data.competition.goal;
+    wrap.innerHTML = (data.participants || []).map(p => {
+      const pct = Math.min(100, Math.round((p.progress / goal) * 100));
+      return `
+        <div class="progress-row"><span>${p.username}</span><span>${fmt(p.progress)} / ${fmt(goal)}</span></div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('createRaceBtn').addEventListener('click', async () => {
+    const name = document.getElementById('raceName').value.trim();
+    const goal = Number(document.getElementById('raceGoal').value);
+    const duration = Number(document.getElementById('raceDuration').value) || 60;
+    if (!name || !goal || goal <= 0) { alert('Enter a race name and a positive commit goal.'); return; }
+    try {
+      await api('POST', '/competitions', { name, goal, durationMinutes: duration });
+      document.getElementById('raceName').value = '';
+      document.getElementById('raceGoal').value = '';
+      document.getElementById('raceDuration').value = '';
+      await refreshRaces();
+    } catch (e) { alert(e.message); }
+  });
+
+  // ---------- Teams (co-op pooled commits) ----------
+  async function refreshTeams() {
+    const listEl = document.getElementById('teamList');
+    let data;
+    try { data = await api('GET', '/teams'); } catch (e) { return; }
+    listEl.innerHTML = '';
+    (data.teams || []).forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'mp-card';
+      card.innerHTML = `
+        <div class="mp-card-title">${t.name}</div>
+        <div class="mp-card-meta">${t.member_count} member${t.member_count === 1 ? '' : 's'} · pooled: ${fmt(t.pooled_commits)} commits</div>
+        ${t.joined
+          ? `<button class="small-btn" data-contribute="${t.id}">contribute commits</button>`
+          : `<button class="small-btn" data-join-team="${t.id}">join team</button>`}
+      `;
+      listEl.appendChild(card);
+    });
+    listEl.querySelectorAll('[data-join-team]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await api('POST', '/teams/' + btn.dataset.joinTeam + '/join', {});
+          await refreshTeams();
+        } catch (e) { alert(e.message); }
+      });
+    });
+    listEl.querySelectorAll('[data-contribute]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const amountStr = prompt('How many of your commits do you want to contribute to the team pool?');
+        const amount = Number(amountStr);
+        if (!amount || amount <= 0) return;
+        if (amount > state.totalCommits) { alert("You don't have that many commits."); return; }
+        try {
+          await api('POST', '/teams/' + btn.dataset.contribute + '/contribute', { amount: Math.floor(amount) });
+          await refreshTeams();
+        } catch (e) { alert(e.message); }
+      });
+    });
+  }
+
+  document.getElementById('createTeamBtn').addEventListener('click', async () => {
+    const name = document.getElementById('teamName').value.trim();
+    if (name.length < 3) { alert('Team name must be at least 3 characters.'); return; }
+    try {
+      await api('POST', '/teams', { name });
+      document.getElementById('teamName').value = '';
+      await refreshTeams();
+    } catch (e) { alert(e.message); }
+  });
+
+  // ---------- Tabs ----------
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+    if (name === 'messages') refreshMessages();
+    if (name === 'races') refreshRaces();
+    if (name === 'teams') refreshTeams();
+  }
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  document.getElementById('addFriendBtn').addEventListener('click', () => {
+    searchUsers(document.getElementById('addFriendInput').value);
+  });
+  document.getElementById('addFriendInput').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') searchUsers(ev.target.value);
+  });
+
+  function renderAll() {
+    renderTopStats();
+    renderHires();
+    renderLeaderboard();
+  }
+
+  // ---------- Commit clicking ----------
+  const commitBtn = document.getElementById('commitBtn');
+  commitBtn.addEventListener('click', (ev) => {
+    const gain = 1 * multiplier();
+    state.commits += gain;
+    state.totalCommits += gain;
+    spawnFloat(ev, '+' + fmt(gain));
+    renderAll();
+  });
+
+  function spawnFloat(ev, text) {
+    const el = document.createElement('div');
+    el.className = 'float-commit';
+    el.textContent = text;
+    const rect = commitBtn.getBoundingClientRect();
+    const zone = commitBtn.closest('.commit-zone');
+    const zoneRect = zone.getBoundingClientRect();
+    el.style.left = (rect.left - zoneRect.left + rect.width / 2 - 10) + 'px';
+    el.style.top = (rect.top - zoneRect.top - 10) + 'px';
+    zone.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  }
+
+  // ---------- Prestige ----------
+  document.getElementById('prestigeBtn').addEventListener('click', () => {
+    const gain = Math.floor(Math.sqrt(state.totalCommits / 1000));
+    if (gain <= 0) {
+      alert('Need more total commits before refactoring pays off.');
+      return;
+    }
+    state.refactorPoints += gain;
+    state.commits = 0;
+    state.hires = defaultHires();
+    saveState();
+    renderAll();
+  });
+
+  // ---------- Passive tick ----------
+  let lastTick = Date.now();
+  setInterval(() => {
+    const now = Date.now();
+    const dt = (now - lastTick) / 1000;
+    lastTick = now;
+    const gain = totalCps() * dt;
+    if (gain > 0) {
+      state.commits += gain;
+      state.totalCommits += gain;
+      renderTopStats();
+      renderHires(); // costs/affordability can change
+    }
+  }, 250);
+
+  // ---------- Free trial popup ----------
+  function maybeShowTrial() {
+    if (state.trialShown) return;
+    if (state.totalCommits < 250) return;
+    state.trialShown = true;
+    saveState();
+    trialRoot.innerHTML = `
+      <div class="trial-popup">
+        <h3>// unlock Copilot Premium+™</h3>
+        <p>Your team could ship 3x faster with AI-suggested commits. Free trial, cancel anytime (allegedly).</p>
+        <div class="trial-actions">
+          <button class="trial-yes" id="trialYes">start trial</button>
+          <button class="trial-no" id="trialNo">no thanks</button>
+        </div>
+      </div>`;
+    document.getElementById('trialYes').addEventListener('click', () => {
+      state.refactorPoints += 1;
+      saveState();
+      trialRoot.innerHTML = '';
+      renderAll();
+    });
+    document.getElementById('trialNo').addEventListener('click', () => {
+      trialRoot.innerHTML = '';
+    });
+  }
+  setInterval(maybeShowTrial, 3000);
+
+  // ---------- Auth flow ----------
+  const authScreen = document.getElementById('authScreen');
+  const authError = document.getElementById('authError');
+  const authUsername = document.getElementById('authUsername');
+  const authPassword = document.getElementById('authPassword');
+  const authSubmitBtn = document.getElementById('authSubmitBtn');
+  const authToggleLink = document.getElementById('authToggleLink');
+  const authToggleText = document.getElementById('authToggleText');
+  const authSub = document.getElementById('authSub');
+  const userChipName = document.getElementById('userChipName');
+  let authMode = 'login'; // 'login' | 'register'
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    authError.textContent = '';
+    if (mode === 'login') {
+      authSub.textContent = 'sign in to sync your commits everywhere';
+      authSubmitBtn.textContent = 'sign in';
+      authToggleText.textContent = 'no account? ';
+      authToggleLink.textContent = 'register';
+    } else {
+      authSub.textContent = 'create an account (min 8 character password)';
+      authSubmitBtn.textContent = 'create account';
+      authToggleText.textContent = 'already have one? ';
+      authToggleLink.textContent = 'sign in';
+    }
+  }
+  authToggleLink.addEventListener('click', () => setAuthMode(authMode === 'login' ? 'register' : 'login'));
+
+  async function submitAuth() {
+    const username = authUsername.value.trim();
+    const password = authPassword.value;
+    authError.textContent = '';
+    if (!username || !password) { authError.textContent = 'Enter a username and password.'; return; }
+    try {
+      const path = authMode === 'login' ? '/auth/login' : '/auth/register';
+      const data = await api('POST', path, { username, password });
+      authToken = data.token;
+      localStorage.setItem(TOKEN_KEY, authToken);
+      currentUser = data.user;
+      onAuthenticated();
+    } catch (e) {
+      authError.textContent = e.message;
+    }
+  }
+  authSubmitBtn.addEventListener('click', submitAuth);
+  authPassword.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submitAuth(); });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem(TOKEN_KEY);
+    authScreen.style.display = 'flex';
+    setAuthMode('login');
+  });
+
+  function onAuthenticated() {
+    authScreen.style.display = 'none';
+    userChipName.textContent = currentUser.username;
+    // Merge server totals with local so neither side ever loses progress.
+    state.totalCommits = Math.max(state.totalCommits, Number(currentUser.total_commits) || 0);
+    state.refactorPoints = Math.max(state.refactorPoints, Number(currentUser.refactor_points) || 0);
+    saveState();
+    renderAll();
+    refreshFriends();
+    startSyncLoop();
+  }
+
+  let syncStarted = false;
+  function startSyncLoop() {
+    if (syncStarted) return;
+    syncStarted = true;
+    setInterval(async () => {
+      if (!authToken) return;
+      try {
+        const data = await api('POST', '/auth/sync', {
+          totalCommits: Math.floor(state.totalCommits),
+          refactorPoints: Math.floor(state.refactorPoints)
+        });
+        currentUser = data.user;
+      } catch (e) { /* offline or expired token — local play continues regardless */ }
+    }, 5000);
+    // Keep the friends leaderboard reasonably live for anyone with this tab open.
+    setInterval(refreshFriends, 8000);
+  }
+
+  async function tryRestoreSession() {
+    if (!authToken) { setAuthMode('login'); return; }
+    try {
+      const data = await api('GET', '/auth/me');
+      currentUser = data.user;
+      onAuthenticated();
+    } catch (e) {
+      authToken = null;
+      localStorage.removeItem(TOKEN_KEY);
+      setAuthMode('login');
+    }
+  }
+
+  // ---------- Init ----------
+  renderAll();
+  tryRestoreSession();
+})();
+</script>
+</body>
+</html>
