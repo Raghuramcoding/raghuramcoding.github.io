@@ -523,14 +523,27 @@
   loadState();
 
   // ---------- API client ----------
-  async function api(method, path, body) {
+  async function api(method, path, body, timeoutMs) {
     const headers = { 'Content-Type': 'application/json' };
     if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
-    const res = await fetch(API_BASE_URL + path, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs || 60000);
+    let res;
+    try {
+      res = await fetch(API_BASE_URL + path, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal: controller.signal
+      });
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        throw new Error('The server took too long to respond. If this is the first request in a while, it may still be waking up — try again in a moment.');
+      }
+      throw new Error('Could not reach the server. Check your connection and try again.');
+    } finally {
+      clearTimeout(timeout);
+    }
     let data = null;
     try { data = await res.json(); } catch (e) { /* empty body */ }
     if (!res.ok) {
@@ -1057,6 +1070,7 @@
   const authSub = document.getElementById('authSub');
   const userChipName = document.getElementById('userChipName');
   let authMode = 'login'; // 'login' | 'register'
+  let authSubmitting = false;
 
   function setAuthMode(mode) {
     authMode = mode;
@@ -1076,10 +1090,23 @@
   authToggleLink.addEventListener('click', () => setAuthMode(authMode === 'login' ? 'register' : 'login'));
 
   async function submitAuth() {
+    if (authSubmitting) return; // ignore repeat clicks while a request is already in flight
     const username = authUsername.value.trim();
     const password = authPassword.value;
     authError.textContent = '';
     if (!username || !password) { authError.textContent = 'Enter a username and password.'; return; }
+
+    authSubmitting = true;
+    const idleLabel = authMode === 'login' ? 'sign in' : 'create account';
+    authSubmitBtn.textContent = 'connecting...';
+    authSubmitBtn.disabled = true;
+    // The backend is hosted on Render's free tier, which spins down after 15 minutes
+    // idle — the first request after that can take 30-60s to wake it back up. Let the
+    // person know so a slow first login doesn't look like the button is just broken.
+    const slowHint = setTimeout(() => {
+      authError.textContent = 'Still waking up the server (free hosting sleeps when idle) — this can take up to a minute on the first try...';
+    }, 4000);
+
     try {
       const path = authMode === 'login' ? '/auth/login' : '/auth/register';
       const data = await api('POST', path, { username, password });
@@ -1088,11 +1115,21 @@
       currentUser = data.user;
       onAuthenticated();
     } catch (e) {
-      authError.textContent = e.message;
+      authError.textContent = e.message || 'Something went wrong — check your connection and try again.';
+    } finally {
+      clearTimeout(slowHint);
+      authSubmitting = false;
+      authSubmitBtn.textContent = idleLabel;
+      authSubmitBtn.disabled = false;
     }
   }
   authSubmitBtn.addEventListener('click', submitAuth);
   authPassword.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submitAuth(); });
+
+  // Ping the backend as soon as the page loads so a sleeping free-tier instance
+  // starts waking up in the background while the person is still typing their
+  // credentials, instead of only waking up once they hit submit.
+  fetch(API_BASE_URL + '/health').catch(() => { /* ignore — real errors surface on actual submit */ });
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
     authToken = null;
