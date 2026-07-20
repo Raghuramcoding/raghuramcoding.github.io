@@ -321,6 +321,39 @@
     background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
     color: var(--text); font-family: inherit; font-size: 12px; padding: 7px;
   }
+
+  /* ---------- Scrollable long lists (163 tiers / achievements) ---------- */
+  #hireList { max-height: 320px; overflow-y: auto; padding-right: 4px; }
+  .hire-more-note {
+    text-align: center; color: var(--text-dim); font-size: 10px; padding: 6px 0 2px; font-style: italic;
+  }
+  #achievementsList { max-height: 280px; overflow-y: auto; padding-right: 4px; }
+  .achv-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 8px; margin-bottom: 4px; border-radius: 5px;
+    background: var(--panel2); border: 1px solid var(--border); opacity: 0.55;
+  }
+  .achv-row.unlocked { opacity: 1; border-color: var(--amber-dim); }
+  .achv-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+  .achv-text { display: flex; flex-direction: column; gap: 1px; }
+  .achv-name { font-size: 11px; font-weight: 700; color: var(--text); }
+  .achv-row.unlocked .achv-name { color: var(--amber-bright); }
+  .achv-desc { font-size: 10px; color: var(--text-dim); }
+
+  /* ---------- Achievement unlock toast ---------- */
+  #achievementToastRoot {
+    position: fixed; top: 16px; right: 16px; z-index: 1500;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .achv-toast {
+    background: var(--panel); border: 1px solid var(--amber); border-radius: 6px;
+    padding: 10px 16px; box-shadow: 0 0 20px rgba(255,176,0,0.25);
+    animation: toastIn 0.25s ease-out; transition: opacity 0.6s ease;
+  }
+  .achv-toast.fade-out { opacity: 0; }
+  .achv-toast-title { font-size: 9px; color: var(--amber-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .achv-toast-name { font-size: 13px; color: var(--amber-bright); font-weight: 800; margin-top: 2px; }
+  @keyframes toastIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 </style>
 </head>
 <body>
@@ -372,6 +405,11 @@
         </div>
         <button class="prestige-btn" id="prestigeBtn">refactor()</button>
       </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <h2>// achievements <span id="achievementsProgress" style="float:right; color:var(--text-dim); font-size:10px; text-transform:none; letter-spacing:0;">0 / 163 unlocked</span></h2>
+      <div id="achievementsList"></div>
     </div>
   </div>
 
@@ -432,6 +470,7 @@
 
 <div id="modalRoot"></div>
 <div id="trialRoot"></div>
+<div id="achievementToastRoot"></div>
 
 <script>
 (function () {
@@ -445,17 +484,160 @@
   // Set this to your deployed Render URL after deploying commit-engine-backend, e.g.
   // 'https://commit-engine-backend.onrender.com'. Leave as-is for local testing against
   // `npm start` on the backend (defaults to localhost:3000).
+  
   const API_BASE_URL = 'https://commit-engine-backend.onrender.com';
 
-  // ---------- Hires config ----------
-  const HIRE_DEFS = [
-    { id: 'intern',  name: 'Intern',        desc: '0.2 commits/sec', baseCost: 15,   cps: 0.2 },
-    { id: 'junior',  name: 'Junior Dev',    desc: '1 commit/sec',    baseCost: 100,  cps: 1 },
-    { id: 'mid',     name: 'Mid-level Dev', desc: '5 commits/sec',   baseCost: 600,  cps: 5 },
-    { id: 'senior',  name: 'Senior Dev',    desc: '20 commits/sec',  baseCost: 4000, cps: 20 },
-    { id: 'staff',   name: 'Staff Eng',     desc: '90 commits/sec',  baseCost: 25000, cps: 90 },
-    { id: 'principal', name: 'Principal Eng', desc: '400 commits/sec', baseCost: 150000, cps: 400 }
+
+
+  // Number formatter — defined this early because the shop/achievement
+  // generators just below run immediately at load and both call fmt().
+  const FMT_SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+  function fmt(n) {
+    if (n < 1000) return Math.floor(n).toString();
+    const tier = Math.min(FMT_SUFFIXES.length - 1, Math.floor(Math.log10(n) / 3));
+    return (n / Math.pow(1000, tier)).toFixed(2) + FMT_SUFFIXES[tier];
+  }
+
+  // ---------- Hires config (163 tiers, generated) ----------
+  // Rather than hand-author 163 near-identical entries, generate them from a
+  // small pool of role/tier names with a smooth cost/cps growth curve — this
+  // keeps the progression balanced (each tier ~19% pricier, ~15% stronger)
+  // and avoids 150+ lines of copy-pasted, error-prone data.
+  const HIRE_ROLE_NAMES = [
+    'Intern', 'Junior Dev', 'Mid-level Dev', 'Senior Dev', 'Staff Eng',
+    'Principal Eng', 'Architect', 'DevOps Eng', 'QA Engineer', 'Data Engineer',
+    'ML Engineer', 'Security Eng', 'SRE', 'Tech Lead', 'Eng Manager',
+    'Director of Eng', 'VP of Eng', 'Consultant', 'Open Source Maintainer', 'Hackathon Champion'
   ];
+  const HIRE_TIER_LABELS = [
+    'Trainee', 'Junior', 'Associate', 'Mid', 'Senior',
+    'Staff', 'Principal', 'Distinguished', 'Legendary'
+  ];
+  const HIRE_DEFS = (function generateHireDefs() {
+    const defs = [];
+    let idx = 0;
+    outer:
+    for (const tier of HIRE_TIER_LABELS) {
+      for (const role of HIRE_ROLE_NAMES) {
+        if (idx >= 163) break outer;
+        const baseCost = Math.ceil(15 * Math.pow(1.19, idx));
+        const cps = +(0.15 * Math.pow(1.155, idx)).toFixed(3);
+        defs.push({
+          id: 'hire_' + idx,
+          name: `${tier} ${role}`,
+          cps,
+          baseCost
+        });
+        idx++;
+      }
+    }
+    return defs;
+  })();
+
+  // ---------- Achievements (163, generated) ----------
+  // Same reasoning as above: generated from templates rather than hand-written,
+  // so the 163 conditions stay consistent and checkable in code instead of prose.
+  const ACHV_ADJECTIVES = [
+    'Tireless', 'Midnight', 'Caffeinated', 'Relentless', 'Silent', 'Legendary',
+    'Rogue', 'Diligent', 'Fearless', 'Methodical', 'Chaotic', 'Meticulous',
+    'Unstoppable', 'Nocturnal', 'Zealous'
+  ];
+  const ACHV_NOUNS = [
+    'Committer', 'Refactorer', 'Builder', 'Shipper', 'Debugger', 'Architect',
+    'Maintainer', 'Contributor', 'Reviewer', 'Merger', 'Deployer', 'Coder'
+  ];
+
+  function buildCommitMilestoneAchievements(count) {
+    const list = [];
+    let lastThreshold = 0;
+    for (let i = 0; i < count; i++) {
+      let threshold = Math.round(10 * Math.pow(1.28, i));
+      if (threshold <= lastThreshold) threshold = lastThreshold + 1;
+      lastThreshold = threshold;
+      const adj = ACHV_ADJECTIVES[i % ACHV_ADJECTIVES.length];
+      const noun = ACHV_NOUNS[(i * 7) % ACHV_NOUNS.length];
+      list.push({
+        id: 'commits_' + i,
+        name: `${adj} ${noun}`,
+        desc: `Reach ${fmt(threshold)} total commits.`,
+        check: (ctx) => ctx.state.totalCommits >= threshold
+      });
+    }
+    return list;
+  }
+
+  function buildHireMilestoneAchievements() {
+    const list = [];
+    for (let tierIdx = 0; tierIdx < 163; tierIdx += 10) {
+      const def = HIRE_DEFS[tierIdx];
+      if (!def) continue;
+      const target = 25;
+      list.push({
+        id: 'hire_milestone_' + tierIdx,
+        name: `${def.name} Wrangler`,
+        desc: `Hire ${target} ${def.name}s.`,
+        check: (ctx) => (ctx.state.hires[def.id] || 0) >= target
+      });
+    }
+    return list;
+  }
+
+  function buildPrestigeAchievements() {
+    return [1, 2, 5, 10, 25, 50, 100].map(n => ({
+      id: 'prestige_' + n,
+      name: n === 1 ? 'First Refactor' : `Refactored ${n} Times`,
+      desc: `Refactor ${n} time${n === 1 ? '' : 's'}.`,
+      check: (ctx) => ctx.state.prestigeCount >= n
+    }));
+  }
+
+  function buildClickAchievements() {
+    return [100, 1000, 10000].map(n => ({
+      id: 'clicks_' + n,
+      name: n === 100 ? 'Finger Warmup' : n === 1000 ? 'Carpal Tunnel Candidate' : 'Click Machine',
+      desc: `Manually click "git commit" ${fmt(n)} times.`,
+      check: (ctx) => ctx.state.manualClicks >= n
+    }));
+  }
+
+  function buildSocialAchievements() {
+    return [
+      { id: 'friend_first', name: 'Made a Friend', desc: 'Add your first friend.',
+        check: (ctx) => ctx.friendsCache.friends.length >= 1 },
+      { id: 'friend_5', name: 'Small Squad', desc: 'Have 5 friends.',
+        check: (ctx) => ctx.friendsCache.friends.length >= 5 },
+      { id: 'friend_10', name: 'Networker', desc: 'Have 10 friends.',
+        check: (ctx) => ctx.friendsCache.friends.length >= 10 },
+      { id: 'friend_25', name: 'Social Committer', desc: 'Have 25 friends.',
+        check: (ctx) => ctx.friendsCache.friends.length >= 25 },
+      { id: 'msg_first', name: 'Breaking the Ice', desc: 'Send your first message.',
+        check: (ctx) => ctx.state.messagesSent >= 1 },
+      { id: 'msg_10', name: 'Chatty', desc: 'Send 10 messages.',
+        check: (ctx) => ctx.state.messagesSent >= 10 },
+      { id: 'msg_50', name: 'Never Stops Talking', desc: 'Send 50 messages.',
+        check: (ctx) => ctx.state.messagesSent >= 50 },
+      { id: 'race_first', name: 'On Your Marks', desc: 'Join your first race.',
+        check: (ctx) => ctx.state.racesJoinedCount >= 1 },
+      { id: 'race_3', name: 'Serial Racer', desc: 'Join 3 races.',
+        check: (ctx) => ctx.state.racesJoinedCount >= 3 },
+      { id: 'team_first', name: 'Team Player', desc: 'Join your first team.',
+        check: (ctx) => ctx.state.teamsJoinedCount >= 1 },
+      { id: 'team_contribute_1000', name: 'Pooling Resources', desc: 'Contribute 1,000 commits to a team pool.',
+        check: (ctx) => ctx.state.teamContributedTotal >= 1000 },
+      { id: 'team_contribute_10000', name: 'All In', desc: 'Contribute 10,000 commits to a team pool.',
+        check: (ctx) => ctx.state.teamContributedTotal >= 10000 }
+    ];
+  }
+
+  const ACHIEVEMENTS = (function generateAchievements() {
+    const hireMilestones = buildHireMilestoneAchievements();   // 17
+    const prestige = buildPrestigeAchievements();               // 7
+    const social = buildSocialAchievements();                   // 12
+    const clicks = buildClickAchievements();                    // 3
+    const fixedCount = hireMilestones.length + prestige.length + social.length + clicks.length;
+    const commitMilestones = buildCommitMilestoneAchievements(163 - fixedCount);
+    return [...commitMilestones, ...hireMilestones, ...prestige, ...social, ...clicks];
+  })();
 
   // ---------- State ----------
   let state = {
@@ -465,7 +647,14 @@
     hires: {},
     trialShown: false,
     trialActive: false,
-    trialDeadline: 0
+    trialDeadline: 0,
+    manualClicks: 0,
+    prestigeCount: 0,
+    messagesSent: 0,
+    racesJoinedCount: 0,
+    teamsJoinedCount: 0,
+    teamContributedTotal: 0,
+    unlockedAchievements: {}
   };
 
   let currentUser = null; // { id, username, total_commits, refactor_points }
@@ -492,9 +681,13 @@
         state = Object.assign({
           commits: 0, totalCommits: 0, refactorPoints: 0,
           hires: defaultHires(), trialShown: false,
-          trialActive: false, trialDeadline: 0
+          trialActive: false, trialDeadline: 0,
+          manualClicks: 0, prestigeCount: 0, messagesSent: 0,
+          racesJoinedCount: 0, teamsJoinedCount: 0, teamContributedTotal: 0,
+          unlockedAchievements: {}
         }, parsed);
         if (!state.hires) state.hires = defaultHires();
+        if (!state.unlockedAchievements) state.unlockedAchievements = {};
         // old local-only "friends" data is superseded by the real backend friend
         // system; drop it from the save so it doesn't linger unused.
         delete state.friends;
@@ -570,12 +763,8 @@
     return cps * multiplier();
   }
 
-  function fmt(n) {
-    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-    return Math.floor(n).toString();
-  }
+  // (fmt moved earlier in the file — see near SAVE_KEY constants — since the
+  // achievement/shop generators below need it and run immediately at load.)
 
   // ---------- Rendering ----------
   const commitCountEl = document.getElementById('commitCount');
@@ -597,7 +786,14 @@
 
   function renderHires() {
     hireListEl.innerHTML = '';
-    HIRE_DEFS.forEach(def => {
+    // With 163 tiers, only render owned ones plus a handful of upcoming ones —
+    // keeps the DOM small and avoids re-building 163 rows on every tick.
+    let highestOwnedIdx = -1;
+    HIRE_DEFS.forEach((def, i) => { if ((state.hires[def.id] || 0) > 0) highestOwnedIdx = i; });
+    const visibleCount = Math.min(HIRE_DEFS.length, Math.max(8, highestOwnedIdx + 6));
+    const visibleDefs = HIRE_DEFS.slice(0, visibleCount);
+
+    visibleDefs.forEach(def => {
       const cost = hireCost(def);
       const owned = state.hires[def.id] || 0;
       const row = document.createElement('div');
@@ -605,13 +801,19 @@
       row.innerHTML = `
         <div class="hire-info">
           <div class="name">${def.name} <span style="color:var(--text-dim); font-weight:400;">x${owned}</span></div>
-          <div class="desc">${def.desc}</div>
+          <div class="desc">${fmt(def.cps)} commits/sec</div>
         </div>
         <button class="hire-btn" data-id="${def.id}" ${state.commits < cost ? 'disabled' : ''}>
           hire — ${fmt(cost)}
         </button>`;
       hireListEl.appendChild(row);
     });
+    if (visibleCount < HIRE_DEFS.length) {
+      const more = document.createElement('div');
+      more.className = 'hire-more-note';
+      more.textContent = `+ ${HIRE_DEFS.length - visibleCount} more roles unlock as your team grows`;
+      hireListEl.appendChild(more);
+    }
     hireListEl.querySelectorAll('.hire-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const def = HIRE_DEFS.find(d => d.id === btn.dataset.id);
@@ -621,6 +823,7 @@
           state.hires[def.id] = (state.hires[def.id] || 0) + 1;
           saveState();
           renderAll();
+          checkAchievements();
         }
       });
     });
@@ -639,6 +842,7 @@
     } catch (e) { /* stay on stale cache if a poll fails */ }
     renderLeaderboard();
     renderIncomingRequests();
+    checkAchievements();
   }
 
   function renderLeaderboard() {
@@ -837,6 +1041,9 @@
       try {
         await api('POST', '/messages', { toUsername: username, body });
         input.value = '';
+        state.messagesSent++;
+        saveState();
+        checkAchievements();
         openThread(username); // refresh thread
         refreshMessages();
       } catch (e) { alert(e.message); }
@@ -870,6 +1077,9 @@
       btn.addEventListener('click', async () => {
         try {
           await api('POST', '/competitions/' + btn.dataset.joinRace + '/join', {});
+          state.racesJoinedCount++;
+          saveState();
+          checkAchievements();
           await refreshRaces();
         } catch (e) { alert(e.message); }
       });
@@ -901,6 +1111,9 @@
       document.getElementById('raceName').value = '';
       document.getElementById('raceGoal').value = '';
       document.getElementById('raceDuration').value = '';
+      state.racesJoinedCount++; // creating a race auto-joins you
+      saveState();
+      checkAchievements();
       await refreshRaces();
     } catch (e) { alert(e.message); }
   });
@@ -927,6 +1140,9 @@
       btn.addEventListener('click', async () => {
         try {
           await api('POST', '/teams/' + btn.dataset.joinTeam + '/join', {});
+          state.teamsJoinedCount++;
+          saveState();
+          checkAchievements();
           await refreshTeams();
         } catch (e) { alert(e.message); }
       });
@@ -939,6 +1155,9 @@
         if (amount > state.totalCommits) { alert("You don't have that many commits."); return; }
         try {
           await api('POST', '/teams/' + btn.dataset.contribute + '/contribute', { amount: Math.floor(amount) });
+          state.teamContributedTotal += Math.floor(amount);
+          saveState();
+          checkAchievements();
           await refreshTeams();
         } catch (e) { alert(e.message); }
       });
@@ -951,6 +1170,9 @@
     try {
       await api('POST', '/teams', { name });
       document.getElementById('teamName').value = '';
+      state.teamsJoinedCount++; // creating a team auto-joins you
+      saveState();
+      checkAchievements();
       await refreshTeams();
     } catch (e) { alert(e.message); }
   });
@@ -978,6 +1200,59 @@
     renderTopStats();
     renderHires();
     renderLeaderboard();
+    renderAchievements();
+  }
+
+  // ---------- Achievements ----------
+  const achievementsListEl = document.getElementById('achievementsList');
+  const achievementsProgressEl = document.getElementById('achievementsProgress');
+  const achievementToastRoot = document.getElementById('achievementToastRoot');
+
+  function checkAchievements() {
+    const ctx = { state, friendsCache };
+    let newlyUnlocked = [];
+    ACHIEVEMENTS.forEach(a => {
+      if (state.unlockedAchievements[a.id]) return;
+      let met = false;
+      try { met = !!a.check(ctx); } catch (e) { met = false; }
+      if (met) {
+        state.unlockedAchievements[a.id] = true;
+        newlyUnlocked.push(a);
+      }
+    });
+    if (newlyUnlocked.length > 0) {
+      saveState();
+      renderAchievements();
+      newlyUnlocked.slice(0, 5).forEach((a, i) => setTimeout(() => showAchievementToast(a), i * 600));
+    }
+  }
+
+  function showAchievementToast(a) {
+    const toast = document.createElement('div');
+    toast.className = 'achv-toast';
+    toast.innerHTML = `<div class="achv-toast-title">🏆 achievement unlocked</div><div class="achv-toast-name">${a.name}</div>`;
+    achievementToastRoot.appendChild(toast);
+    setTimeout(() => toast.classList.add('fade-out'), 3200);
+    setTimeout(() => toast.remove(), 3800);
+  }
+
+  function renderAchievements() {
+    if (!achievementsListEl) return;
+    const unlockedCount = Object.keys(state.unlockedAchievements).length;
+    achievementsProgressEl.textContent = `${unlockedCount} / ${ACHIEVEMENTS.length} unlocked`;
+    achievementsListEl.innerHTML = '';
+    ACHIEVEMENTS.forEach(a => {
+      const unlocked = !!state.unlockedAchievements[a.id];
+      const row = document.createElement('div');
+      row.className = 'achv-row' + (unlocked ? ' unlocked' : '');
+      row.innerHTML = `
+        <span class="achv-icon">${unlocked ? '✓' : '🔒'}</span>
+        <span class="achv-text">
+          <span class="achv-name">${a.name}</span>
+          <span class="achv-desc">${a.desc}</span>
+        </span>`;
+      achievementsListEl.appendChild(row);
+    });
   }
 
   // ---------- Commit clicking ----------
@@ -986,6 +1261,7 @@
     const gain = 1 * multiplier();
     state.commits += gain;
     state.totalCommits += gain;
+    state.manualClicks++;
     spawnFloat(ev, '+' + fmt(gain));
     renderAll();
   });
@@ -1013,12 +1289,16 @@
     state.refactorPoints += gain;
     state.commits = 0;
     state.hires = defaultHires();
+    state.prestigeCount++;
     saveState();
     renderAll();
+    checkAchievements();
   });
 
   // ---------- Passive tick ----------
   let lastTick = Date.now();
+  let lastHireRender = 0;
+  let lastAchievementCheck = 0;
   setInterval(() => {
     const now = Date.now();
     const dt = (now - lastTick) / 1000;
@@ -1028,9 +1308,17 @@
       state.commits += gain;
       state.totalCommits += gain;
       renderTopStats();
-      renderHires(); // costs/affordability can change
+      if (now - lastHireRender > 1000) { // costs/affordability can change, but no need to rebuild 60x/min
+        renderHires();
+        lastHireRender = now;
+      }
+      if (now - lastAchievementCheck > 2000) {
+        checkAchievements();
+        lastAchievementCheck = now;
+      }
     }
   }, 250);
+
 
   // ---------- Free trial popup ----------
   function maybeShowTrial() {
@@ -1147,6 +1435,7 @@
     state.refactorPoints = Math.max(state.refactorPoints, Number(currentUser.refactor_points) || 0);
     saveState();
     renderAll();
+    checkAchievements();
     refreshFriends();
     startSyncLoop();
   }
