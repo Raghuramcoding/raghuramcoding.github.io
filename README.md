@@ -1,4 +1,7 @@
-# Linking a Github Pages Domain to Discord Connections
+New Readme.Md RELATED TO THIS PROJECT 
+Hello this is my amazing site, this is not my first site or my first time working with Html and Css, however you may notice that I seem to not have a single .Css File, You may wonder why and this is because I made my site to be simple so I do have Css but it is inside if my page's Html file, just so you know. Also fun fact I have added 200 commits to this project over the course of 3 Months ! and 28 days or 121 Days. 
+ OLD README.MD NOT RELATED TO THIS PROJECT BELOW
+  # Linking a Github Pages Domain to Discord Connections
 
 You can add your domain to your Discord connections to showcase it on your profile.
 

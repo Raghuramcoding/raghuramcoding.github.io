@@ -1,0 +1,105 @@
+<style>
+    /* Basic styling for the stats cards */
+    .stats-card {
+      margin-top: 4px;
+      padding: 10px;
+      background-color: #1a1a2e;
+      border-radius: 5px;
+      width: 250px;
+    }
+    
+    .stats-title {
+      color: #9fa8da;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stats-content {
+      color: #aaff00;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .nav-buttons {
+      font-size: 10px;
+      color: #5c6bc0;
+      cursor: pointer;
+    }
+    
+    .nav-buttons span:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="box1" class="stats-card" style="display: block;">
+    <div class="stats-title">Trackmania Stats</div>
+    <div id="player-data" class="stats-content">Loading stats...</div>
+    <div class="nav-buttons">
+      <span onclick="swap('box1', 'box2')">[next]</span>
+    </div>
+  </div>
+
+  <div id="box2" class="stats-card" style="display: none;">
+    <div class="stats-title">About Player</div>
+    <div class="stats-content">Player: raghuramkanungo</div>
+    <div class="nav-buttons">
+      <span onclick="swap('box2', 'box1')">[prev]</span>
+    </div>
+  </div>
+
+<script>
+  // Function to switch between boxes
+  function swap(hideId, showId) {
+    document.getElementById(hideId).style.display = 'none';
+    document.getElementById(showId).style.display = 'block';
+  }
+
+  // Function to clean up Trackmania color codes (like $09f or $fff) from nicknames
+  function cleanNickname(name) {
+    return name ? name.replace(/\$[0-9a-fA-F]{3}|\$[zZ]|\$[fF]01/g, '') : 'Unknown';
+  }
+
+  // Function to fetch and display the formatted API data
+  async function fetchStats() {
+    const displayElement = document.getElementById('player-data');
+    
+    try {
+      const response = await fetch('https://api.ul.unitedascenders.xyz/player/raghuramkanungo');
+      
+      if (!response.ok) {
+        throw new Error('Network response failed');
+      }
+      
+      const data = await response.json();
+      
+      // Pull specific pieces of data from the JSON object
+      const cleanName = cleanNickname(data.nickname);
+      const location = data.path ? data.path.replaceAll('|', ' > ') : 'N/A';
+      const points = data.multiplayer?.Stadium?.points || 0;
+      const wins = data.multiplayer?.Stadium?.wins || 0;
+
+      // Insert clean HTML structure instead of raw JSON
+      displayElement.innerHTML = `
+        <div style="font-size: 11px; color: #ffffff; margin-bottom: 4px;">
+          <strong>Player:</strong> ${cleanName}
+        </div>
+        <div style="font-size: 9px; color: #aaff00; margin-bottom: 4px;">
+          <strong>Region:</strong> ${location}
+        </div>
+        <div style="font-size: 9px; color: #9fa8da;">
+          <strong>Points:</strong> ${points} | <strong>Wins:</strong> ${wins}
+        </div>
+      `;
+    } catch (error) {
+      displayElement.innerText = 'Error loading stats';
+      console.error('API Error:', error);
+    }
+  }
+
+  // Load API data on page load
+  fetchStats();
+</script>

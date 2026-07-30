@@ -584,42 +584,84 @@ a:visited { color: #551a8b; }
       <div style="font-size:8px; color:#7986cb; margin-top:2px;">Github.com</div>
     </div>
          <a href="https://github.com" class="nav-btn">Visit site</a>
-   <div id="box1" class="award-box" style="margin-top:4px; display: block;">
+<div id="box1" class="award-box" style="margin-top:4px; display: block;">
   <div class="award-title" style="color:#9fa8da;">Member of</div>
   <div style="color:#aaff00; font-family:'Arial Black',sans-serif; font-size:9px; text-transform:uppercase;">TMX 100% PROJECT</div>
   <div style="font-size:8px; color:#5c6bc0; cursor: pointer;">
-    <span onclick="swap('box2', 'box1')">[prev]</span> 
-    <span onclick="swap('box2', 'box1')">[next]</span>
+    <span onclick="swap('box1', 'box3')">[prev]</span> 
+    <span onclick="swap('box1', 'box2')">[next]</span>
   </div>
 </div>
 
 <div id="box2" class="award-box" style="margin-top:4px; display: none;">
   <div class="award-title" style="color:#9fa8da;">Member of</div>
   <div style="color:#aaff00; font-family:'Arial Black',sans-serif; font-size:9px; text-transform:uppercase;">TM Trial community</div>
-  <div style="font-size:8px; color:#5c6bc0; cursor: pointer;">
-     <a href="https://tmrpgtrial.com/" style="background-color: #aaff00; color: #000000; padding: 6px 12px; font-family: 'Arial Black', sans-serif; font-size: 10px; text-decoration: none; border-radius: 3px; display: inline-block; margin-top: 5px;">
-  VIEW COMMUNITY MADE SITE
-  
-</a>
+  <a href="https://tmrpgtrial.com/" style="background-color: #aaff00; color: #000000; padding: 6px 12px; font-family: 'Arial Black', sans-serif; font-size: 10px; text-decoration: none; border-radius: 3px; display: inline-block; margin-top: 5px;">
+    VIEW COMMUNITY MADE SITE
+  </a>
+  <div style="font-size:8px; color:#5c6bc0; cursor: pointer; margin-top: 5px;">
     <span onclick="swap('box2', 'box1')">[prev]</span> 
     <span onclick="swap('box2', 'box3')">[next]</span>
   </div>
 </div>
 
-<div id="box3" class="My Trackmania stats, Pulled straight from the game" style="margin-top:4px; display: none;">
-  <div class="Stats" style="color:#9fa8da;">stats</div>
-  <div style="color:#aaff00; font-family:'Arial Black',sans-serif; font-size:9px; text-transform:uppercase;">https://api.ul.unitedascenders.xyz/player/raghuramkanungo</div>
-  <div style="font-size:8px; color:#5c6bc0; cursor: pointer;">
-    <span onclick="swap('box3', 'box2')">[prev]</span> 
+<div id="box3" class="stats-card" style="margin-top:4px; display: none;">
+  <div class="stats-title" style="color:#9fa8da;">About Player</div>
+  
+  <div id="player-data" style="color:#aaff00; font-family:'Arial Black',sans-serif; font-size:9px;">Loading stats...</div>
+  
+  <div class="nav-buttons" style="font-size:8px; color:#5c6bc0; cursor: pointer; margin-top: 5px;">
+    <span onclick="swap('box3', 'box2')">[prev]</span>
     <span onclick="swap('box3', 'box1')">[next]</span>
   </div>
 </div>
 
 <script>
-function swap(showId, hideId) {
-  document.getElementById(showId).style.display = 'block';
-  document.getElementById(hideId).style.display = 'none';
-}
+  // Function to switch between boxes
+  function swap(hideId, showId) {
+    document.getElementById(hideId).style.display = 'none';
+    document.getElementById(showId).style.display = 'block';
+  }
+
+  // Clean up Trackmania color codes (like $09f or $fff)
+  function cleanNickname(name) {
+    return name ? name.replace(/\$[0-9a-fA-F]{3}|\$[zZ]|\$[fF]01/g, '') : 'Unknown';
+  }
+
+  // Fetch and display live API data
+  async function fetchStats() {
+    const displayElement = document.getElementById('player-data');
+    
+    try {
+      const response = await fetch('https://api.ul.unitedascenders.xyz/player/raghuramkanungo');
+      if (!response.ok) throw new Error('Network error');
+      
+      const data = await response.json();
+      
+      const cleanName = cleanNickname(data.nickname);
+      const location = data.path ? data.path.replaceAll('|', ' > ') : 'N/A';
+      const points = data.multiplayer?.Stadium?.points || 0;
+      const wins = data.multiplayer?.Stadium?.wins || 0;
+
+      displayElement.innerHTML = `
+        <div style="font-size: 11px; color: #ffffff; margin-bottom: 4px;">
+          <strong>Player:</strong> ${cleanName}
+        </div>
+        <div style="font-size: 9px; color: #aaff00; margin-bottom: 4px;">
+          <strong>Region:</strong> ${location}
+        </div>
+        <div style="font-size: 9px; color: #9fa8da;">
+          <strong>Points:</strong> ${points} | <strong>Wins:</strong> ${wins}
+        </div>
+      `;
+    } catch (error) {
+      displayElement.innerText = 'Error loading stats';
+      console.error('API Error:', error);
+    }
+  }
+
+  fetchStats();
+</script>
 </script>
     </div>
     <hr class="nav-divider">
