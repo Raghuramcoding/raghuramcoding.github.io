@@ -33,7 +33,7 @@ a:visited { color: #551a8b; }
 .counter-num { font-family: "Courier New", monospace; font-size: 16px; color: #00ff41; letter-spacing: 3px; text-shadow: 0 0 4px #00ff41; }
 .counter-label { font-family: "Arial Black", sans-serif; font-size: 8px; color: #ffd600; text-transform: uppercase; letter-spacing: 2px; display: block; margin-top: 1px; }
 .last-updated { font-family: "Courier New", monospace; font-size: 10px; color: #888; margin-top: 8px; }
-.main-content { padding: 10px 14px; background-color: #ffffff; }
+.main-content { padding: 10px 14px; background-color: #ffffff; position: relative; }
 .section-title { font-family: "Arial Black", Arial, sans-serif; font-size: 15px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 1px; border-bottom: 4px solid #ffd600; padding-bottom: 1px; margin-bottom: 8px; display: inline-block; }
 .sep { border: none; border-top: 1px solid #3f51b5; border-bottom: 1px solid #9fa8da; margin: 10px 0; }
 .footer-bar { background-color: #111833; border-top: 2px solid #ff9900; text-align: center; padding: 8px; font-size: 10px; color: #7986cb; }
@@ -44,6 +44,42 @@ a:visited { color: #551a8b; }
 .online-dot { color: #aaff00; }
 @keyframes blink-it { 50% { opacity: 0; } }
 .blink { animation: blink-it 0.8s step-start infinite; }
+
+/* Physics Container Styles */
+#physics-arena {
+  position: relative;
+  width: 100%;
+  height: 450px;
+  background: #f0f2f5;
+  border: 2px solid #3f51b5;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.physics-box {
+  position: absolute;
+  background-color: #3f51b5;
+  background-image: linear-gradient(180deg, #5c6bc0 0%, #283593 100%);
+  color: #ffffff;
+  font-family: "Arial Black", Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-top: 1px solid #9fa8da;
+  border-left: 1px solid #9fa8da;
+  border-right: 1px solid #0d1b3e;
+  border-bottom: 1px solid #0d1b3e;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.physics-box:hover {
+  background-color: #ff9900;
+  background-image: none;
+  color: #000;
+  z-index: 1000;
+}
 </style>
 </head>
 <body>
@@ -107,29 +143,124 @@ a:visited { color: #551a8b; }
   </td>
 
   <td class="main-content" valign="top">
+    <h2>Sorry if this looks not working and none of the buttons work</h2>
+    
+    <!-- Physics Floating Links Arena -->
+    <div id="physics-arena">
+      <a href="404.html" class="physics-box">Error 404 Page</a>
+      <a href="physicsengine.html" class="physics-box">A physics Engine</a>
+      <a href="Forum.html" class="physics-box">Forum Go check it out!</a>
+      <a href="changelog.html" class="physics-box">Archived Updates</a>
+      <a href="commit-engine.html" class="physics-box">Commit-engine game</a>
+      <a href="fact-check-studio.html" class="physics-box">Fact-Check Studio</a>
+      <a href="hacker-engine.html" class="physics-box">Hacking Game</a>
+      <a href="index.html" class="physics-box">Homepage</a>
+      <a href="number-guessinggame.html" class="physics-box">Number Guessing Game</a>
+      <a href="pong.html" class="physics-box">Ping Pong Game</a>
+      <a href="projects.html" class="physics-box">Older Projects</a>
+      <a href="Python-roadmap.html" class="physics-box">Python Roadmap</a>
+      <a href="reading.html" class="physics-box">Reading List</a>
+      <a href="site.html" class="physics-box">This Page!</a>
+      <a href="sound-keyboard.html" class="physics-box">Sound Keyboard</a>
+      <a href="test.html" class="physics-box">Test Page</a>
+      <a href="velocity-showcase.html" class="physics-box">Velocity Showcase</a>
+      <a href="velocityquest.html" class="physics-box">Velocity Quest</a>
+    </div>
+
+    <div style="margin-top: 10px;">
+      <img src="untitled.jpg" alt="Image" style="max-width:100%;">
+      <img src="favicon.png" alt="Image for logo">
+    </div>
+
+    <h2>By the way none of the buttons on the side work yet those will be fixed soon</h2>
+    <h2>That's it, every page on my site, but Every week, day, month or whenever I decide to, new pages shall be added. Thank You - Raghuram, PS I wrote the code myself for about 30 minutes</h2>
+  </td>
+</tr>
+</table>
+</div>
+
+<div class="footer-bar">
+  <div class="footer-links">
+    <a href="index.html">Home</a> | <a href="forum.html">Forum</a> | <a href="projects.html">Projects</a>
+  </div>
+  <div class="footer-copy">&copy; 2026 The Ultimate Coding Voyage</div>
+</div>
+
+<!-- JavaScript for Collision & Floating Physics -->
+<script>
+const arena = document.getElementById('physics-arena');
+const boxes = document.querySelectorAll('.physics-box');
+
+const boxData = [];
+
+// Initialize positions and velocities
+boxes.forEach((box, index) => {
+  const width = box.offsetWidth || 100;
+  const height = box.offsetHeight || 30;
+  
+  boxData.push({
+    element: box,
+    x: Math.random() * (arena.clientWidth - width),
+    y: Math.random() * (arena.clientHeight - height),
+    vx: (Math.random() - 0.5) * 2.5,
+    vy: (Math.random() - 0.5) * 2.5,
+    width: width,
+    height: height
+  });
+});
+
+function updatePhysics() {
+  const arenaWidth = arena.clientWidth;
+  const arenaHeight = arena.clientHeight;
+
+  for (let i = 0; i < boxData.length; i++) {
+    let b = boxData[i];
+    
+    b.x += b.vx;
+    b.y += b.vy;
+
+    // Wall collisions
+    if (b.x <= 0) { b.x = 0; b.vx *= -1; }
+    if (b.x + b.width >= arenaWidth) { b.x = arenaWidth - b.width; b.vx *= -1; }
+    if (b.y <= 0) { b.y = 0; b.vy *= -1; }
+    if (b.y + b.height >= arenaHeight) { b.y = arenaHeight - b.height; b.vy *= -1; }
+
+    // Box-to-box collisions
+    for (let j = i + 1; j < boxData.length; j++) {
+      let b2 = boxData[j];
+      
+      if (
+        b.x < b2.x + b2.width &&
+        b.x + b.width > b2.x &&
+        b.y < b2.y + b2.height &&
+        b.y + b.height > b2.y
+      ) {
+        // Swap velocities on collision
+        let tempVx = b.vx;
+        let tempVy = b.vy;
+        b.vx = b2.vx;
+        b.vy = b2.vy;
+        b2.vx = tempVx;
+        b2.vy = tempVy;
+
+        // Push apart slightly to prevent sticking
+        b.x += b.vx;
+        b.y += b.vy;
+        b2.x += b2.vx;
+        b2.y += b2.vy;
+      }
+    }
+
+    // Apply new positions
+    b.element.style.left = b.x + 'px';
+    b.element.style.top = b.y + 'px';
+  }
+
+  requestAnimationFrame(updatePhysics);
+}
+
+requestAnimationFrame(updatePhysics);
+</script>
 
 </body>
 </html>
-<h1> Sorry if this looks not works and non of the buttons work <h1>
-<p><a href="404.html">Error 404 Page</a></p>
-<p><a href="physicsengine.html">A physics Engine</p>
-<img src="untitled.jpg" alt="Image">
-<p><a href="Forum.html">Forum Go check it out!</a>
-<p><a href="changelog.html">Archived Place where Updates used to be anouced</a>
-<p><a href="commit-engine.html">Commit-engine game</a>
-<p><a href="fact-check-studio.html">Simple Thing I made with Ai that does not work</a>
-<img src="favicon.png" alt="Image for logo">
-<p><a href="hacker-engine.html">Hacking Game I made with AI For Fun </a>
-<p><a href="index.html ">Homepage or landing page, whatever you call it</a>
-<h1> by the way non of the buttons on the side work yet those will be fixed soon<h1>
-<p><a href="number-guessinggame.html"> Old number Guessing Game, Also my first game ported to browsers</a>
-<p><a href="pong.html">A ping Pong game very simple</a>
-<p><a href="projects.html">A place where you can find some of my older projects</a>
-<p><a href="Python-roadmap.html">Another page I made while testing A AI</a>
-<p><a href="reading.html">A site where I (hopefully) will display and rate every book I have read</a>
-<p><a href="site.html">This Page!</a>
-<p><a href="sound-keyboard.html">A sound keyboard like I talked about</a>
-<p><a href="test.html">A page I made while testing Something for the homepage</a>
-<p><a href="velocity-showcase.html">Another Thing I made to test something</a>
-<p><a href="velocityquest.html">People who have been here since day 1 know this one </a>
-<h2>Thats It every page on my site, but Every week,day, month or whenevery I decide to, New pages shall be added. Thank You -Raghuram, PS I wrote the code myself for about 30 minutes<h2>
