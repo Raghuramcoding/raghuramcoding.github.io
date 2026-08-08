@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Horizon Rush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./src/styles.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="game-ui hidden">
+    <!-- top-left race info -->
+    <div id="race-panel" class="hud-panel top-left hidden">
+      <div class="race-pos"><span id="race-position">1</span><span class="race-pos-total">/6</span></div>
+      <div class="race-sub"><span id="race-lap">LAP 1/2</span></div>
+      <div class="race-sub"><span id="race-cp">CP 0/0</span></div>
+      <div class="race-timer" id="race-timer">00:00.0</div>
+    </div>
+
+    <!-- top-right drift score -->
+    <div id="drift-panel" class="hud-panel top-right hidden">
+      <div class="drift-label">DRIFT</div>
+      <div class="drift-score"><span id="drift-score">0</span></div>
+      <div class="drift-combo">x<span id="drift-combo">1.0</span></div>
+    </div>
+    <div id="drift-bank" class="hud-panel top-right-under">SCORE <span id="total-score">0</span></div>
+
+    <!-- center notifications -->
+    <div id="notify" class="notify"></div>
+    <div id="countdown" class="countdown hidden"></div>
+
+    <!-- bottom-left minimap -->
+    <div id="minimap-wrap" class="hud-panel bottom-left">
+      <canvas id="minimap" width="200" height="200"></canvas>
+    </div>
+
+    <!-- bottom-right speedo -->
+    <div id="speedo" class="bottom-right">
+      <svg id="rpm-arc" viewBox="0 0 220 130" width="220" height="130">
+        <path id="arc-bg" d="M 20 120 A 90 90 0 0 1 200 120" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="10" stroke-linecap="round"/>
+        <path id="arc-fill" d="M 20 120 A 90 90 0 0 1 200 120" fill="none" stroke="url(#speedgrad)" stroke-width="10" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="speedgrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#22d3ee"/>
+            <stop offset="0.6" stop-color="#a855f7"/>
+            <stop offset="1" stop-color="#ff2e63"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="speedo-readout">
+        <div class="speed-num" id="speed-num">0</div>
+        <div class="speed-unit">KM/H</div>
+      </div>
+      <div class="gear" id="gear">N</div>
+      <div class="nitro-wrap">
+        <div class="nitro-label">NITROUS</div>
+        <div class="nitro-bar"><div class="nitro-fill" id="nitro-fill"></div></div>
+      </div>
+    </div>
+
+    <div id="controls-hint" class="controls-hint">
+      WASD Drive · SPACE Drift · SHIFT Nitrous · E Enter/Exit · R Race · C Cam · T Time · M Mute · P Pause
+    </div>
+  </div>
+
+  <!-- Start screen -->
+  <div id="start-screen" class="overlay">
+    <div class="start-inner">
+      <div class="logo" aria-label="Horizon Rush logo">
+        <svg viewBox="0 0 120 120" width="120" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#22d3ee"/>
+              <stop offset="0.5" stop-color="#a855f7"/>
+              <stop offset="1" stop-color="#ff2e63"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="54" stroke="url(#lg)" stroke-width="3" opacity="0.5"/>
+          <path d="M18 74 h84" stroke="url(#lg)" stroke-width="4" stroke-linecap="round"/>
+          <path d="M26 66 h76" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+          <path d="M34 58 h60" stroke="#a855f7" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+          <path d="M60 20 L84 56 H36 Z" fill="url(#lg)" opacity="0.9"/>
+          <circle cx="60" cy="44" r="5" fill="#0a0a12"/>
+        </svg>
+      </div>
+      <h1 class="game-title">HORIZON <span>RUSH</span></h1>
+      <p class="tagline">Open-world arcade drift racing</p>
+      <div class="controls-grid">
+        <div><kbd>W A S D</kbd> Drive</div>
+        <div><kbd>SPACE</kbd> Handbrake drift</div>
+        <div><kbd>SHIFT</kbd> Nitrous boost</div>
+        <div><kbd>E</kbd> Enter / exit car</div>
+        <div><kbd>R</kbd> Start a race</div>
+        <div><kbd>C</kbd> Camera toggle</div>
+        <div><kbd>T</kbd> Skip time</div>
+        <div><kbd>M</kbd> Mute · <kbd>P</kbd> Pause</div>
+      </div>
+      <button id="start-btn" data-interactive>CLICK TO START</button>
+      <p class="loading-note" id="loading-note">Building the world…</p>
+    </div>
+  </div>
+
+  <!-- Pause menu -->
+  <div id="pause-screen" class="overlay hidden">
+    <div class="pause-inner game-panel">
+      <h2>PAUSED</h2>
+      <button id="resume-btn" data-interactive>RESUME</button>
+      <button id="restart-btn" data-interactive>RESTART</button>
+      <div class="pause-controls">WASD Drive · SPACE Drift · SHIFT Nitrous · E Enter/Exit · R Race · C Cam · T Time · M Mute</div>
+    </div>
+  </div>
+
+  <!-- Race finish -->
+  <div id="finish-screen" class="overlay hidden">
+    <div class="finish-inner game-panel">
+      <h2 id="finish-place">FINISH!</h2>
+      <div id="finish-time" class="finish-time"></div>
+      <div id="finish-results" class="finish-results"></div>
+      <button id="finish-btn" data-interactive>CONTINUE</button>
+    </div>
+  </div>
+
+  <!-- Multiverse Arcade integration: shared token economy + hub link (self-contained, doesn't touch game code) -->
+  <script src="../arcade-api.js"></script>
+  <style>
+    #ma-badge{position:fixed;top:10px;left:10px;z-index:999;font-family:'Chakra Petch',monospace;
+      background:rgba(10,10,20,.65);border:1px solid rgba(255,255,255,.15);border-radius:8px;
+      padding:6px 12px;color:#fff;font-size:13px;display:flex;gap:12px;align-items:center;backdrop-filter:blur(4px)}
+    #ma-badge a{color:#22d3ee;text-decoration:none;font-weight:600}
+    #ma-badge a:hover{text-decoration:underline}
+  </style>
+  <div id="ma-badge"><a href="../index.html">← HUB</a><span>🪙 <b id="ma-tok">0</b></span><span id="ma-fx" style="color:#ff4d4d;"></span></div>
+  <script>
+    (function(){
+      const tokEl=document.getElementById('ma-tok');
+      const fxEl=document.getElementById('ma-fx');
+      let pendingSync=0,lastAwardedScore=0;
+
+      function startGame(){
+        const s=document.createElement('script');
+        s.type='module';s.src='./src/main.js';
+        document.body.appendChild(s);
+      }
+
+      function beginTracking(){
+        setInterval(()=>{
+          const scoreEl=document.getElementById('total-score');
+          if(scoreEl){
+            const score=parseInt(scoreEl.textContent.replace(/[^0-9]/g,''),10)||0;
+            if(score>lastAwardedScore){pendingSync+=Math.floor((score-lastAwardedScore)/25);lastAwardedScore=score;}
+          }
+        },1500);
+        setInterval(()=>{
+          if(pendingSync<=0||!window.ArcadeAPI)return;
+          const amt=pendingSync;pendingSync=0;
+          ArcadeAPI.addTokens(amt,'horizon-rush').then(r=>{if(typeof r.tokens==='number')tokEl.textContent=r.tokens;}).catch(()=>{pendingSync+=amt;});
+        },3000);
+        if(window.ArcadeAPI)ArcadeAPI.getTokens().then(t=>tokEl.textContent=t);
+      }
+
+      // Apply equipped speed bonus (if any) BEFORE the game module loads, since
+      // MAX_SPEED is computed once at module-eval time from window.ARCADE_SPEED_MULT.
+      window.ARCADE_COOP = !!(window.ModeAPI && ModeAPI.getMode()==='coop');
+      if(window.ARCADE_COOP){
+        const hint=document.createElement('div');
+        hint.style.cssText='position:fixed;top:44px;left:10px;z-index:999;font-family:\'Chakra Petch\',monospace;background:rgba(10,10,20,.65);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;color:#ffd700;font-size:11px;';
+        hint.textContent='🎮🎮 P1: WASD  ·  P2 (gold car): Arrow Keys';
+        document.body.appendChild(hint);
+      }
+      if(window.ArcadeAPI&&ArcadeAPI.isLoggedIn()){
+        ArcadeAPI.getEquippedEffects().then(fx=>{
+          window.ARCADE_SPEED_MULT=1+(fx.effect_speed_pct||0)/100;
+          if(fx.effect_speed_pct)fxEl.textContent=`+${fx.effect_speed_pct}% top speed (${fx.name})`;
+          startGame();beginTracking();
+        }).catch(()=>{startGame();beginTracking();});
+      }else{
+        startGame();beginTracking();
+      }
+    })();
+  </script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body>
+</html>
