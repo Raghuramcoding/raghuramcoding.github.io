@@ -6,6 +6,9 @@ import { GameAudio } from './audio.js';
 import { ParticlePool, SkidMarks, Rain } from './effects.js';
 import { Destructibles } from './destructibles.js';
 
+// Couch Co-op: P1=WASD only, P2=Arrow keys (set by the arcade shell before this module loads)
+const COOP = !!window.ARCADE_COOP;
+
 // ---------------- Renderer / scene ----------------
 const canvas = document.getElementById('game-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -205,7 +208,6 @@ const race = {
 
 // ---------------- Input ----------------
 const keys = {};
-const COOP = !!window.ARCADE_COOP; // Couch Co-op: P1=WASD only, P2=Arrow keys (set by the arcade shell before this module loads)
 let paused = false;
 let started = false;
 addEventListener('keydown', (e) => {
