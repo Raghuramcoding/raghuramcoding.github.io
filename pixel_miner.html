@@ -241,6 +241,7 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const wrap = document.getElementById('canvasWrap');
 let CELL_PX = 8;
+let gridWidth = 0;
 let cameraRow = 0; // float, follows frontRow
 const turret = {x:0, y:46};
 
@@ -251,7 +252,8 @@ function resize(){
   canvas.style.height = wrap.clientHeight+'px';
   ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
   CELL_PX = Math.max(4, Math.floor(wrap.clientWidth / COLS));
-  turret.x = wrap.clientWidth/2;
+  gridWidth = CELL_PX * COLS;
+  turret.x = gridWidth/2;
 }
 window.addEventListener('resize', resize);
 
@@ -317,7 +319,7 @@ function explodeAt(row,col,dmg){
 
 function worldToCell(x,y){
   const row = Math.floor(cameraRow + (y - turret.y)/CELL_PX);
-  const col = Math.floor(x / CELL_PX);
+  const col = Math.min(COLS-1, Math.max(0, Math.floor(x / CELL_PX)));
   return {row,col};
 }
 
@@ -326,7 +328,7 @@ function updateBalls(dt){
     const b = balls[i];
     b.x += b.vx; b.y += b.vy; b.life--;
     if (b.x<0){b.x=0;b.vx*=-1;}
-    if (b.x>wrap.clientWidth){b.x=wrap.clientWidth;b.vx*=-1;}
+    if (b.x>gridWidth){b.x=gridWidth;b.vx*=-1;}
     const {row,col} = worldToCell(b.x,b.y);
     let removed = false;
     if (row>=frontRow && row<ROWS && col>=0 && col<COLS){
