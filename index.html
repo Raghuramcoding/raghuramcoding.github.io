@@ -625,7 +625,7 @@ a:visited { color: #551a8b; }
 
   // Clean up Trackmania color codes (like $09f or $fff)
   function cleanNickname(name) {
-    return name ? name.replace(/\$[0-9a-fA-F]{3}|\$[zZ]|\$[fF]01/g, '') : 'Unknown';
+    return name ? name.replace(/\$[0-9a-fA-F]{3}|\$[zZ]|\$[fF]01/go, '') : 'Unknown';
   }
 
   // Fetch and display live API data
