@@ -7,59 +7,82 @@
 <style>
   :root{
     --bg:#0e0f13; --panel:#171922; --panel2:#1f2230; --accent:#ffd447;
-    --accent2:#5ad1ff; --danger:#ff5a5a; --text:#e9ecf5; --muted:#8a90a8;
-    --border:#2a2e40;
+    --accent2:#5ad1ff; --danger:#ff5a5a; --muted:#8a90a8; --text:#e9ecf5;
+    --border:#2a2e40; --purple:#c98bff;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif; overflow:hidden;}
+    font-family:'Segoe UI',Roboto,Arial,sans-serif; overflow:hidden;}
   #app{display:flex; width:100vw; height:100vh;}
   #gameCol{flex:1; display:flex; flex-direction:column; min-width:0;}
-  #hud{display:flex; align-items:center; gap:18px; padding:10px 16px;
+  #hud{display:flex; align-items:center; gap:14px; padding:8px 14px;
     background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap;}
-  .stat{display:flex; align-items:center; gap:6px; font-size:14px; color:var(--muted);}
-  .stat b{color:var(--text); font-size:15px;}
+  .stat{display:flex; align-items:center; gap:5px; font-size:13px; color:var(--muted); white-space:nowrap;}
+  .stat b{color:var(--text); font-size:14px;}
   #oreStat b{color:var(--accent);}
-  #progWrap{flex:1; min-width:160px; display:flex; align-items:center; gap:8px;}
-  #progBar{flex:1; height:14px; background:#0b0c11; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+  #prestigeStat b{color:var(--purple);}
+  #progWrap{flex:1; min-width:140px; display:flex; align-items:center; gap:8px;}
+  #progBar{flex:1; height:12px; background:#0b0c11; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
   #progFill{height:100%; width:0%; background:linear-gradient(90deg,#5ad1ff,#ffd447); transition:width .2s;}
   #canvasWrap{position:relative; flex:1; background:#05060a; overflow:hidden; cursor:crosshair;}
   canvas{display:block; width:100%; height:100%;}
-  #modeBar{display:flex; gap:6px; padding:8px 16px; background:var(--panel); border-top:1px solid var(--border); align-items:center; flex-wrap:wrap;}
+  #modeBar{display:flex; gap:6px; padding:7px 14px; background:var(--panel); border-top:1px solid var(--border); align-items:center; flex-wrap:wrap;}
   .modeBtn{background:var(--panel2); color:var(--muted); border:1px solid var(--border); border-radius:6px;
-    padding:6px 12px; font-size:13px; cursor:pointer; user-select:none;}
+    padding:6px 11px; font-size:12.5px; cursor:pointer; user-select:none;}
   .modeBtn.active{background:var(--accent2); color:#08131a; border-color:var(--accent2); font-weight:600;}
-  #hint{margin-left:auto; font-size:12px; color:var(--muted);}
-  #shop{width:320px; background:var(--panel); border-left:1px solid var(--border);
+  #overchargeBtn{background:linear-gradient(90deg,#ff8a5c,#ffd447); color:#2a1400; border:none; border-radius:6px;
+    padding:6px 12px; font-size:12.5px; font-weight:700; cursor:pointer;}
+  #overchargeBtn:disabled{background:#3a3d4a; color:#6c7086; cursor:not-allowed;}
+  #hint{margin-left:auto; font-size:11.5px; color:var(--muted);}
+  #sidebar{width:330px; background:var(--panel); border-left:1px solid var(--border);
     display:flex; flex-direction:column; overflow:hidden;}
-  #shopHead{padding:14px 16px; border-bottom:1px solid var(--border);}
-  #shopHead h2{margin:0; font-size:16px;}
-  #shopHead p{margin:4px 0 0; font-size:12px; color:var(--muted);}
-  #shopList{flex:1; overflow-y:auto; padding:10px;}
+  #tabs{display:flex; border-bottom:1px solid var(--border);}
+  .tabBtn{flex:1; padding:10px 4px; background:var(--panel); color:var(--muted); border:none;
+    font-size:11.5px; cursor:pointer; border-bottom:2px solid transparent;}
+  .tabBtn.active{color:var(--text); border-bottom-color:var(--accent); background:var(--panel2);}
+  #panelBody{flex:1; overflow-y:auto; padding:10px;}
   .item{background:var(--panel2); border:1px solid var(--border); border-radius:8px;
-    padding:10px 12px; margin-bottom:10px;}
-  .item .row1{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
-  .item .name{font-size:13.5px; font-weight:600;}
-  .item .lvl{font-size:11px; color:var(--muted);}
-  .item .desc{font-size:11.5px; color:var(--muted); margin-bottom:8px; line-height:1.4;}
-  .buyBtn{width:100%; padding:7px; border:none; border-radius:6px; background:var(--accent);
-    color:#221900; font-weight:700; font-size:12.5px; cursor:pointer;}
+    padding:9px 11px; margin-bottom:9px;}
+  .item .row1{display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;}
+  .item .name{font-size:13px; font-weight:600;}
+  .item .lvl{font-size:10.5px; color:var(--muted);}
+  .item .desc{font-size:11px; color:var(--muted); margin-bottom:7px; line-height:1.35;}
+  .buyBtn{width:100%; padding:6.5px; border:none; border-radius:6px; background:var(--accent);
+    color:#221900; font-weight:700; font-size:12px; cursor:pointer;}
+  .buyBtn.purple{background:var(--purple); color:#1c0033;}
   .buyBtn:disabled{background:#3a3d4a; color:#6c7086; cursor:not-allowed;}
-  .toggleBtn{width:100%; padding:7px; border:1px solid var(--border); border-radius:6px;
-    background:#232739; color:var(--text); font-weight:600; font-size:12.5px; cursor:pointer;}
+  .toggleBtn{width:100%; padding:6.5px; border:1px solid var(--border); border-radius:6px;
+    background:#232739; color:var(--text); font-weight:600; font-size:12px; cursor:pointer;}
   .toggleBtn.on{background:#1c3a2e; border-color:#2f6f4f; color:#7fe3ae;}
+  .achv{display:flex; gap:9px; align-items:center; background:var(--panel2); border:1px solid var(--border);
+    border-radius:8px; padding:8px 10px; margin-bottom:8px; opacity:0.4;}
+  .achv.unlocked{opacity:1; border-color:#3f6e4a;}
+  .achv .icon{font-size:20px;}
+  .achv .name{font-size:12.5px; font-weight:600;}
+  .achv .desc{font-size:10.5px; color:var(--muted);}
+  .cosmRow{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .swatch{width:34px; height:34px; border-radius:8px; cursor:pointer; border:2px solid var(--border);}
+  .swatch.sel{border-color:var(--accent);}
+  #prestigeBtn{width:100%; padding:12px; border:none; border-radius:8px; background:linear-gradient(90deg,#c98bff,#5ad1ff);
+    color:#140026; font-weight:800; font-size:13px; cursor:pointer; margin-bottom:12px;}
+  #prestigeBtn:disabled{background:#3a3d4a; color:#6c7086; cursor:not-allowed;}
+  #prestigeInfo{font-size:11.5px; color:var(--muted); margin-bottom:12px; line-height:1.5;}
   #modal{position:fixed; inset:0; background:rgba(4,5,8,.85); display:none; align-items:center; justify-content:center; z-index:50;}
-  #modalBox{background:var(--panel); border:1px solid var(--accent); border-radius:14px; padding:32px 36px;
+  #modalBox{background:var(--panel); border:1px solid var(--accent); border-radius:14px; padding:28px 32px;
     text-align:center; max-width:420px;}
-  #modalBox h1{margin:0 0 10px; color:var(--accent); font-size:26px;}
-  #modalBox p{color:var(--muted); font-size:14px; line-height:1.5;}
-  #modalBox button{margin-top:16px; padding:10px 22px; border:none; border-radius:8px;
+  #modalBox h1{margin:0 0 10px; color:var(--accent); font-size:24px;}
+  #modalBox p{color:var(--muted); font-size:13.5px; line-height:1.5;}
+  #modalBox button{margin-top:14px; padding:10px 22px; border:none; border-radius:8px;
     background:var(--accent); color:#221900; font-weight:700; cursor:pointer; font-size:14px;}
-  #detectHint{position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  #detectHint{position:absolute; top:8px; left:50%; transform:translateX(-50%);
     background:rgba(20,22,30,.85); border:1px solid var(--accent); border-radius:20px;
-    padding:6px 16px; font-size:12px; color:var(--accent); display:none; pointer-events:none;}
+    padding:5px 14px; font-size:11.5px; color:var(--accent); display:none; pointer-events:none; white-space:nowrap;}
+  #toastWrap{position:absolute; top:44px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; pointer-events:none; z-index:5;}
+  .toast{background:rgba(20,22,30,.92); border:1px solid var(--accent); border-radius:8px; padding:6px 14px;
+    font-size:12px; color:var(--accent); animation:fadeUp 3.2s ease forwards;}
+  @keyframes fadeUp{0%{opacity:0; transform:translateY(-6px);} 10%{opacity:1; transform:translateY(0);} 80%{opacity:1;} 100%{opacity:0;}}
   ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:#333749; border-radius:4px;}
-  @media (max-width:800px){ #shop{width:230px;} .item .desc{display:none;} }
+  @media (max-width:820px){ #sidebar{width:240px;} .item .desc{display:none;} }
 </style>
 </head>
 <body>
@@ -67,24 +90,32 @@
   <div id="gameCol">
     <div id="hud">
       <div class="stat" id="oreStat">⛏️ <b id="oreVal">0</b> Ore</div>
-      <div class="stat">🕳️ Depth <b id="depthVal">0</b> / 100,000</div>
-      <div class="stat">🧱 Mined <b id="minedVal">0</b> / 10,000,000</div>
+      <div class="stat" id="prestigeStat">💎 <b id="prestigeVal">0</b> Prestige</div>
+      <div class="stat">🕳️ Depth <b id="depthVal">0</b></div>
+      <div class="stat">🧱 Run <b id="minedVal">0</b>/10,000,000</div>
       <div id="progWrap"><div id="progBar"><div id="progFill"></div></div></div>
     </div>
     <div id="canvasWrap">
       <canvas id="c"></canvas>
       <div id="detectHint"></div>
+      <div id="toastWrap"></div>
     </div>
     <div id="modeBar">
-      <div class="modeBtn" data-mode="manual">🖱️ Manual Click</div>
+      <div class="modeBtn" data-mode="manual">🖱️ Manual</div>
       <div class="modeBtn" data-mode="auto">🔫 Auto-Fire</div>
-      <div class="modeBtn" data-mode="sling">🎯 Slingshot Drag</div>
-      <div id="hint">Aim with your cursor. Find the 1-in-10,000,000 golden pixel.</div>
+      <div class="modeBtn" data-mode="sling">🎯 Slingshot</div>
+      <button id="overchargeBtn">⚡ Overcharge</button>
+      <div id="hint">Aim with your cursor.</div>
     </div>
   </div>
-  <div id="shop">
-    <div id="shopHead"><h2>🛒 Mining Shop</h2><p>Upgrade your rig to dig faster &amp; deeper.</p></div>
-    <div id="shopList"></div>
+  <div id="sidebar">
+    <div id="tabs">
+      <button class="tabBtn active" data-tab="shop">🛒 Shop</button>
+      <button class="tabBtn" data-tab="prestige">💎 Prestige</button>
+      <button class="tabBtn" data-tab="achv">🏆 Achv.</button>
+      <button class="tabBtn" data-tab="cosm">🎨 Style</button>
+    </div>
+    <div id="panelBody"></div>
   </div>
 </div>
 
@@ -104,11 +135,11 @@
 const COLS = 100;
 const ROWS = 100000;
 const TOTAL = COLS*ROWS; // exactly 10,000,000
+const MAX_HP = 150; // hard cap - nothing can ever exceed this
 
-/* hp remaining per cell; 255 = uninitialized sentinel */
-const hpGrid = new Uint8Array(TOTAL).fill(255);
-/* count of uncleared cells remaining in each row */
+const hpGrid = new Uint8Array(TOTAL).fill(255); // 255 = uninitialized sentinel
 const rowRemaining = new Uint32Array(ROWS).fill(COLS);
+const hitCounts = new Map(); // failsafe: idx -> hit count (only tracks actively-hit cells)
 
 function hash2(row,col,salt){
   let h = (row*374761393 + col*668265263 + salt*2246822519) >>> 0;
@@ -119,15 +150,27 @@ function hash2(row,col,salt){
 
 function baseHP(row){
   const tier = Math.min(Math.floor(row/900), 55);
-  return 2 + tier + Math.floor(hash2(row,0,7)*3);
+  let hp = 2 + tier + Math.floor(hash2(row,0,7)*3);
+  if (isReinforced(row, undefined)) hp = Math.min(MAX_HP, hp*2.2);
+  return Math.min(MAX_HP, hp);
+}
+function baseHPForCell(row,col){
+  const tier = Math.min(Math.floor(row/900), 55);
+  let hp = 2 + tier + Math.floor(hash2(row,0,7)*3);
+  if (isReinforced(row,col)) hp = Math.round(Math.min(MAX_HP, hp*2.2));
+  return Math.min(MAX_HP, hp);
 }
 
 function isOre(row,col){ return hash2(row,col,42) < 0.006; }
+function isVein(row,col){ return !isOre(row,col) && hash2(row,col,55) < 0.003; }
+function isTrap(row,col){ return !isOre(row,col) && !isVein(row,col) && hash2(row,col,66) < 0.004; }
+function isReinforced(row,col){ return hash2(row,col===undefined?0:col,77) < 0.008; }
+
 function oreValue(row,col){
   const r = hash2(row,col,43);
-  if (r<0.08) return 40;      // diamond-tier
-  if (r<0.3) return 18;       // emerald-tier
-  return 8;                   // copper-tier
+  if (r<0.08) return 40;
+  if (r<0.3) return 18;
+  return 8;
 }
 function oreColor(row,col){
   const r = hash2(row,col,43);
@@ -140,7 +183,7 @@ const ZONES = [
   {max:2000,   colors:['#6b4a2f','#7a5636','#5f4128','#836045']},
   {max:8000,   colors:['#5a5a63','#666670','#4f4f58','#71717c']},
   {max:20000,  colors:['#48454f','#524e5a','#3e3b45','#5c5865']},
-  {max:50000,  colors:['#2f2b38','#39344400','#39344400','#443f52'].map((c,i)=>i===1||i===2?'#39344a':c)},
+  {max:50000,  colors:['#332e42','#39344a','#2c283a','#443f52']},
   {max:100000, colors:['#191622','#211d2c','#141220','#241f30']}
 ];
 function zoneColors(row){
@@ -149,6 +192,9 @@ function zoneColors(row){
 }
 function cellColor(row,col){
   if (isOre(row,col)) return oreColor(row,col);
+  if (isVein(row,col)) return '#ff9dee';
+  if (isTrap(row,col)) return '#ff4d4d';
+  if (isReinforced(row,col)) return '#8a8fa3';
   const cs = zoneColors(row);
   const idx = Math.floor(hash2(row,col,11)*cs.length) % cs.length;
   return cs[idx];
@@ -156,74 +202,97 @@ function cellColor(row,col){
 
 let goldIndex = Math.floor(Math.random()*TOTAL);
 let goldFound = false;
-
-let frontRow = 0; // rows [0,frontRow) are fully cleared
+let frontRow = 0;
 
 function idxOf(row,col){ return row*COLS+col; }
 function getHP(row,col){
   const i = idxOf(row,col);
   const v = hpGrid[i];
-  return v===255 ? baseHP(row) : v;
+  return v===255 ? baseHPForCell(row,col) : v;
 }
 function setHP(row,col,v){
-  hpGrid[idxOf(row,col)] = Math.max(0, Math.min(254, v));
+  hpGrid[idxOf(row,col)] = Math.max(0, Math.min(254, Math.min(MAX_HP,v)));
 }
 
-/* ============ GAME STATE / UPGRADES ============ */
+/* ============ STATE ============ */
 const state = {
   ore: 0,
   totalMined: 0,
   shotsFired: 0,
   mode: 'manual',
+  autoAimOn: false,
+  cosmetic: {turret:'#5ad1ff', trail:false},
+  achievements: {},
+  prestigePoints: 0,
+  prestigeRuns: 0,
+  bestDepthEver: 0,
+  goldFoundTotal: 0,
   upgrades: {
-    damage: 1,
-    fireRate: 1,
-    multishot: 1,
-    explosion: 1,
-    speed: 1,
-    pierce: 1,
-    detector: 0,   // 0/1 unlocked
-    autoaim: 0,    // 0/1 unlocked toggle purchased
-    multiplier: 1
+    damage:1, fireRate:1, multishot:1, explosion:1, speed:1, pierce:1,
+    detector:0, autoaim:0, multiplier:1, chainLightning:0
   },
-  autoAimOn: false
+  prestigeUpgrades: { dmgMult:1, oreMult:1, luckMult:1 },
+  overcharge: { active:false, until:0, cooldownUntil:0 }
 };
 
 const UPG = {
-  damage:    {name:'⚡ Ball Damage', base:15, mult:1.32, max:60,
+  damage:    {name:'⚡ Ball Damage', base:15, mult:1.28, max:80,
     desc:'Increases damage each ball deals on impact.',
-    effect:()=> 1 + (state.upgrades.damage-1)*1.4},
-  fireRate:  {name:'🔥 Fire Rate', base:20, mult:1.3, max:40,
-    desc:'Shoot faster in Auto-Fire mode and reduces manual cooldown.',
-    effect:()=> Math.max(60, 420 - (state.upgrades.fireRate-1)*22)},
-  multishot: {name:'🎇 Multishot', base:120, mult:1.9, max:8,
+    effect:()=> (1 + (state.upgrades.damage-1)*1.4) * pMult('dmgMult')},
+  fireRate:  {name:'🔥 Fire Rate', base:20, mult:1.28, max:50,
+    desc:'Shoot faster in Auto-Fire and reduces manual cooldown.',
+    effect:()=> Math.max(45, 420 - (state.upgrades.fireRate-1)*20)},
+  multishot: {name:'🎇 Multishot', base:120, mult:1.85, max:10,
     desc:'Fire additional balls in a spread with every shot.',
     effect:()=> state.upgrades.multishot},
-  explosion: {name:'💥 Blast Radius', base:80, mult:1.7, max:10,
+  explosion: {name:'💥 Blast Radius', base:80, mult:1.65, max:12,
     desc:'Balls damage nearby cells in a radius on impact.',
     effect:()=> (state.upgrades.explosion-1)},
-  speed:     {name:'🚀 Ball Speed', base:12, mult:1.25, max:30,
-    desc:'Balls travel faster, letting you fire more per second.',
+  speed:     {name:'🚀 Ball Speed', base:12, mult:1.24, max:35,
+    desc:'Balls travel faster.',
     effect:()=> 7 + (state.upgrades.speed-1)*0.7},
-  pierce:    {name:'🎯 Pierce', base:100, mult:1.8, max:6,
-    desc:'Balls punch through a cell and keep going instead of stopping.',
+  pierce:    {name:'🎯 Pierce', base:100, mult:1.75, max:8,
+    desc:'Balls punch through and keep going.',
     effect:()=> state.upgrades.pierce-1},
   detector:  {name:'🧭 Gold Detector', base:500, mult:1, max:1,
-    desc:'Unlocks a proximity compass that senses the golden pixel when you dig near it.',
+    desc:'Unlocks a proximity compass for the golden pixel.',
     effect:()=> state.upgrades.detector},
   autoaim:   {name:'🤖 Auto-Aim Module', base:600, mult:1, max:1,
-    desc:'Unlocks a toggle that automatically targets the weakest nearby cell for you.',
+    desc:'Unlocks a toggle that auto-targets the weakest nearby cell.',
     effect:()=> state.upgrades.autoaim},
-  multiplier:{name:'💰 Ore Multiplier', base:250, mult:1.6, max:20,
-    desc:'Permanently increases all Ore earned from mining.',
-    effect:()=> 1 + (state.upgrades.multiplier-1)*0.18}
+  multiplier:{name:'💰 Ore Multiplier', base:250, mult:1.55, max:25,
+    desc:'Permanently increases all Ore earned.',
+    effect:()=> (1 + (state.upgrades.multiplier-1)*0.18) * pMult('oreMult')},
+  chainLightning:{name:'⚡ Chain Lightning', base:900, mult:1, max:1,
+    desc:'Hits have a chance to arc extra damage to a nearby uncleared cell.',
+    effect:()=> state.upgrades.chainLightning}
 };
+
+const PUPG = {
+  dmgMult: {name:'💎 Eternal Damage', base:3, mult:1.6, max:15,
+    desc:'Permanent damage multiplier that survives every Collapse.'},
+  oreMult: {name:'💎 Eternal Fortune', base:3, mult:1.6, max:15,
+    desc:'Permanent ore-gain multiplier that survives every Collapse.'},
+  luckMult:{name:'💎 Eternal Luck', base:4, mult:1.7, max:10,
+    desc:'Increases odds of veins and reduces trap frequency (visual only for now, boosts vein rewards).'}
+};
+function pMult(key){
+  const lvl = state.prestigeUpgrades[key];
+  if (key==='luckMult') return 1 + (lvl-1)*0.15;
+  return 1 + (lvl-1)*0.22;
+}
 
 function costOf(key){
   const u = UPG[key];
   const lvl = state.upgrades[key];
   if (lvl >= u.max) return null;
-  return Math.round(u.base * Math.pow(u.mult, (u.base<200? lvl-1 : lvl-1)));
+  return Math.round(u.base * Math.pow(u.mult, lvl-1));
+}
+function pCostOf(key){
+  const u = PUPG[key];
+  const lvl = state.prestigeUpgrades[key];
+  if (lvl >= u.max) return null;
+  return Math.round(u.base * Math.pow(u.mult, lvl-1));
 }
 
 function buy(key){
@@ -231,9 +300,44 @@ function buy(key){
   if (cost===null || state.ore < cost) return;
   state.ore -= cost;
   state.upgrades[key] += 1;
-  renderShop();
-  updateHUD();
-  save();
+  renderPanel(); updateHUD(); save();
+}
+function pBuy(key){
+  const cost = pCostOf(key);
+  if (cost===null || state.prestigePoints < cost) return;
+  state.prestigePoints -= cost;
+  state.prestigeUpgrades[key] += 1;
+  renderPanel(); updateHUD(); save();
+}
+
+/* ============ ACHIEVEMENTS ============ */
+const ACHIEVEMENTS = [
+  {id:'first_ore', icon:'⛏️', name:'First Strike', desc:'Mine your first pixel.', cond:()=>state.totalMined>=1},
+  {id:'hundred', icon:'💯', name:'Getting Started', desc:'Mine 100 pixels this run.', cond:()=>state.totalMined>=100},
+  {id:'ten_k', icon:'🧱', name:'Deep Digger', desc:'Mine 10,000 pixels this run.', cond:()=>state.totalMined>=10000},
+  {id:'depth_1000', icon:'🕳️', name:'Half a Klick Down', desc:'Reach depth 1,000.', cond:()=>frontRow>=1000},
+  {id:'depth_10000', icon:'🌋', name:'Into the Mantle', desc:'Reach depth 10,000.', cond:()=>frontRow>=10000},
+  {id:'first_gold', icon:'✨', name:'Eureka', desc:'Find your first golden pixel.', cond:()=>state.goldFoundTotal>=1},
+  {id:'gold_5', icon:'🏆', name:'Gold Rush', desc:'Find 5 golden pixels.', cond:()=>state.goldFoundTotal>=5},
+  {id:'shots_1000', icon:'🎯', name:'Trigger Happy', desc:'Fire 1,000 shots.', cond:()=>state.shotsFired>=1000},
+  {id:'first_prestige', icon:'💎', name:'Collapse and Rebuild', desc:'Prestige for the first time.', cond:()=>state.prestigeRuns>=1},
+  {id:'dmg_max', icon:'⚡', name:'Overwhelming Force', desc:'Max out Ball Damage.', cond:()=>state.upgrades.damage>=UPG.damage.max},
+];
+function checkAchievements(){
+  for (const a of ACHIEVEMENTS){
+    if (!state.achievements[a.id] && a.cond()){
+      state.achievements[a.id] = true;
+      toast(`🏆 Achievement unlocked: ${a.name}`);
+      save();
+    }
+  }
+}
+function toast(msg){
+  const wrap2 = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className='toast'; el.textContent = msg;
+  wrap2.appendChild(el);
+  setTimeout(()=>el.remove(), 3300);
 }
 
 /* ============ CANVAS / CAMERA ============ */
@@ -242,7 +346,7 @@ const ctx = canvas.getContext('2d');
 const wrap = document.getElementById('canvasWrap');
 let CELL_PX = 8;
 let gridWidth = 0;
-let cameraRow = 0; // float, follows frontRow
+let cameraRow = 0;
 const turret = {x:0, y:46};
 
 function resize(){
@@ -259,24 +363,36 @@ window.addEventListener('resize', resize);
 
 /* ============ BALLS ============ */
 const balls = [];
+function currentDamage(){
+  let d = UPG.damage.effect();
+  if (state.overcharge.active && performance.now() < state.overcharge.until) d *= 3;
+  return d;
+}
 function spawnBall(angle){
   const spd = UPG.speed.effect();
   balls.push({
     x: turret.x, y: turret.y,
     vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd,
     pierceLeft: UPG.pierce.effect(),
-    life: 600
+    life: 600, trail: state.cosmetic.trail ? [] : null
   });
   state.shotsFired++;
 }
-
 function fireVolley(angle){
   const n = UPG.multishot.effect();
-  const spread = Math.min(0.5, 0.09*(n-1));
+  const spread = Math.min(0.55, 0.09*(n-1));
   for (let i=0;i<n;i++){
     const t = n===1?0:(i/(n-1)-0.5);
     spawnBall(angle + t*spread*2);
   }
+}
+
+function forceFailsafeClear(row,col,idx){
+  setHP(row,col,0);
+  rowRemaining[row]--;
+  hitCounts.delete(idx);
+  if (idx===goldIndex && !goldFound) triggerWin();
+  if (row===frontRow){ while (frontRow<ROWS-1 && rowRemaining[frontRow]===0) frontRow++; }
 }
 
 function applyDamage(row,col,dmg){
@@ -284,18 +400,31 @@ function applyDamage(row,col,dmg){
   if (row < frontRow) return false;
   const cur = getHP(row,col);
   if (cur<=0) return false;
+  const idx = idxOf(row,col);
+
+  // failsafe: track hit count, force-clear if something is absurdly stuck
+  const hc = (hitCounts.get(idx)||0) + 1;
+  if (hc > 60){ forceFailsafeClear(row,col,idx); return true; }
+  hitCounts.set(idx, hc);
+
   const next = cur - dmg;
   if (next<=0){
-    setHP(row,col,0);
-    rowRemaining[row]--;
-    const idx = idxOf(row,col);
+    if (isTrap(row,col)){
+      toast('💥 Trap triggered! Ore output dampened briefly.');
+      state.trapDebuffUntil = performance.now()+2500;
+    }
     let gain = 1 + Math.floor(row/1200);
     if (isOre(row,col)) gain += oreValue(row,col);
-    state.ore += Math.round(gain * UPG.multiplier.effect());
+    if (isVein(row,col)) gain += Math.round(30 * (1+(state.prestigeUpgrades.luckMult-1)*0.3));
+    const debuffed = state.trapDebuffUntil && performance.now()<state.trapDebuffUntil;
+    state.ore += Math.round(gain * UPG.multiplier.effect() * (debuffed?0.4:1));
     state.totalMined++;
-    if (idx===goldIndex && !goldFound) triggerWin();
-    if (row===frontRow){
-      while (frontRow<ROWS-1 && rowRemaining[frontRow]===0) frontRow++;
+    forceFailsafeClear(row,col,idx);
+    // chain lightning
+    if (state.upgrades.chainLightning>0 && Math.random()<0.35){
+      const dc = Math.random()<0.5?-1:1;
+      const tr = row + (Math.random()<0.5?0:1);
+      applyDamage(tr, col+dc, dmg*0.6);
     }
   } else {
     setHP(row,col,next);
@@ -323,9 +452,10 @@ function worldToCell(x,y){
   return {row,col};
 }
 
-function updateBalls(dt){
+function updateBalls(){
   for (let i=balls.length-1;i>=0;i--){
     const b = balls[i];
+    if (b.trail){ b.trail.push({x:b.x,y:b.y}); if (b.trail.length>10) b.trail.shift(); }
     b.x += b.vx; b.y += b.vy; b.life--;
     if (b.x<0){b.x=0;b.vx*=-1;}
     if (b.x>gridWidth){b.x=gridWidth;b.vx*=-1;}
@@ -334,7 +464,7 @@ function updateBalls(dt){
     if (row>=frontRow && row<ROWS && col>=0 && col<COLS){
       const cur = getHP(row,col);
       if (cur>0){
-        const dmg = UPG.damage.effect();
+        const dmg = currentDamage();
         applyDamage(row,col,dmg);
         explodeAt(row,col,dmg);
         if (b.pierceLeft>0){ b.pierceLeft--; }
@@ -348,7 +478,8 @@ function updateBalls(dt){
 }
 
 /* ============ AIM / INPUT ============ */
-let mouse = {x:0,y:200,down:false};
+let mouse = {x:0,y:200};
+let mouseMoved = false;
 let dragStart = null;
 let lastShot = 0;
 
@@ -358,18 +489,16 @@ wrap.addEventListener('mousemove', e=>{
   mouseMoved = true;
 });
 wrap.addEventListener('mousedown', e=>{
-  mouse.down = true;
   const r = wrap.getBoundingClientRect();
   const mx=e.clientX-r.left, my=e.clientY-r.top;
   if (state.mode==='manual') tryManualShot(mx,my);
   else if (state.mode==='sling') dragStart = {x:mx,y:my};
 });
 window.addEventListener('mouseup', e=>{
-  mouse.down = false;
   if (state.mode==='sling' && dragStart){
     const r = wrap.getBoundingClientRect();
     const mx=e.clientX-r.left, my=e.clientY-r.top;
-    const dx = mx-dragStart.x, dy = my-dragStart.y; // drag TOWARD desired shot direction
+    const dx = mx-dragStart.x, dy = my-dragStart.y;
     const dist = Math.min(220, Math.hypot(dx,dy));
     if (dist>8){
       const angle = Math.atan2(dy,dx);
@@ -383,12 +512,12 @@ window.addEventListener('mouseup', e=>{
 });
 wrap.addEventListener('touchmove', e=>{
   const t=e.touches[0]; const r=wrap.getBoundingClientRect();
-  mouse.x=t.clientX-r.left; mouse.y=t.clientY-r.top; e.preventDefault();
+  mouse.x=t.clientX-r.left; mouse.y=t.clientY-r.top; mouseMoved=true; e.preventDefault();
 },{passive:false});
 wrap.addEventListener('touchstart', e=>{
   const t=e.touches[0]; const r=wrap.getBoundingClientRect();
   const mx=t.clientX-r.left, my=t.clientY-r.top;
-  mouse.x=mx; mouse.y=my;
+  mouse.x=mx; mouse.y=my; mouseMoved=true;
   if (state.mode==='manual') tryManualShot(mx,my);
   else if (state.mode==='sling') dragStart={x:mx,y:my};
 });
@@ -404,7 +533,6 @@ function tryManualShot(mx,my){
 
 function currentAimAngle(){
   if (state.autoAimOn){
-    // scan a small window around frontier for weakest uncleared cell
     let best=null,bestHP=Infinity;
     for (let r=frontRow; r<Math.min(ROWS,frontRow+14); r++){
       for (let c=0;c<COLS;c++){
@@ -419,133 +547,49 @@ function currentAimAngle(){
       return Math.atan2(ty-turret.y, tx-turret.x);
     }
   }
-  if (!mouseMoved) return Math.PI/2; // default: aim straight down into the grid
+  if (!mouseMoved) return Math.PI/2;
   return Math.atan2(mouse.y-turret.y, mouse.x-turret.x);
 }
 
-/* ============ MODE UI ============ */
+/* ============ MODE / OVERCHARGE UI ============ */
+let autoTimer = 0;
 document.querySelectorAll('.modeBtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     state.mode = btn.dataset.mode;
-    if (state.mode==='auto') autoTimer = 0; // fire immediately on switch
+    if (state.mode==='auto') autoTimer = 0;
     document.querySelectorAll('.modeBtn').forEach(b=>b.classList.toggle('active', b===btn));
     save();
   });
 });
+document.getElementById('overchargeBtn').addEventListener('click', ()=>{
+  const now = performance.now();
+  if (now < state.overcharge.cooldownUntil) return;
+  state.overcharge.active = true;
+  state.overcharge.until = now + 5000;
+  state.overcharge.cooldownUntil = now + 20000;
+  toast('⚡ Overcharge activated! 3x damage for 5s.');
+});
 
-/* ============ MAIN LOOP ============ */
-let autoTimer = 0;
-let shopRefreshTimer = 0;
-let mouseMoved = false;
-function loop(ts){
-  try{
-    const dt = 16.7;
-    cameraRow += (frontRow - cameraRow)*0.08;
+/* ============ PANELS ============ */
+let activeTab = 'shop';
+document.querySelectorAll('.tabBtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    activeTab = btn.dataset.tab;
+    document.querySelectorAll('.tabBtn').forEach(b=>b.classList.toggle('active', b===btn));
+    renderPanel();
+  });
+});
 
-    if (state.mode==='auto'){
-      autoTimer -= dt;
-      const cd = UPG.fireRate.effect();
-      if (autoTimer<=0){
-        fireVolley(currentAimAngle());
-        autoTimer = cd;
-      }
-    }
-
-    updateBalls(dt);
-    render();
-    updateHUD();
-
-    shopRefreshTimer -= dt;
-    if (shopRefreshTimer<=0){
-      shopRefreshTimer = 500;
-      renderShop();
-    }
-  } catch(err){
-    console.error('Pixel Miner loop error (recovered):', err);
-  }
-  requestAnimationFrame(loop);
+function renderPanel(){
+  const body = document.getElementById('panelBody');
+  body.innerHTML = '';
+  if (activeTab==='shop') renderShop(body);
+  else if (activeTab==='prestige') renderPrestige(body);
+  else if (activeTab==='achv') renderAchv(body);
+  else if (activeTab==='cosm') renderCosm(body);
 }
 
-function render(){
-  const w = wrap.clientWidth, h = wrap.clientHeight;
-  ctx.clearRect(0,0,w,h);
-
-  // grid
-  const rowsVisible = Math.ceil((h - turret.y)/CELL_PX) + 2;
-  const topRow = Math.max(0, Math.floor(cameraRow));
-  for (let r=topRow; r<Math.min(ROWS, topRow+rowsVisible); r++){
-    const sy = (r-cameraRow)*CELL_PX + turret.y;
-    if (sy>h) break;
-    if (sy < -CELL_PX) continue;
-    for (let c=0;c<COLS;c++){
-      const hp = getHP(r,c);
-      const sx = c*CELL_PX;
-      if (hp<=0){
-        ctx.fillStyle = '#05060a';
-        ctx.fillRect(sx,sy,CELL_PX+1,CELL_PX+1);
-        continue;
-      }
-      ctx.fillStyle = cellColor(r,c);
-      ctx.fillRect(sx,sy,CELL_PX+1,CELL_PX+1);
-      const bhp = baseHP(r);
-      if (hp<bhp){
-        ctx.fillStyle='rgba(0,0,0,'+(0.55*(1-hp/bhp))+')';
-        ctx.fillRect(sx,sy,CELL_PX+1,CELL_PX+1);
-      }
-    }
-  }
-
-  // balls
-  ctx.fillStyle = '#ffe98a';
-  for (const b of balls){
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,4.2,0,Math.PI*2);
-    ctx.fill();
-  }
-
-  // turret
-  ctx.save();
-  const angle = currentAimAngle();
-  ctx.translate(turret.x,turret.y);
-  ctx.rotate(angle);
-  ctx.fillStyle = '#5ad1ff';
-  ctx.fillRect(-6,-6,26,12);
-  ctx.restore();
-  ctx.fillStyle='#e9ecf5';
-  ctx.beginPath(); ctx.arc(turret.x,turret.y,9,0,Math.PI*2); ctx.fill();
-
-  // slingshot drag line
-  if (dragStart){
-    ctx.strokeStyle='#ffd447'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
-    ctx.beginPath(); ctx.moveTo(turret.x,turret.y); ctx.lineTo(mouse.x,mouse.y); ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // detector hint
-  const hintEl = document.getElementById('detectHint');
-  if (state.upgrades.detector>0 && !goldFound){
-    const goldRow = Math.floor(goldIndex/COLS), goldCol = goldIndex%COLS;
-    const rowDist = Math.abs(goldRow-frontRow);
-    if (rowDist < 900){
-      hintEl.style.display='block';
-      const dir = goldRow>frontRow? 'deeper below ⬇️' : 'above (already passed) ⬆️';
-      const side = goldCol < COLS/2 - 5 ? 'left ⬅️' : (goldCol>COLS/2+5?'right ➡️':'center ⬆️');
-      hintEl.textContent = `🧭 Gold sensed ~${rowDist} rows ${dir} · lean ${side}`;
-    } else hintEl.style.display='none';
-  } else hintEl.style.display='none';
-}
-
-function updateHUD(){
-  document.getElementById('oreVal').textContent = Math.floor(state.ore).toLocaleString();
-  document.getElementById('depthVal').textContent = frontRow.toLocaleString();
-  document.getElementById('minedVal').textContent = state.totalMined.toLocaleString();
-  document.getElementById('progFill').style.width = (state.totalMined/TOTAL*100).toFixed(4)+'%';
-}
-
-/* ============ SHOP RENDER ============ */
-function renderShop(){
-  const list = document.getElementById('shopList');
-  list.innerHTML = '';
+function renderShop(body){
   for (const key in UPG){
     const u = UPG[key];
     const lvl = state.upgrades[key];
@@ -560,7 +604,7 @@ function renderShop(){
       if (owned && key==='autoaim'){
         btn.className='toggleBtn'+(state.autoAimOn?' on':'');
         btn.textContent = state.autoAimOn? 'Auto-Aim: ON':'Auto-Aim: OFF';
-        btn.onclick=()=>{state.autoAimOn=!state.autoAimOn; renderShop(); save();};
+        btn.onclick=()=>{state.autoAimOn=!state.autoAimOn; renderPanel(); save();};
       } else if (owned){
         btn.className='buyBtn'; btn.disabled=true; btn.textContent='Unlocked';
       } else {
@@ -580,39 +624,252 @@ function renderShop(){
       else { btn.textContent = `Upgrade — ${cost} Ore`; btn.disabled = state.ore<cost; btn.onclick=()=>buy(key); }
       div.appendChild(btn);
     }
-    list.appendChild(div);
+    body.appendChild(div);
   }
+}
+
+function prestigeGain(){
+  return Math.floor(Math.sqrt(Math.max(0,frontRow)/40));
+}
+function renderPrestige(body){
+  const gain = prestigeGain();
+  const info = document.createElement('div');
+  info.id='prestigeInfo';
+  info.innerHTML = `Collapse the shaft to reset your current run (depth &amp; grid) in exchange for
+    <b style="color:var(--purple)">${gain} Prestige Points</b>, spent below on permanent multipliers that
+    survive forever. Requires depth ≥ 500 to collapse.<br><br>
+    Best depth ever: ${state.bestDepthEver.toLocaleString()} · Total collapses: ${state.prestigeRuns}`;
+  body.appendChild(info);
+
+  const btn = document.createElement('button');
+  btn.id='prestigeBtn';
+  btn.textContent = frontRow<500 ? `Need depth 500+ (currently ${frontRow})` : `💎 Collapse the Shaft (+${gain} Prestige)`;
+  btn.disabled = frontRow<500 || gain<=0;
+  btn.onclick = doPrestige;
+  body.appendChild(btn);
+
+  for (const key in PUPG){
+    const u = PUPG[key];
+    const lvl = state.prestigeUpgrades[key];
+    const cost = pCostOf(key);
+    const div = document.createElement('div');
+    div.className='item';
+    div.innerHTML = `<div class="row1"><span class="name">${u.name}</span><span class="lvl">Lv ${lvl}${cost===null?' (MAX)':''}</span></div>
+      <div class="desc">${u.desc}</div>`;
+    const b2 = document.createElement('button');
+    b2.className='buyBtn purple';
+    if (cost===null){ b2.textContent='MAX'; b2.disabled=true; }
+    else { b2.textContent = `${cost} 💎`; b2.disabled = state.prestigePoints<cost; b2.onclick=()=>pBuy(key); }
+    div.appendChild(b2);
+    body.appendChild(div);
+  }
+}
+
+function doPrestige(){
+  const gain = prestigeGain();
+  if (frontRow<500 || gain<=0) return;
+  state.prestigePoints += gain;
+  state.prestigeRuns += 1;
+  state.bestDepthEver = Math.max(state.bestDepthEver, frontRow);
+  // reset run
+  hpGrid.fill(255);
+  rowRemaining.fill(COLS);
+  hitCounts.clear();
+  frontRow = 0; cameraRow = 0;
+  state.ore = 0; state.totalMined = 0;
+  state.upgrades = {damage:1,fireRate:1,multishot:1,explosion:1,speed:1,pierce:1,detector:0,autoaim:0,multiplier:1,chainLightning:0};
+  state.autoAimOn = false;
+  goldIndex = Math.floor(Math.random()*TOTAL);
+  goldFound = false;
+  toast(`💎 Collapsed! +${gain} Prestige Points earned.`);
+  checkAchievements();
+  renderPanel(); updateHUD(); save();
+}
+
+function renderAchv(body){
+  for (const a of ACHIEVEMENTS){
+    const unlocked = !!state.achievements[a.id];
+    const div = document.createElement('div');
+    div.className='achv'+(unlocked?' unlocked':'');
+    div.innerHTML = `<div class="icon">${unlocked?a.icon:'🔒'}</div>
+      <div><div class="name">${a.name}</div><div class="desc">${a.desc}</div></div>`;
+    body.appendChild(div);
+  }
+}
+
+const TURRET_COLORS = ['#5ad1ff','#ff8a5c','#7fe3ae','#c98bff','#ffd447','#ff5a5a'];
+function renderCosm(body){
+  const label = document.createElement('div');
+  label.className='desc'; label.style.marginBottom='6px'; label.textContent='Turret Color';
+  body.appendChild(label);
+  const row = document.createElement('div');
+  row.className='cosmRow';
+  TURRET_COLORS.forEach(c=>{
+    const sw = document.createElement('div');
+    sw.className='swatch'+(state.cosmetic.turret===c?' sel':'');
+    sw.style.background=c;
+    sw.onclick=()=>{state.cosmetic.turret=c; renderPanel(); save();};
+    row.appendChild(sw);
+  });
+  body.appendChild(row);
+
+  const div = document.createElement('div');
+  div.className='item';
+  div.innerHTML = `<div class="row1"><span class="name">✨ Ball Trail</span></div>
+    <div class="desc">Adds a fading trail behind every ball you fire.</div>`;
+  const btn = document.createElement('button');
+  btn.className='toggleBtn'+(state.cosmetic.trail?' on':'');
+  btn.textContent = state.cosmetic.trail?'Trail: ON':'Trail: OFF';
+  btn.onclick=()=>{state.cosmetic.trail=!state.cosmetic.trail; renderPanel(); save();};
+  div.appendChild(btn);
+  body.appendChild(div);
+}
+
+/* ============ MAIN LOOP ============ */
+let shopRefreshTimer = 0;
+function loop(){
+  try{
+    const dt = 16.7;
+    cameraRow += (frontRow - cameraRow)*0.08;
+
+    if (state.mode==='auto'){
+      autoTimer -= dt;
+      const cd = UPG.fireRate.effect();
+      if (autoTimer<=0){ fireVolley(currentAimAngle()); autoTimer = cd; }
+    }
+    if (state.overcharge.active && performance.now()>state.overcharge.until) state.overcharge.active=false;
+
+    updateBalls();
+    render();
+    updateHUD();
+    checkAchievements();
+
+    shopRefreshTimer -= dt;
+    if (shopRefreshTimer<=0){ shopRefreshTimer = 500; renderPanel(); }
+  } catch(err){
+    console.error('Pixel Miner loop error (recovered):', err);
+  }
+  requestAnimationFrame(loop);
+}
+
+function render(){
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  ctx.clearRect(0,0,w,h);
+
+  const rowsVisible = Math.ceil((h - turret.y)/CELL_PX) + 2;
+  const topRow = Math.max(0, Math.floor(cameraRow));
+  for (let r=topRow; r<Math.min(ROWS, topRow+rowsVisible); r++){
+    const sy = (r-cameraRow)*CELL_PX + turret.y;
+    if (sy>h) break;
+    if (sy < -CELL_PX) continue;
+    for (let c=0;c<COLS;c++){
+      const hp = getHP(r,c);
+      const sx = c*CELL_PX;
+      if (hp<=0){
+        ctx.fillStyle = '#05060a';
+        ctx.fillRect(sx,sy,CELL_PX+1,CELL_PX+1);
+        continue;
+      }
+      ctx.fillStyle = cellColor(r,c);
+      ctx.fillRect(sx,sy,CELL_PX+1,CELL_PX+1);
+      const bhp = baseHPForCell(r,c);
+      if (hp<bhp){
+        ctx.fillStyle='rgba(0,0,0,'+(0.55*(1-hp/bhp))+')';
+        ctx.fillRect(sx,sy,CELL_PX+1,CELL_PX+1);
+      }
+    }
+  }
+
+  for (const b of balls){
+    if (b.trail && b.trail.length){
+      for (let i=0;i<b.trail.length;i++){
+        const p = b.trail[i];
+        ctx.fillStyle = `rgba(255,233,138,${(i/b.trail.length)*0.35})`;
+        ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.fillStyle = state.overcharge.active ? '#ff8a5c' : '#ffe98a';
+    ctx.beginPath(); ctx.arc(b.x,b.y,4.2,0,Math.PI*2); ctx.fill();
+  }
+
+  ctx.save();
+  const angle = currentAimAngle();
+  ctx.translate(turret.x,turret.y);
+  ctx.rotate(angle);
+  ctx.fillStyle = state.cosmetic.turret;
+  ctx.fillRect(-6,-6,26,12);
+  ctx.restore();
+  ctx.fillStyle='#e9ecf5';
+  ctx.beginPath(); ctx.arc(turret.x,turret.y,9,0,Math.PI*2); ctx.fill();
+
+  if (dragStart){
+    ctx.strokeStyle='#ffd447'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(turret.x,turret.y); ctx.lineTo(mouse.x,mouse.y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  const hintEl = document.getElementById('detectHint');
+  if (state.upgrades.detector>0 && !goldFound){
+    const goldRow = Math.floor(goldIndex/COLS), goldCol = goldIndex%COLS;
+    const rowDist = Math.abs(goldRow-frontRow);
+    if (rowDist < 900){
+      hintEl.style.display='block';
+      const dir = goldRow>frontRow? 'deeper below ⬇️' : 'above (already passed) ⬆️';
+      const side = goldCol < COLS/2 - 5 ? 'left ⬅️' : (goldCol>COLS/2+5?'right ➡️':'center ⬆️');
+      hintEl.textContent = `🧭 Gold sensed ~${rowDist} rows ${dir} · lean ${side}`;
+    } else hintEl.style.display='none';
+  } else hintEl.style.display='none';
+}
+
+function updateHUD(){
+  document.getElementById('oreVal').textContent = Math.floor(state.ore).toLocaleString();
+  document.getElementById('prestigeVal').textContent = state.prestigePoints.toLocaleString();
+  document.getElementById('depthVal').textContent = frontRow.toLocaleString();
+  document.getElementById('minedVal').textContent = state.totalMined.toLocaleString();
+  document.getElementById('progFill').style.width = (state.totalMined/TOTAL*100).toFixed(4)+'%';
+  const ob = document.getElementById('overchargeBtn');
+  const now = performance.now();
+  if (now < state.overcharge.cooldownUntil){
+    ob.disabled = true;
+    ob.textContent = state.overcharge.active ? '⚡ ACTIVE' : `⚡ CD ${Math.ceil((state.overcharge.cooldownUntil-now)/1000)}s`;
+  } else { ob.disabled=false; ob.textContent='⚡ Overcharge'; }
 }
 
 /* ============ WIN ============ */
 function triggerWin(){
   goldFound = true;
+  state.goldFoundTotal++;
   const modal = document.getElementById('modal');
   document.getElementById('modalTitle').textContent = '✨ GOLDEN PIXEL FOUND! ✨';
   document.getElementById('modalBody').textContent =
     `You dug through ${state.totalMined.toLocaleString()} pixels and fired ${state.shotsFired.toLocaleString()} shots to find it, `+
-    `reaching a depth of ${frontRow.toLocaleString()} rows. Keep mining — a new golden pixel has been hidden somewhere deeper!`;
+    `reaching a depth of ${frontRow.toLocaleString()} rows. A new golden pixel has been hidden somewhere deeper!`;
   document.getElementById('modalBtn').onclick = ()=>{
     modal.style.display='none';
     goldFound=false;
-    // place new gold somewhere not yet mined, ahead of the frontier
     let tries=0, ni;
     do { ni = frontRow*COLS + Math.floor(Math.random()*( (ROWS-frontRow)*COLS )); tries++; }
     while (getHP(Math.floor(ni/COLS), ni%COLS)<=0 && tries<50);
     goldIndex = ni;
+    checkAchievements();
     save();
   };
   modal.style.display='flex';
+  checkAchievements();
   save();
 }
 
 /* ============ SAVE / LOAD ============ */
-const SAVE_KEY = 'pixelMinerSave_v1';
+const SAVE_KEY = 'pixelMinerSave_v2';
 function save(){
   try{
     const data = {
       ore: state.ore, totalMined: state.totalMined, shotsFired: state.shotsFired,
       mode: state.mode, upgrades: state.upgrades, autoAimOn: state.autoAimOn,
+      cosmetic: state.cosmetic, achievements: state.achievements,
+      prestigePoints: state.prestigePoints, prestigeRuns: state.prestigeRuns,
+      prestigeUpgrades: state.prestigeUpgrades, bestDepthEver: state.bestDepthEver,
+      goldFoundTotal: state.goldFoundTotal,
       frontRow, goldIndex, goldFound
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -620,12 +877,20 @@ function save(){
 }
 function load(){
   try{
-    const raw = localStorage.getItem(SAVE_KEY);
+    let raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) raw = localStorage.getItem('pixelMinerSave_v1'); // migrate old saves
     if (!raw) return;
     const d = JSON.parse(raw);
     state.ore=d.ore||0; state.totalMined=d.totalMined||0; state.shotsFired=d.shotsFired||0;
     state.mode=d.mode||'manual'; Object.assign(state.upgrades,d.upgrades||{});
     state.autoAimOn=!!d.autoAimOn;
+    if (d.cosmetic) Object.assign(state.cosmetic, d.cosmetic);
+    if (d.achievements) state.achievements = d.achievements;
+    state.prestigePoints = d.prestigePoints||0;
+    state.prestigeRuns = d.prestigeRuns||0;
+    if (d.prestigeUpgrades) Object.assign(state.prestigeUpgrades, d.prestigeUpgrades);
+    state.bestDepthEver = d.bestDepthEver||0;
+    state.goldFoundTotal = d.goldFoundTotal||0;
     frontRow = d.frontRow||0;
     for (let r=0;r<frontRow;r++) rowRemaining[r]=0;
     goldIndex = typeof d.goldIndex==='number'? d.goldIndex : goldIndex;
@@ -641,7 +906,7 @@ function init(){
   document.querySelectorAll('.modeBtn').forEach(b=>{
     b.classList.toggle('active', b.dataset.mode===state.mode);
   });
-  renderShop();
+  renderPanel();
   updateHUD();
   document.getElementById('modalBtn').onclick = ()=>{document.getElementById('modal').style.display='none';};
   requestAnimationFrame(loop);
