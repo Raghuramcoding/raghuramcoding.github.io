@@ -266,6 +266,7 @@ const state = {
   shotsFired: 0,
   mode: 'manual',
   autoAimOn: false,
+  autoPilotOn: false,
   cosmetic: {turret:'#5ad1ff', trail:false},
   achievements: {},
   prestigePoints: 0,
@@ -275,7 +276,8 @@ const state = {
   upgrades: {
     damage:1, fireRate:1, multishot:1, explosion:1, speed:1, pierce:1,
     detector:0, autoaim:0, multiplier:1, chainLightning:0,
-    drone:0, droneDamage:1, critChance:1, ricochet:1
+    autoPilot:0,
+    drone:0, droneDamage:1, critChance:1, ricochet:1, range:1
   },
   prestigeUpgrades: { dmgMult:1, oreMult:1, luckMult:1 },
   overcharge: { active:false, until:0, cooldownUntil:0 }
@@ -323,7 +325,13 @@ const UPG = {
     effect:()=> Math.min(0.6, (state.upgrades.critChance-1)*0.05)},
   ricochet:  {name:'↩️ Ricochet', base:350, mult:1.7, max:6,
     desc:'Balls that stop have a chance to bounce and strike another nearby cell.',
-    effect:()=> state.upgrades.ricochet-1}
+    effect:()=> state.upgrades.ricochet-1},
+  range:     {name:'📏 Ball Range', base:140, mult:1.45, max:15,
+    desc:'Increases how far balls travel before fading out, letting you reach cells farther away.',
+    effect:()=> (state.upgrades.range-1)*90},
+  autoPilot: {name:'🕹️ Turret Autopilot', base:750, mult:1, max:1,
+    desc:'Unlocks a toggle that automatically drags your turret around the shaft for you, wandering to new spots so you do not have to.',
+    effect:()=> state.upgrades.autoPilot}
 };
 
 const PUPG = {
@@ -478,7 +486,7 @@ function spawnBall(angle){
     x: turret.x, y: turret.y,
     vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd,
     pierceLeft: UPG.pierce.effect(),
-    life: 600, trail: state.cosmetic.trail ? [] : null
+    life: 600 + UPG.range.effect(), trail: state.cosmetic.trail ? [] : null
   });
   state.shotsFired++;
 }
@@ -600,12 +608,29 @@ wrap.addEventListener('mousemove', e=>{
 });
 wrap.addEventListener('contextmenu', e=>{ e.preventDefault(); });
 let turretDrag = false;
+const TURRET_Y_MIN = 26, TURRET_Y_MAX_MARGIN = 26;
+let autoPilotTarget = null;
+let autoPilotNextPick = 0;
+function updateAutoPilot(){
+  if (!state.autoPilotOn || !state.upgrades.autoPilot || turretDrag) return;
+  const now = performance.now();
+  if (!autoPilotTarget || now > autoPilotNextPick){
+    autoPilotTarget = {
+      x: Math.random()*gridWidth,
+      y: TURRET_Y_MIN + Math.random()*(wrap.clientHeight - TURRET_Y_MAX_MARGIN - TURRET_Y_MIN)
+    };
+    autoPilotNextPick = now + 2200 + Math.random()*2600;
+  }
+  turret.x += (autoPilotTarget.x - turret.x) * 0.035;
+  turret.y += (autoPilotTarget.y - turret.y) * 0.035;
+}
 wrap.addEventListener('mousedown', e=>{
   const r = wrap.getBoundingClientRect();
   const mx=e.clientX-r.left, my=e.clientY-r.top;
   if (e.button===2){
     turretDrag = true;
     turret.x = Math.max(0, Math.min(gridWidth, mx));
+    turret.y = Math.max(TURRET_Y_MIN, Math.min(wrap.clientHeight-TURRET_Y_MAX_MARGIN, my));
     return;
   }
   if (state.mode==='manual') tryManualShot(mx,my);
@@ -615,6 +640,7 @@ wrap.addEventListener('mousemove', e=>{
   if (turretDrag){
     const r = wrap.getBoundingClientRect();
     turret.x = Math.max(0, Math.min(gridWidth, e.clientX-r.left));
+    turret.y = Math.max(TURRET_Y_MIN, Math.min(wrap.clientHeight-TURRET_Y_MAX_MARGIN, e.clientY-r.top));
   }
 });
 window.addEventListener('mouseup', e=>{
@@ -729,6 +755,10 @@ function renderShop(body){
         btn.className='toggleBtn'+(state.autoAimOn?' on':'');
         btn.textContent = state.autoAimOn? 'Auto-Aim: ON':'Auto-Aim: OFF';
         btn.onclick=()=>{state.autoAimOn=!state.autoAimOn; renderPanel(); save();};
+      } else if (owned && key==='autoPilot'){
+        btn.className='toggleBtn'+(state.autoPilotOn?' on':'');
+        btn.textContent = state.autoPilotOn? 'Autopilot: ON':'Autopilot: OFF';
+        btn.onclick=()=>{state.autoPilotOn=!state.autoPilotOn; renderPanel(); save();};
       } else if (owned){
         btn.className='buyBtn'; btn.disabled=true; btn.textContent='Unlocked';
       } else {
@@ -801,8 +831,9 @@ function doPrestige(){
   hitCounts.clear();
   frontRow = 0; cameraRow = 0; viewOffset = 0; viewOffsetTarget = 0;
   state.ore = 0; state.totalMined = 0;
-  state.upgrades = {damage:1,fireRate:1,multishot:1,explosion:1,speed:1,pierce:1,detector:0,autoaim:0,multiplier:1,chainLightning:0,drone:0,droneDamage:1,critChance:1,ricochet:1};
+  state.upgrades = {damage:1,fireRate:1,multishot:1,explosion:1,speed:1,pierce:1,detector:0,autoaim:0,multiplier:1,chainLightning:0,drone:0,droneDamage:1,critChance:1,ricochet:1,range:1};
   state.autoAimOn = false;
+  state.autoPilotOn = false;
   drones.length = 0;
   goldIndex = Math.floor(Math.random()*TOTAL);
   goldFound = false;
@@ -869,6 +900,7 @@ function loop(){
     updateBalls();
     syncDrones();
     updateDrones();
+    updateAutoPilot();
     render();
     updateHUD();
     checkAchievements();
@@ -1018,7 +1050,7 @@ function save(){
   try{
     const data = {
       ore: state.ore, totalMined: state.totalMined, shotsFired: state.shotsFired,
-      mode: state.mode, upgrades: state.upgrades, autoAimOn: state.autoAimOn,
+      mode: state.mode, upgrades: state.upgrades, autoAimOn: state.autoAimOn, autoPilotOn: state.autoPilotOn,
       cosmetic: state.cosmetic, achievements: state.achievements,
       prestigePoints: state.prestigePoints, prestigeRuns: state.prestigeRuns,
       prestigeUpgrades: state.prestigeUpgrades, bestDepthEver: state.bestDepthEver,
@@ -1037,6 +1069,7 @@ function load(){
     state.ore=d.ore||0; state.totalMined=d.totalMined||0; state.shotsFired=d.shotsFired||0;
     state.mode=d.mode||'manual'; Object.assign(state.upgrades,d.upgrades||{});
     state.autoAimOn=!!d.autoAimOn;
+    state.autoPilotOn=!!d.autoPilotOn;
     if (d.cosmetic) Object.assign(state.cosmetic, d.cosmetic);
     if (d.achievements) state.achievements = d.achievements;
     state.prestigePoints = d.prestigePoints||0;
