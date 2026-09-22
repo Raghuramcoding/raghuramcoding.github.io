@@ -20,6 +20,7 @@
   .stat{display:flex; align-items:center; gap:5px; font-size:13px; color:var(--muted); white-space:nowrap;}
   .stat b{color:var(--text); font-size:14px;}
   #oreStat b{color:var(--accent);}
+  #comboStat b{color:#ff9d3e; font-size:15px;}
   #prestigeStat b{color:var(--purple);}
   #progWrap{flex:1; min-width:140px; display:flex; align-items:center; gap:8px;}
   #progBar{flex:1; height:12px; background:#0b0c11; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
@@ -112,6 +113,7 @@
   <div id="gameCol">
     <div id="hud">
       <div class="stat" id="oreStat">⛏️ <b id="oreVal">0</b> Ore</div>
+      <div class="stat" id="comboStat">🔥 Combo <b id="comboVal">x1</b></div>
       <div class="stat" id="prestigeStat">💎 <b id="prestigeVal">0</b> Prestige</div>
       <div class="stat">🕳️ Depth <b id="depthVal">0</b></div>
       <div class="stat">🧱 Run <b id="minedVal">0</b>/10,000,000</div>
@@ -200,15 +202,17 @@ function baseHP(row){
   return Math.min(MAX_HP, hp);
 }
 function baseHPForCell(row,col){
+  if (isBoss(row,col)) return MAX_HP;
   const tier = Math.min(Math.floor(row/900), 55);
   let hp = 2 + tier + Math.floor(hash2(row,0,7)*3);
   if (isReinforced(row,col)) hp = Math.round(Math.min(MAX_HP, hp*2.2));
   return Math.min(MAX_HP, hp);
 }
 
-function isOre(row,col){ return hash2(row,col,42) < 0.006; }
-function isVein(row,col){ return !isOre(row,col) && hash2(row,col,55) < 0.003; }
-function isTrap(row,col){ return !isOre(row,col) && !isVein(row,col) && hash2(row,col,66) < 0.004; }
+function isBoss(row,col){ return row>150 && hash2(row,col,88) < 0.00035; }
+function isOre(row,col){ return !isBoss(row,col) && hash2(row,col,42) < 0.006; }
+function isVein(row,col){ return !isOre(row,col) && !isBoss(row,col) && hash2(row,col,55) < 0.003; }
+function isTrap(row,col){ return !isOre(row,col) && !isVein(row,col) && !isBoss(row,col) && hash2(row,col,66) < 0.004; }
 function isReinforced(row,col){ return hash2(row,col===undefined?0:col,77) < 0.008; }
 
 function oreValue(row,col){
@@ -236,6 +240,7 @@ function zoneColors(row){
   return ZONES[ZONES.length-1].colors;
 }
 function cellColor(row,col){
+  if (isBoss(row,col)) return '#ff1e1e';
   if (isOre(row,col)) return oreColor(row,col);
   if (isVein(row,col)) return '#ff9dee';
   if (isTrap(row,col)) return '#ff4d4d';
@@ -394,6 +399,7 @@ function checkAchievements(){
     if (!state.achievements[a.id] && a.cond()){
       state.achievements[a.id] = true;
       toast(`🏆 Achievement unlocked: ${a.name}`);
+      sfxAchievement();
       save();
     }
   }
@@ -439,6 +445,94 @@ function resize(){
 window.addEventListener('resize', resize);
 
 /* ============ BALLS ============ */
+/* ============ SFX (synthesized, no files needed) ============ */
+let actx = null;
+function ensureAudioCtx(){
+  if (!actx){
+    try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ actx=null; }
+  }
+  return actx;
+}
+function beep(freq, dur, type, vol){
+  const ac = ensureAudioCtx();
+  if (!ac) return;
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = type||'square';
+  osc.frequency.value = freq;
+  gain.gain.value = (vol!==undefined?vol:0.06);
+  osc.connect(gain); gain.connect(ac.destination);
+  const now = ac.currentTime;
+  gain.gain.setValueAtTime(gain.gain.value, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now+dur);
+  osc.start(now); osc.stop(now+dur);
+}
+function sfxShoot(){ beep(520+Math.random()*80, 0.06, 'square', 0.03); }
+function sfxHit(){ beep(200+Math.random()*40, 0.05, 'triangle', 0.04); }
+function sfxClear(){ beep(700+Math.random()*120, 0.09, 'sine', 0.05); }
+function sfxOre(){ beep(1000, 0.12, 'sine', 0.05); }
+function sfxAchievement(){ beep(600,0.08,'square',0.05); setTimeout(()=>beep(900,0.14,'square',0.06),90); }
+function sfxBoss(){ beep(90,0.35,'sawtooth',0.08); }
+function sfxCombo(level){ beep(500+level*40, 0.05, 'square', 0.035); }
+
+/* ============ SCREEN SHAKE & PARTICLES ============ */
+let shakeMag = 0;
+function addShake(amount){ shakeMag = Math.min(28, shakeMag + amount); }
+const particles = [];
+function spawnParticles(row,col,color,count){
+  const sx = col*CELL_PX + CELL_PX/2;
+  const sy = (row-cameraRow)*CELL_PX + turret.y;
+  for (let i=0;i<count;i++){
+    const ang = Math.random()*Math.PI*2, spd = 1+Math.random()*3;
+    particles.push({x:sx,y:sy,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd-1,life:26+Math.random()*14,color});
+  }
+}
+function updateParticles(){
+  for (let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.life--;
+    if (p.life<=0) particles.splice(i,1);
+  }
+}
+
+/* ============ COMBO STREAK ============ */
+let comboCount = 0, comboMult = 1, lastHitAt = 0;
+const COMBO_WINDOW = 1400;
+function registerHitForCombo(){
+  const now = performance.now();
+  if (now - lastHitAt > COMBO_WINDOW){ comboCount = 0; }
+  comboCount++;
+  lastHitAt = now;
+  const newMult = 1 + Math.min(2.5, Math.floor(comboCount/8)*0.25);
+  if (newMult > comboMult){ comboMult = newMult; sfxCombo(comboCount); }
+}
+function comboMultiplier(){
+  if (performance.now() - lastHitAt > COMBO_WINDOW){ comboCount = 0; comboMult = 1; }
+  return comboMult;
+}
+
+/* ============ RANDOM EVENTS ============ */
+let eventActive = null, eventUntil = 0, nextEventAt = performance.now() + 40000 + Math.random()*30000;
+function maybeTriggerEvent(){
+  const now = performance.now();
+  if (eventActive && now > eventUntil){ eventActive = null; toast('Event ended.'); }
+  if (!eventActive && now > nextEventAt){
+    const roll = Math.random();
+    if (roll < 0.5){
+      eventActive = 'orerush'; eventUntil = now + 12000;
+      toast('🎉 ORE RUSH! 2x ore for 12 seconds');
+    } else {
+      eventActive = 'meteors'; eventUntil = now + 6000;
+      toast('☄️ Meteor Shower! Bonus balls incoming');
+    }
+    nextEventAt = now + 55000 + Math.random()*40000;
+  }
+  if (eventActive==='meteors' && Math.random()<0.35){
+    const ang = Math.PI/2 + (Math.random()-0.5)*0.8;
+    spawnBall(ang);
+  }
+}
+
 const balls = [];
 const drones = [];
 function syncDrones(){
@@ -489,6 +583,7 @@ function spawnBall(angle){
     life: 600 + UPG.range.effect(), trail: state.cosmetic.trail ? [] : null
   });
   state.shotsFired++;
+  sfxShoot();
 }
 function fireVolley(angle){
   const n = UPG.multishot.effect();
@@ -519,19 +614,39 @@ function applyDamage(row,col,dmg){
   if (hc > 60){ forceFailsafeClear(row,col,idx); return true; }
   hitCounts.set(idx, hc);
 
+  const boss = isBoss(row,col);
+  registerHitForCombo();
+  sfxHit();
+  if (boss){
+    addShake(4);
+    if (cur >= MAX_HP) toast('⚠️ Boss block encountered!');
+  }
+
   const next = cur - dmg;
   if (next<=0){
     if (isTrap(row,col)){
       toast('💥 Trap triggered! Ore output dampened briefly.');
       state.trapDebuffUntil = performance.now()+2500;
+      addShake(6);
     }
     let gain = 1 + Math.floor(row/1200);
     if (isOre(row,col)) gain += oreValue(row,col);
     if (isVein(row,col)) gain += Math.round(30 * (1+(state.prestigeUpgrades.luckMult-1)*0.3));
+    if (boss){
+      gain += 250 + Math.floor(row/50);
+      toast('💀 Boss block defeated! Huge ore payout');
+      addShake(18);
+      sfxBoss();
+      spawnParticles(row,col,'#ff1e1e',36);
+    } else {
+      spawnParticles(row,col, cellColor(row,col), isOre(row,col)||isVein(row,col) ? 14 : 7);
+    }
     const debuffed = state.trapDebuffUntil && performance.now()<state.trapDebuffUntil;
-    state.ore += Math.round(gain * UPG.multiplier.effect() * (debuffed?0.4:1));
+    const rushMult = (eventActive==='orerush') ? 2 : 1;
+    state.ore += Math.round(gain * UPG.multiplier.effect() * (debuffed?0.4:1) * comboMultiplier() * rushMult);
     state.totalMined++;
     forceFailsafeClear(row,col,idx);
+    if (isOre(row,col)||isVein(row,col)) sfxOre(); else sfxClear();
     // chain lightning
     if (state.upgrades.chainLightning>0 && Math.random()<0.35){
       const dc = Math.random()<0.5?-1:1;
@@ -901,6 +1016,9 @@ function loop(){
     syncDrones();
     updateDrones();
     updateAutoPilot();
+    updateParticles();
+    maybeTriggerEvent();
+    shakeMag *= 0.88;
     render();
     updateHUD();
     checkAchievements();
@@ -917,7 +1035,8 @@ function render(){
   const w = wrap.clientWidth, h = wrap.clientHeight;
   ctx.clearRect(0,0,w,h);
   ctx.save();
-  ctx.translate(0, -viewOffset);
+  const shx = (Math.random()-0.5)*shakeMag, shy = (Math.random()-0.5)*shakeMag;
+  ctx.translate(shx, shy - viewOffset);
 
   const rowsVisible = Math.ceil((h - turret.y + viewOffset)/CELL_PX) + 2;
   const topRow = Math.max(0, Math.floor(cameraRow));
@@ -954,6 +1073,13 @@ function render(){
     ctx.fillStyle = state.overcharge.active ? '#ff8a5c' : '#ffe98a';
     ctx.beginPath(); ctx.arc(b.x,b.y,4.2,0,Math.PI*2); ctx.fill();
   }
+
+  for (const p of particles){
+    ctx.globalAlpha = Math.max(0, p.life/36);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x-2, p.y-2, 4, 4);
+  }
+  ctx.globalAlpha = 1;
 
   const nowT = performance.now()/300;
   for (const d of drones){
@@ -1008,6 +1134,7 @@ function render(){
 
 function updateHUD(){
   document.getElementById('oreVal').textContent = Math.floor(state.ore).toLocaleString();
+  document.getElementById('comboVal').textContent = 'x'+comboMultiplier().toFixed(2);
   document.getElementById('prestigeVal').textContent = state.prestigePoints.toLocaleString();
   document.getElementById('depthVal').textContent = frontRow.toLocaleString();
   document.getElementById('minedVal').textContent = state.totalMined.toLocaleString();
@@ -1024,6 +1151,8 @@ function updateHUD(){
 function triggerWin(){
   goldFound = true;
   state.goldFoundTotal++;
+  addShake(20);
+  beep(660,0.15,'square',0.07); setTimeout(()=>beep(880,0.15,'square',0.07),140); setTimeout(()=>beep(1100,0.25,'square',0.08),280);
   const modal = document.getElementById('modal');
   document.getElementById('modalTitle').textContent = '✨ GOLDEN PIXEL FOUND! ✨';
   document.getElementById('modalBody').textContent =
