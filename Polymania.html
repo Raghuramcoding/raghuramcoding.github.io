@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    
+    <!-- 1. Pure HTML Instant Redirect (0 = zero seconds delay) -->
+    <meta http-equiv="refresh" content="0; url=https://trackmania.com">
+    
+    <!-- 2. JavaScript Fallback (Forces redirect if HTML meta fails) -->
+    <script>
+        window.location.replace("https://trackmania.com");
+    </script>
+</head>
+<body>
+    <!-- 3. Manual Link Fallback (If all automation is blocked by the browser) -->
+    <p>For Polymania click here if redirect fails 
+       <a href="https://trackmania.com">Polymania mod</a>.
+    </p>
+</body>
+</html>
