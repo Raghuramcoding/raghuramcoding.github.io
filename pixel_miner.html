@@ -282,8 +282,10 @@ const state = {
     damage:1, fireRate:1, multishot:1, explosion:1, speed:1, pierce:1,
     detector:0, autoaim:0, multiplier:1, chainLightning:0,
     autoPilot:0,
-    drone:0, droneDamage:1, critChance:1, ricochet:1, range:1
+    drone:0, droneDamage:1, critChance:1, ricochet:1, range:1,
+    autoDynamite:1, easyDig:1, droneCap:0, overclock:1
   },
+  depthWarpsBought: 0,
   prestigeUpgrades: { dmgMult:1, oreMult:1, luckMult:1 },
   overcharge: { active:false, until:0, cooldownUntil:0 }
 };
@@ -336,7 +338,19 @@ const UPG = {
     effect:()=> (state.upgrades.range-1)*90},
   autoPilot: {name:'🕹️ Turret Autopilot', base:750, mult:1, max:1,
     desc:'Unlocks a toggle that automatically drags your turret around the shaft for you, wandering to new spots so you do not have to.',
-    effect:()=> state.upgrades.autoPilot}
+    effect:()=> state.upgrades.autoPilot},
+  autoDynamite:{name:'🧨 Auto-Dynamite', base:300, mult:1.6, max:12,
+    desc:'Passively detonates a charge in the frontier row every couple seconds, clearing several cells for free — no aiming needed.',
+    effect:()=> state.upgrades.autoDynamite-1},
+  easyDig:   {name:'📐 Easy Dig', base:450, mult:1.9, max:20,
+    desc:'Reduces how much of a row needs clearing before you advance a level deeper — at max level you only need about half a row cleared.',
+    effect:()=> Math.min(0.5, (state.upgrades.easyDig-1)*0.026)},
+  droneCap:  {name:'🐝 Drone Swarm Bay', base:900, mult:2.0, max:5,
+    desc:'Raises your maximum number of Mining Drones beyond the base limit of 3.',
+    effect:()=> state.upgrades.droneCap},
+  overclock: {name:'⚙️ Frontier Overclock', base:600, mult:1.7, max:10,
+    desc:'Each moment there is a small chance the entire frontier row is instantly finished off for free. Stacks with everything else.',
+    effect:()=> Math.min(0.08, (state.upgrades.overclock-1)*0.009)}
 };
 
 const PUPG = {
@@ -536,7 +550,7 @@ function maybeTriggerEvent(){
 const balls = [];
 const drones = [];
 function syncDrones(){
-  const want = state.upgrades.drone;
+  const want = state.upgrades.drone + UPG.droneCap.effect();
   while (drones.length < want){
     drones.push({row: frontRow + Math.random()*3, col: Math.random()*COLS, target:null, bob:Math.random()*10});
   }
@@ -594,12 +608,42 @@ function fireVolley(angle){
   }
 }
 
+function rowAdvanceThreshold(){
+  return Math.floor(COLS * UPG.easyDig.effect());
+}
+function sweepFinishCell(row,col){
+  const cur = getHP(row,col);
+  if (cur<=0) return;
+  const idx = idxOf(row,col);
+  let gain = 1 + Math.floor(row/1200);
+  if (isOre(row,col)) gain += oreValue(row,col);
+  if (isVein(row,col)) gain += Math.round(30 * (1+(state.prestigeUpgrades.luckMult-1)*0.3));
+  const rushMult = (eventActive==='orerush') ? 2 : 1;
+  state.ore += Math.round(gain * UPG.multiplier.effect() * rushMult * 0.6);
+  state.totalMined++;
+  setHP(row,col,0);
+  rowRemaining[row]--;
+  hitCounts.delete(idx);
+  if (idx===goldIndex && !goldFound) triggerWin();
+}
+function tryAdvanceFrontier(){
+  let guard = 0;
+  while (frontRow<ROWS-1 && guard<400){
+    guard++;
+    const threshold = rowAdvanceThreshold();
+    if (rowRemaining[frontRow] > threshold) break;
+    if (rowRemaining[frontRow] > 0){
+      for (let c=0;c<COLS;c++){ if (getHP(frontRow,c)>0) sweepFinishCell(frontRow,c); }
+    }
+    frontRow++;
+  }
+}
 function forceFailsafeClear(row,col,idx){
   setHP(row,col,0);
   rowRemaining[row]--;
   hitCounts.delete(idx);
   if (idx===goldIndex && !goldFound) triggerWin();
-  if (row===frontRow){ while (frontRow<ROWS-1 && rowRemaining[frontRow]===0) frontRow++; }
+  if (row===frontRow) tryAdvanceFrontier();
 }
 
 function applyDamage(row,col,dmg){
@@ -854,7 +898,43 @@ function renderPanel(){
   else if (activeTab==='cosm') renderCosm(body);
 }
 
+function depthWarpAmount(){ return 15; }
+function depthWarpCost(){
+  return Math.round(80 * Math.pow(1.045, state.depthWarpsBought) * (1 + frontRow*0.012));
+}
+function doDepthWarp(){
+  const cost = depthWarpCost();
+  if (state.ore < cost) return;
+  state.ore -= cost;
+  state.depthWarpsBought++;
+  const amount = depthWarpAmount();
+  const targetRow = Math.min(ROWS-1, frontRow + amount);
+  for (let r=frontRow; r<targetRow; r++){
+    for (let c=0;c<COLS;c++){ if (getHP(r,c)>0) sweepFinishCell(r,c); }
+    rowRemaining[r] = 0;
+  }
+  frontRow = targetRow;
+  toast(`🕳️ Depth Warp! Jumped ${amount} rows deeper.`);
+  addShake(10);
+  renderPanel(); updateHUD(); save();
+}
+function renderDepthWarp(body){
+  const cost = depthWarpCost();
+  const div = document.createElement('div');
+  div.className='item';
+  div.innerHTML = `<div class="row1"><span class="name">🕳️ Depth Warp</span><span class="lvl">+${depthWarpAmount()} rows</span></div>
+    <div class="desc">Instantly clears and skips ahead ${depthWarpAmount()} rows of the shaft, crediting ore for everything skipped. Cost rises the deeper you go.</div>`;
+  const btn = document.createElement('button');
+  btn.className='buyBtn';
+  btn.textContent = `Warp — ${cost.toLocaleString()} Ore`;
+  btn.disabled = state.ore<cost;
+  btn.onclick = doDepthWarp;
+  div.appendChild(btn);
+  body.appendChild(div);
+}
+
 function renderShop(body){
+  renderDepthWarp(body);
   for (const key in UPG){
     const u = UPG[key];
     const lvl = state.upgrades[key];
@@ -946,9 +1026,10 @@ function doPrestige(){
   hitCounts.clear();
   frontRow = 0; cameraRow = 0; viewOffset = 0; viewOffsetTarget = 0;
   state.ore = 0; state.totalMined = 0;
-  state.upgrades = {damage:1,fireRate:1,multishot:1,explosion:1,speed:1,pierce:1,detector:0,autoaim:0,multiplier:1,chainLightning:0,drone:0,droneDamage:1,critChance:1,ricochet:1,range:1};
+  state.upgrades = {damage:1,fireRate:1,multishot:1,explosion:1,speed:1,pierce:1,detector:0,autoaim:0,multiplier:1,chainLightning:0,autoPilot:0,drone:0,droneDamage:1,critChance:1,ricochet:1,range:1,autoDynamite:1,easyDig:1,droneCap:0,overclock:1};
   state.autoAimOn = false;
   state.autoPilotOn = false;
+  state.depthWarpsBought = 0;
   drones.length = 0;
   goldIndex = Math.floor(Math.random()*TOTAL);
   goldFound = false;
@@ -999,6 +1080,34 @@ function renderCosm(body){
 
 /* ============ MAIN LOOP ============ */
 let shopRefreshTimer = 0;
+let autoDynamiteTimer = 0;
+function updateAutoDynamite(dt){
+  const extra = UPG.autoDynamite.effect();
+  if (extra<=0) return;
+  autoDynamiteTimer -= dt;
+  if (autoDynamiteTimer>0) return;
+  autoDynamiteTimer = 2200;
+  const targets = [];
+  for (let c=0;c<COLS;c++){ if (getHP(frontRow,c)>0) targets.push(c); }
+  if (!targets.length) return;
+  const count = Math.min(targets.length, 1+extra);
+  for (let i=0; i<count; i++){
+    const pick = Math.floor(Math.random()*targets.length);
+    const c = targets.splice(pick,1)[0];
+    applyDamage(frontRow, c, 9999);
+  }
+  addShake(2);
+}
+function updateOverclock(){
+  const chance = UPG.overclock.effect();
+  if (chance<=0) return;
+  if (Math.random() < chance){
+    for (let c=0;c<COLS;c++){ if (getHP(frontRow,c)>0) applyDamage(frontRow,c,9999); }
+    toast('⚙️ Frontier Overclock triggered!');
+    addShake(8);
+  }
+}
+
 function loop(){
   try{
     const dt = 16.7;
@@ -1016,6 +1125,8 @@ function loop(){
     syncDrones();
     updateDrones();
     updateAutoPilot();
+    updateAutoDynamite(dt);
+    updateOverclock();
     updateParticles();
     maybeTriggerEvent();
     shakeMag *= 0.88;
@@ -1180,6 +1291,7 @@ function save(){
     const data = {
       ore: state.ore, totalMined: state.totalMined, shotsFired: state.shotsFired,
       mode: state.mode, upgrades: state.upgrades, autoAimOn: state.autoAimOn, autoPilotOn: state.autoPilotOn,
+      depthWarpsBought: state.depthWarpsBought,
       cosmetic: state.cosmetic, achievements: state.achievements,
       prestigePoints: state.prestigePoints, prestigeRuns: state.prestigeRuns,
       prestigeUpgrades: state.prestigeUpgrades, bestDepthEver: state.bestDepthEver,
@@ -1199,6 +1311,7 @@ function load(){
     state.mode=d.mode||'manual'; Object.assign(state.upgrades,d.upgrades||{});
     state.autoAimOn=!!d.autoAimOn;
     state.autoPilotOn=!!d.autoPilotOn;
+    state.depthWarpsBought = d.depthWarpsBought||0;
     if (d.cosmetic) Object.assign(state.cosmetic, d.cosmetic);
     if (d.achievements) state.achievements = d.achievements;
     state.prestigePoints = d.prestigePoints||0;
