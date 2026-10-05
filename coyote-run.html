@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Coyote Run</title>
 <style>
-  @font-face{font-family:'Press Start 2P';src:local('Press Start 2P');}
   html,body{margin:0;padding:0;background:#0d0f1a;overflow:hidden;height:100%;font-family:'Courier New',monospace;}
   #wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;}
   canvas{background:#1a1f3a;border:4px solid #6b6b8a;border-radius:0;box-shadow:0 0 0 2px #0d0f1a,0 0 0 6px #4a4a6a,0 0 30px rgba(78,205,196,.35);image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges;}
@@ -17,12 +16,12 @@
 </head>
 <body>
 <div id="wrap">
-  <div id="hud"><span id="lvl">LEVEL 1</span><span id="timer">TIME 0.0</span><span id="lives">LIVES 3</span><span id="best">BEST --</span></div>
+  <div id="hud"><span id="lvl">WORLD 1 · LEVEL 1</span><span id="timer">TIME 0.0</span><span id="lives">LIVES 5</span><span id="best">BEST --</span></div>
   <div style="position:relative">
     <canvas id="c" width="800" height="450"></canvas>
     <div id="msg"></div>
   </div>
-  <div id="help">ARROWS/WASD move · SPACE jump (coyote time + buffer) · SHIFT dash (i-frames, breaks cracked walls) · R restart level</div>
+  <div id="help">ARROWS/WASD move · SPACE jump (coyote time + buffer) · SHIFT dash (i-frames, breaks cracked walls) · R restart</div>
 </div>
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -32,43 +31,92 @@ let keys={};
 addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')e.preventDefault();});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 
-// tile legend: #=solid, ^=spike, C=cracked(breakable by dash, shortcut), S=start, E=exit, X=boss trigger, o=coin/time-save pickup(optional), .=empty
-function makeLevel(rows, opts){ return {rows, opts: opts||{}}; }
+// ---------------- palettes (one hue per world, evenly spaced) ----------------
+function hsl(h,s,l){return `hsl(${((h%360)+360)%360},${s}%,${l}%)`;}
+function makePalette(name,hue){
+  return {
+    name,
+    bg: hsl(hue,38,13), bg2: hsl(hue,32,20),
+    tile: hsl(hue,28,33), tileHi: hsl(hue,34,45), tileSide: hsl(hue,28,37), tileShadow: hsl(hue,34,19),
+    fleck: hsl(hue,28,54),
+    crack: hsl(hue+25,42,38), crackHi: hsl(hue+25,52,52),
+    spike: hsl(hue+330,55,50), spikeHi: hsl(hue+330,70,75),
+    accent: hsl(hue+170,60,62),
+  };
+}
+const WORLD_NAMES = ["Grassy Hills","Cave Depths","Ice Caverns","Volcanic Forge","Toxic Swamp","Sky Temple",
+  "Desert Dunes","Crystal Mines","Haunted Woods","Storm Peaks","Coral Reef","Neon City",
+  "Frozen Tundra","Lava Core","Shadow Realm","Golden Sanctum","Void Expanse","Final Citadel"];
+const PALETTES = WORLD_NAMES.map((name,i)=>makePalette(name, Math.round(i*(360/WORLD_NAMES.length))));
 
-const LEVELS = [
-makeLevel([
-"........................................",
-"........................................",
-".......C#####..........................",
-"S...............^^^....###.........E...",
-"####.......###.......########..########",
-]),
-makeLevel([
-"........................................",
-".................C######...............",
-"......###.......................###....",
-"S.....^^^...####.....^^^^.....#########.",
-"########.C###.................E........",
-"###############.##############.########",
-]),
-makeLevel([
-"........................................",
-"...C##.........#####............#####..",
-"........................................",
-"S...^^^^.....................^^^^..E...",
-"####......####C.....####........########",
-"##########################.##########..",
-], {}),
-];
+// ---------------- seeded RNG + procedural level generation ----------------
+function mulberry32(a){
+  return function(){
+    a|=0; a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+// tile legend: #=solid, ^=spike, C=cracked(breakable by dash, shortcut), S=start, E=exit
+function genLevelRows(seed,difficulty){
+  const rand=mulberry32(seed);
+  const cols=32+Math.min(14,Math.floor(difficulty*0.8));
+  const path=new Array(cols).fill('.');
+  const ground=new Array(cols).fill('#');
+  const extra=new Array(cols).fill('.');
+  path[0]='S'; path[cols-1]='E';
+  let col=4;
+  const gapChance=0.16+difficulty*0.006;
+  const spikeChance=0.14+difficulty*0.006;
+  while(col<cols-5){
+    const r=rand();
+    if(r<gapChance){
+      const gw=2+Math.floor(rand()*2); // 2-3 tile pit, always jumpable
+      for(let k=0;k<gw && col+k<cols-3;k++) ground[col+k]='.';
+      col+=gw+3;
+    } else if(r<gapChance+spikeChance){
+      path[col]='^';
+      col+=2+Math.floor(rand()*2);
+    } else {
+      col+=1+Math.floor(rand()*3);
+    }
+  }
+  // shortcut crack platform(s) — dash through to skip a hazard stretch
+  const nCracks = difficulty>10?2:1;
+  for(let n=0;n<nCracks;n++){
+    const cc=6+Math.floor(rand()*(cols-16))+n*10;
+    if(cc>2 && cc+4<cols-2){ extra[cc]='C'; for(let k=1;k<=3;k++) extra[cc+k]='#'; }
+  }
+  return [
+    '.'.repeat(cols),
+    '.'.repeat(cols),
+    extra.join(''),
+    path.join(''),
+    ground.join(''),
+  ];
+}
+function makeLevel(rows){ return {rows}; }
 
-const BOSS_LEVEL = {
-  arena: {x1:60,x2:740,y1:60,y2:400,groundY:400},
-};
+function buildWorld(wi){
+  const levels=[];
+  for(let li=0;li<3;li++) levels.push(makeLevel(genLevelRows(wi*977+li*131+13, wi+li*1.5)));
+  return {
+    name: WORLD_NAMES[wi],
+    palette: PALETTES[wi],
+    levels,
+    bossHp: 5+Math.floor(wi*0.9),
+    bossSpeed: 1+wi*0.07,
+  };
+}
+const WORLDS=[]; for(let i=0;i<WORLD_NAMES.length;i++) WORLDS.push(buildWorld(i));
 
+const BOSS_LEVEL = { arena: {x1:60,x2:740,y1:60,y2:400,groundY:400} };
 const TILE=25;
+
 let state={
-  levelIndex:0, phase:'level', // level | boss | win
-  timer:0, lives:3, bests:{},
+  worldIndex:0, levelIndex:0, phase:'level', // level | boss | win
+  timer:0, lives:5, bests:{},
   camX:0,
 };
 
@@ -84,8 +132,8 @@ function parseLevel(lv){
       else if(ch==='E')exit={x,y};
     }
   }
-  const width = Math.max(...rows.map(r=>r.length))*TILE;
-  const height = rows.length*TILE;
+  const width=Math.max(...rows.map(r=>r.length))*TILE;
+  const height=rows.length*TILE;
   return {tiles,start,exit,width,height};
 }
 
@@ -95,20 +143,33 @@ function newPlayer(x,y){
   return {x,y,w:16,h:20,vx:0,vy:0,onGround:false,coyote:0,buffer:0,dashT:0,dashCD:0,dashDir:1,facing:1,dead:false,invuln:0};
 }
 
-function loadLevel(i){
-  state.levelIndex=i; state.phase='level'; state.timer=0;
-  level=parseLevel(LEVELS[i]);
+function currentWorld(){ return WORLDS[state.worldIndex]; }
+function palette(){ return currentWorld().palette; }
+
+let levelComplete=false; // guards nextLevel() so it only fires once per exit touch, not every overlapping frame
+
+function loadLevel(wi,li){
+  li=Math.max(0,Math.min(2,li)); // defensive clamp — a world only ever has 3 levels
+  state.worldIndex=wi; state.levelIndex=li; state.phase='level'; state.timer=0;
+  levelComplete=false;
+  level=parseLevel(currentWorld().levels[li]);
   player=newPlayer(level.start.x, level.start.y);
   particles=[];
   showMsg('');
 }
 
-function loadBoss(){
-  state.phase='boss'; state.timer=0;
-  player=newPlayer(100,300);
-  boss=newBoss();
+function loadBoss(wi){
+  state.worldIndex=wi; state.phase='boss'; state.timer=0;
+  levelComplete=false;
+  level=null; // clear the last regular level so its stale exit tile can't be hit-tested during the boss fight
+  const a=BOSS_LEVEL.arena;
+  player=newPlayer(100, a.groundY-20); // spawn standing on the arena floor, not falling from the air
+  player.onGround=true;
+  player.invuln=100; // spawn grace so you can't instantly get chipped by the boss
+  boss=newBoss(currentWorld());
   particles=[]; projectiles=[];
-  showMsg('');
+  showMsg('<b>'+currentWorld().name.toUpperCase()+' BOSS</b>',true);
+  setTimeout(()=>{ if(state.phase==='boss') showMsg(''); },1200);
 }
 
 function showMsg(html,persist){
@@ -119,62 +180,79 @@ function showMsg(html,persist){
 
 // ---- boss ----
 let boss=null, projectiles=[];
-function newBoss(){
-  return {x:600,y:260,w:50,h:60,hp:6,maxhp:6,t:0,phase:0,vx:0,vy:0,hitCD:0,dead:false};
+function newBoss(world){
+  return {x:600,y:260,w:50,h:60,hp:world.bossHp,maxhp:world.bossHp,speed:world.bossSpeed,
+    t:0,introT:90,phase:0,vx:0,vy:0,hitCD:0,dead:false,charging:false};
 }
-function updateBoss(dt){
+function bossRect(){ return {x:boss.x-boss.w/2, y:boss.y-boss.h/2, w:boss.w, h:boss.h}; }
+
+function updateBoss(){
   if(boss.dead) return;
-  boss.t++;
   const a=BOSS_LEVEL.arena;
-  // simple pattern: float around, periodically slam or shoot
-  boss.y = 220 + Math.sin(boss.t*0.03)*40;
+  const hoverBase=a.groundY-45;
+  if(boss.introT>0){ boss.introT--; boss.y=hoverBase; return; } // grace period: boss is inert, can't hurt you
+  boss.t++;
+  boss.y = hoverBase + Math.sin(boss.t*0.03)*12; // low hover overlapping standing height so ground dashes land
   if(boss.t%110===40){
-    // slam toward player x
-    boss.vx = (player.x < boss.x)? -3.2:3.2;
-    setTimeout(()=>{boss.vx=0;},650);
+    const spd=3.0*boss.speed;
+    boss.vx = (player.x < boss.x)? -spd:spd;
+    boss.charging=true;
+    setTimeout(()=>{boss.vx=0; boss.charging=false;},650);
   }
   boss.x += boss.vx;
   boss.x = Math.max(a.x1+30, Math.min(a.x2-30, boss.x));
-  if(boss.t%80===0){
+  if(boss.t%Math.max(50,80-state.worldIndex*2)===0){
     for(let k=-1;k<=1;k++)
-      projectiles.push({x:boss.x, y:boss.y, vx:k*2.2, vy:-1.5, t:0, r:6});
+      projectiles.push({x:boss.x, y:boss.y, vx:k*2.2*boss.speed, vy:-1.5, t:0, r:6});
   }
   projectiles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.06;p.t++;});
   projectiles = projectiles.filter(p=>p.t<200 && p.y<H+40);
 
   if(boss.hitCD>0) boss.hitCD--;
-  // player dash into boss = damage
-  if(player.dashT>0 && boss.hitCD===0 && rectHit(player,boss)){
+  if(player.dashT>0 && boss.hitCD===0 && rectHit(player,bossRect())){
     boss.hp--; boss.hitCD=30;
     for(let k=0;k<10;k++) particles.push(mkParticle(boss.x+boss.w/2,boss.y+boss.h/2,'#ffd93d'));
-    if(boss.hp<=0){ boss.dead=true; showMsg('<b>BOSS DOWN!</b>',true); setTimeout(()=>{state.phase='win';},1200); }
+    if(boss.hp<=0){
+      boss.dead=true;
+      showMsg('<b>BOSS DOWN!</b>',true);
+      setTimeout(()=>{
+        if(state.worldIndex+1<WORLDS.length){
+          showMsg('<b>'+currentWorld().name.toUpperCase()+' CLEARED</b>',true);
+          setTimeout(()=>{
+            state.lives+=5; // bonus hearts for reaching a new world
+            document.getElementById('lives').textContent='LIVES '+state.lives;
+            loadLevel(state.worldIndex+1,0);
+          },900);
+        } else {
+          state.phase='win';
+        }
+      },1100);
+    }
   }
-  // contact damage
-  if(player.invuln===0 && rectHit(player,boss)) hurtPlayer();
+  // only the boss's active attacks hurt you — standing near it while it's idle is safe, so you can line up a dash
+  if(player.invuln===0 && boss.charging && rectHit(player,bossRect())) hurtPlayer();
   projectiles.forEach(p=>{
     if(player.invuln===0 && Math.hypot(p.x-(player.x+8), p.y-(player.y+10)) < p.r+9) hurtPlayer();
   });
 }
 
 function rectHit(a,b){return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;}
-
 function mkParticle(x,y,col){return {x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4-1,life:24,col};}
 
 function hurtPlayer(){
   if(player.invuln>0) return;
   state.lives--;
-  player.invuln=70;
-  player.vx=(player.x<400?1:-1)*-3; player.vy=-6;
+  player.invuln=90;
+  const pushDir=(player.x<(state.phase==='boss'?boss.x:400))?-1:1;
+  player.vx=pushDir*6; player.vy=-7;
   document.getElementById('lives').textContent='LIVES '+state.lives;
   if(state.lives<=0){
-    showMsg('<b>OUT OF LIVES</b><br>press R to retry',true);
+    showMsg('<b>OUT OF LIVES</b><br>press R — back to '+currentWorld().name+' start',true);
     player.dead=true;
   }
 }
 
 // ---- physics / level update ----
-function solidsAt(tiles){return tiles.filter(t=>t.type==='solid');}
-
 function updatePlayer(){
   if(player.dead) return;
   const left=keys['a']||keys['arrowleft'], right=keys['d']||keys['arrowright'];
@@ -199,7 +277,6 @@ function updatePlayer(){
     for(let k=0;k<8;k++) particles.push(mkParticle(player.x+8,player.y+10,'#4ecdc4'));
   }
 
-  // jump buffer/coyote
   if(jumpKey) player.buffer=BUFFER; else if(player.buffer>0) player.buffer--;
   if(player.onGround) player.coyote=COYOTE; else if(player.coyote>0) player.coyote--;
   if(player.buffer>0 && player.coyote>0){
@@ -209,14 +286,17 @@ function updatePlayer(){
 
   const tiles = level?level.tiles:[];
   player.onGround=false;
-  // horizontal
   player.x+=player.vx;
   collideAxis(tiles,'x');
-  // vertical
   player.y+=player.vy;
   collideAxis(tiles,'y');
 
-  // spikes / crack walls / dash-break
+  if(state.phase==='boss'){
+    const a=BOSS_LEVEL.arena;
+    player.x=Math.max(a.x1,Math.min(a.x2-player.w,player.x));
+    if(player.y+player.h>a.groundY){ player.y=a.groundY-player.h; player.vy=0; player.onGround=true; }
+  }
+
   for(const t of tiles){
     if(t.type==='crack' && player.dashT>0 && rectHit(player,{x:t.x,y:t.y,w:TILE,h:TILE})){
       t.type='broken';
@@ -224,17 +304,17 @@ function updatePlayer(){
     }
     if(t.type==='spike' && player.invuln===0 && rectHit(player,{x:t.x+3,y:t.y+8,w:TILE-6,h:TILE-8})){
       hurtPlayer();
-      player.x=level.start.x; player.y=level.start.y; player.vx=0; player.vy=0;
+      if(level){ player.x=level.start.x; player.y=level.start.y; player.vx=0; player.vy=0; }
     }
   }
 
-  if(player.y>level? level.height+200 : H+200){ }
   if(level && player.y > level.height+150){
     player.x=level.start.x; player.y=level.start.y; player.vx=0; player.vy=0;
     hurtPlayer();
   }
 
-  if(level && level.exit && rectHit(player,{x:level.exit.x,y:level.exit.y-25,w:TILE,h:TILE*2})){
+  if(!levelComplete && level && level.exit && rectHit(player,{x:level.exit.x,y:level.exit.y-25,w:TILE,h:TILE*2})){
+    levelComplete=true;
     nextLevel();
   }
 
@@ -261,96 +341,100 @@ function collideAxis(tiles,axis){
 
 function nextLevel(){
   const t=state.timer;
-  const key='L'+state.levelIndex;
+  const key='W'+state.worldIndex+'L'+state.levelIndex;
   if(!state.bests[key] || t<state.bests[key]) state.bests[key]=t;
   document.getElementById('best').textContent='BEST '+(state.bests[key]/60).toFixed(1)+'s';
-  if(state.levelIndex+1 < LEVELS.length){
+  if(state.levelIndex+1<3){
     showMsg('LEVEL CLEAR — '+(t/60).toFixed(1)+'s');
-    setTimeout(()=>loadLevel(state.levelIndex+1),700);
+    setTimeout(()=>loadLevel(state.worldIndex,state.levelIndex+1),700);
   } else {
-    showMsg('<b>FINAL LEVEL CLEAR</b><br>Boss incoming...',true);
-    setTimeout(()=>loadBoss(),1400);
+    showMsg('<b>'+currentWorld().name.toUpperCase()+' — FINAL LEVEL CLEAR</b><br>Boss incoming...',true);
+    setTimeout(()=>{
+      state.lives+=5; // bonus hearts for reaching the boss level
+      document.getElementById('lives').textContent='LIVES '+state.lives;
+      loadBoss(state.worldIndex);
+    },1400);
   }
 }
 
 // ---- render ----
-function render(){
-  ctx.clearRect(0,0,W,H);
-  if(state.phase==='level'){
-    state.camX = Math.max(0, Math.min(level.width-W, player.x-W/2));
-    ctx.save(); ctx.translate(-Math.floor(state.camX),0);
-    // parallax starfield/bg blocks (16-bit sky)
-    ctx.fillStyle='#241a3a'; ctx.fillRect(state.camX,0,W,H);
-    ctx.fillStyle='#3a2a5a';
-    for(let i=0;i<26;i++){const bx=(i*97)%level.width; ctx.fillRect(bx-state.camX*0.4+state.camX,40+((i*61)%90),4,4);}
-    for(const t of level.tiles) drawTile(t);
-    if(level.exit) drawFlag(level.exit.x,level.exit.y-25);
-    drawParticles(); drawPlayer();
-    ctx.restore();
-  } else if(state.phase==='boss'){
-    const a=BOSS_LEVEL.arena;
-    ctx.fillStyle='#1c1430'; ctx.fillRect(0,0,W,H);
-    for(let i=0;i<12;i++) px(20+i*63%W,20+((i*37)%80),3,3,'#3a2a5a');
-    ctx.strokeStyle='#4ecdc4'; ctx.lineWidth=1; ctx.strokeRect(a.x1,a.y1,a.x2-a.x1,a.y2-a.y1);
-    px(a.x1,a.groundY,a.x2-a.x1,20,'#3d4a6b');
-    px(a.x1,a.groundY,a.x2-a.x1,4,'#5a6b93');
-    // boss
-    if(!boss.dead){
-      const bc = boss.hitCD>0?'#ffffff':'#c73e6e';
-      px(boss.x-boss.w/2,boss.y-boss.h/2,boss.w,boss.h,bc);
-      px(boss.x-boss.w/2,boss.y-boss.h/2,boss.w,5,boss.hitCD>0?'#fff':'#e88aa8');
-      px(boss.x-10,boss.y-6,7,7,'#1a1f3a'); px(boss.x+3,boss.y-6,7,7,'#1a1f3a'); // eyes
-      px(boss.x-8,boss.y-4,3,3,'#ff5555'); px(boss.x+5,boss.y-4,3,3,'#ff5555');
-      px(boss.x-20,boss.y-boss.h/2-16,40,6,'#1a1f3a');
-      px(boss.x-19,boss.y-boss.h/2-15,38*(boss.hp/boss.maxhp),4,'#ffd93d');
-    }
-    projectiles.forEach(p=>{px(p.x-p.r,p.y-p.r,p.r*2,p.r*2,'#ff9f43');px(p.x-p.r+1,p.y-p.r,p.r,p.r,'#ffd0a0');});
-    drawParticles(); drawPlayer();
-  } else if(state.phase==='win'){
-    ctx.fillStyle='#0d0f1a'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#4ecdc4'; ctx.font='28px monospace'; ctx.textAlign='center';
-    ctx.fillText('YOU BEAT COYOTE RUN', W/2, H/2-10);
-    ctx.font='14px monospace'; ctx.fillStyle='#fff';
-    ctx.fillText('press R to play again', W/2, H/2+24);
-  }
-}
-
 function px(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(Math.floor(x),Math.floor(y),w,h);}
 
-function drawTile(t){
+function drawTile(t,pal){
   const x=t.x,y=t.y;
   if(t.type==='solid'){
-    px(x,y,TILE,TILE,'#3d4a6b');
-    px(x,y,TILE,4,'#5a6b93');       // top highlight
-    px(x,y,4,TILE,'#4a5980');
-    px(x+TILE-4,y+4,4,TILE-4,'#2a3350'); // shadow edge
-    px(x+4,y+TILE-4,TILE-8,4,'#2a3350');
-    px(x+3,y+7,3,3,'#6b7ba3'); px(x+15,y+15,3,3,'#6b7ba3'); // texture flecks
+    px(x,y,TILE,TILE,pal.tile);
+    px(x,y,TILE,4,pal.tileHi);
+    px(x,y,4,TILE,pal.tileSide);
+    px(x+TILE-4,y+4,4,TILE-4,pal.tileShadow);
+    px(x+4,y+TILE-4,TILE-8,4,pal.tileShadow);
+    px(x+3,y+7,3,3,pal.fleck); px(x+15,y+15,3,3,pal.fleck);
   } else if(t.type==='crack'){
-    px(x,y,TILE,TILE,'#8a5a3a');
-    px(x,y,TILE,4,'#a87a52');
-    px(x+3,y+TILE-6,TILE-6,3,'#5c3a24');
+    px(x,y,TILE,TILE,pal.crack);
+    px(x,y,TILE,4,pal.crackHi);
+    px(x+3,y+TILE-6,TILE-6,3,pal.tileShadow);
     ctx.strokeStyle='#ffd93d'; ctx.lineWidth=1;
     ctx.beginPath();
     ctx.moveTo(x+4,y+3); ctx.lineTo(x+12,y+13); ctx.lineTo(x+7,y+21);
     ctx.moveTo(x+18,y+2); ctx.lineTo(x+13,y+13); ctx.lineTo(x+21,y+22);
     ctx.stroke();
   } else if(t.type==='spike'){
-    ctx.fillStyle='#c73e50';
+    ctx.fillStyle=pal.spike;
     ctx.beginPath();ctx.moveTo(x+1,y+TILE);ctx.lineTo(x+TILE/2,y+7);ctx.lineTo(x+TILE-1,y+TILE);ctx.fill();
-    ctx.fillStyle='#ff8a8a';
+    ctx.fillStyle=pal.spikeHi;
     ctx.beginPath();ctx.moveTo(x+TILE/2-1,y+8);ctx.lineTo(x+TILE/2+2,y+8);ctx.lineTo(x+TILE/2,y+16);ctx.fill();
   }
 }
 
-function drawFlag(x,y){
+function drawFlag(x,y,pal){
   px(x+10,y,3,TILE*2,'#c9c9d8');
-  px(x+13,y+2,10,8,'#ffd93d');
+  px(x+13,y+2,10,8,pal.accent);
   px(x+13,y+2,10,3,'#fff2b0');
   px(x+6,y+TILE*2-3,20,3,'#6b6b8a');
 }
 
-// simple 2-frame walk cycle + idle/jump pose via bob
+function render(){
+  ctx.clearRect(0,0,W,H);
+  const pal=palette();
+  if(state.phase==='level'){
+    state.camX = Math.max(0, Math.min(level.width-W, player.x-W/2));
+    ctx.save(); ctx.translate(-Math.floor(state.camX),0);
+    ctx.fillStyle=pal.bg; ctx.fillRect(state.camX,0,W,H);
+    ctx.fillStyle=pal.bg2;
+    for(let i=0;i<26;i++){const bx=(i*97)%level.width; ctx.fillRect(bx,40+((i*61)%90),4,4);}
+    for(const t of level.tiles) drawTile(t,pal);
+    if(level.exit) drawFlag(level.exit.x,level.exit.y-25,pal);
+    drawParticles(); drawPlayer();
+    ctx.restore();
+  } else if(state.phase==='boss'){
+    const a=BOSS_LEVEL.arena;
+    ctx.fillStyle=pal.bg; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=pal.bg2;
+    for(let i=0;i<12;i++) px(20+i*63%W,20+((i*37)%80),3,3,pal.bg2);
+    ctx.strokeStyle=pal.accent; ctx.lineWidth=1; ctx.strokeRect(a.x1,a.y1,a.x2-a.x1,a.y2-a.y1);
+    px(a.x1,a.groundY,a.x2-a.x1,20,pal.tile);
+    px(a.x1,a.groundY,a.x2-a.x1,4,pal.tileHi);
+    if(!boss.dead){
+      const intro=boss.introT>0;
+      const bc = boss.hitCD>0?'#ffffff':(intro?'#8a5a6e':'#c73e6e');
+      px(boss.x-boss.w/2,boss.y-boss.h/2,boss.w,boss.h,bc);
+      px(boss.x-boss.w/2,boss.y-boss.h/2,boss.w,5,boss.hitCD>0?'#fff':'#e88aa8');
+      px(boss.x-10,boss.y-6,7,7,'#1a1f3a'); px(boss.x+3,boss.y-6,7,7,'#1a1f3a');
+      px(boss.x-8,boss.y-4,3,3,intro?'#aaa':'#ff5555'); px(boss.x+5,boss.y-4,3,3,intro?'#aaa':'#ff5555');
+      px(boss.x-20,boss.y-boss.h/2-16,40,6,'#1a1f3a');
+      px(boss.x-19,boss.y-boss.h/2-15,38*(boss.hp/boss.maxhp),4,pal.accent);
+    }
+    projectiles.forEach(p=>{px(p.x-p.r,p.y-p.r,p.r*2,p.r*2,'#ff9f43');px(p.x-p.r+1,p.y-p.r,p.r,p.r,'#ffd0a0');});
+    drawParticles(); drawPlayer();
+  } else if(state.phase==='win'){
+    ctx.fillStyle='#0d0f1a'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ecdc4'; ctx.font='26px monospace'; ctx.textAlign='center';
+    ctx.fillText('YOU BEAT ALL 18 WORLDS', W/2, H/2-10);
+    ctx.font='14px monospace'; ctx.fillStyle='#fff';
+    ctx.fillText('press R to play again', W/2, H/2+24);
+  }
+}
+
 let animT=0;
 function drawPlayer(){
   animT++;
@@ -361,20 +445,14 @@ function drawPlayer(){
   const x=Math.floor(player.x), y=Math.floor(player.y);
   const moving = Math.abs(player.vx)>0.4 && player.onGround;
   const bob = moving ? (Math.floor(animT/6)%2===0?0:1) : 0;
-  // shadow
   ctx.globalAlpha=0.35; px(x+1,y+player.h-2,player.w-2,3,'#000'); ctx.globalAlpha=1;
-  // legs
   px(x+3,y+14+bob,4,6-bob,shadeCol);
   px(x+9,y+14+(1-bob),4,6-(1-bob),shadeCol);
-  // body
   px(x+1,y+4,player.w-2,11,bodyCol);
   px(x+1,y+4,player.w-2,3,'#fff5cc');
-  // face direction chip
   px(x+(player.facing>0?11:1),y+8,3,3,'#1a1f3a');
-  // head
   px(x+2,y-2,player.w-4,7,bodyCol);
   px(x+2,y-2,player.w-4,2,'#fff5cc');
-  // dash trail spark
   if(player.dashT>0){ ctx.globalAlpha=0.5; px(x-player.dashDir*6,y+3,6,player.h-6,'#4ecdc4'); ctx.globalAlpha=1; }
   ctx.restore();
 }
@@ -382,25 +460,45 @@ function drawParticles(){
   particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/24);ctx.fillStyle=p.col;ctx.fillRect(p.x,p.y,3,3);ctx.globalAlpha=1;});
 }
 
+function updateHud(){
+  if(state.phase==='level'){
+    document.getElementById('lvl').textContent='WORLD '+(state.worldIndex+1)+'/'+WORLDS.length+' '+currentWorld().name.toUpperCase()+' · LEVEL '+(state.levelIndex+1)+'/3';
+  } else if(state.phase==='boss'){
+    document.getElementById('lvl').textContent='WORLD '+(state.worldIndex+1)+'/'+WORLDS.length+' · BOSS';
+  }
+}
+
+function restart(){
+  if(state.lives<=0){
+    state.lives=5; document.getElementById('lives').textContent='LIVES 5';
+    loadLevel(state.worldIndex,0); // back to start of the CURRENT world, not the whole game
+  } else if(state.phase==='boss'){
+    loadBoss(state.worldIndex);
+  } else if(state.phase==='level'){
+    loadLevel(state.worldIndex,state.levelIndex);
+  } else if(state.phase==='win'){
+    state.worldIndex=0; state.lives=5; document.getElementById('lives').textContent='LIVES 5';
+    loadLevel(0,0);
+  }
+}
+
+let rWasDown=false;
 function loop(){
   if((state.phase==='level'||state.phase==='boss') && !player.dead){
     state.timer++;
     document.getElementById('timer').textContent='TIME '+(state.timer/60).toFixed(1);
   }
-  if(state.phase==='level'){ updatePlayer(); document.getElementById('lvl').textContent='LEVEL '+(state.levelIndex+1)+' / '+LEVELS.length; }
-  else if(state.phase==='boss'){ updatePlayer(); updateBoss(); document.getElementById('lvl').textContent='BOSS FIGHT'; }
+  if(state.phase==='level'){ updatePlayer(); updateHud(); }
+  else if(state.phase==='boss'){ updatePlayer(); updateBoss(); updateHud(); }
 
-  if(keys['r']){
-    if(state.lives<=0){ state.lives=3; document.getElementById('lives').textContent='LIVES 3'; loadLevel(0); }
-    else if(state.phase==='boss') loadBoss();
-    else if(state.phase==='level') loadLevel(state.levelIndex);
-    else if(state.phase==='win'){ state.lives=3; document.getElementById('lives').textContent='LIVES 3'; loadLevel(0); }
-  }
+  if(keys['r'] && !rWasDown) restart();
+  rWasDown=!!keys['r'];
+
   render();
   requestAnimationFrame(loop);
 }
 
-loadLevel(0);
+loadLevel(0,0);
 loop();
 </script>
 </body>
