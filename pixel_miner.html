@@ -148,6 +148,7 @@
       <button class="tabBtn" data-tab="prestige">💎 Prestige</button>
       <button class="tabBtn" data-tab="achv">🏆 Achv.</button>
       <button class="tabBtn" data-tab="cosm">🎨 Style</button>
+      <button class="tabBtn" data-tab="settings">⚙️ Settings</button>
     </div>
     <div id="panelBody"></div>
   </div>
@@ -273,6 +274,7 @@ const state = {
   autoAimOn: false,
   autoPilotOn: false,
   cosmetic: {turret:'#5ad1ff', trail:false},
+  settings: {particlesOn:true, toastsOn:true, musicVolume:45},
   achievements: {},
   prestigePoints: 0,
   prestigeRuns: 0,
@@ -419,6 +421,7 @@ function checkAchievements(){
   }
 }
 function toast(msg){
+  if (!state.settings.toastsOn) return;
   const wrap2 = document.getElementById('toastWrap');
   const el = document.createElement('div');
   el.className='toast'; el.textContent = msg;
@@ -494,6 +497,7 @@ let shakeMag = 0;
 function addShake(amount){ shakeMag = Math.min(28, shakeMag + amount); }
 const particles = [];
 function spawnParticles(row,col,color,count){
+  if (!state.settings.particlesOn) return;
   const sx = col*CELL_PX + CELL_PX/2;
   const sy = (row-cameraRow)*CELL_PX + turret.y;
   for (let i=0;i<count;i++){
@@ -896,6 +900,7 @@ function renderPanel(){
   else if (activeTab==='prestige') renderPrestige(body);
   else if (activeTab==='achv') renderAchv(body);
   else if (activeTab==='cosm') renderCosm(body);
+  else if (activeTab==='settings') renderSettings(body);
 }
 
 function depthWarpAmount(){ return 15; }
@@ -1076,6 +1081,53 @@ function renderCosm(body){
   btn.onclick=()=>{state.cosmetic.trail=!state.cosmetic.trail; renderPanel(); save();};
   div.appendChild(btn);
   body.appendChild(div);
+}
+
+function renderSettings(body){
+  const pDiv = document.createElement('div');
+  pDiv.className='item';
+  pDiv.innerHTML = `<div class="row1"><span class="name">✨ Particles</span></div>
+    <div class="desc">Flying pixel-chunk bursts when a cell clears. Turn off for a calmer, lighter-weight screen.</div>`;
+  const pBtn = document.createElement('button');
+  pBtn.className='toggleBtn'+(state.settings.particlesOn?' on':'');
+  pBtn.textContent = state.settings.particlesOn?'Particles: ON':'Particles: OFF';
+  pBtn.onclick=()=>{state.settings.particlesOn=!state.settings.particlesOn; renderPanel(); save();};
+  pDiv.appendChild(pBtn);
+  body.appendChild(pDiv);
+
+  const tDiv = document.createElement('div');
+  tDiv.className='item';
+  tDiv.innerHTML = `<div class="row1"><span class="name">💬 Popups</span></div>
+    <div class="desc">Toast notifications for achievements, events, traps, and boss blocks.</div>`;
+  const tBtn = document.createElement('button');
+  tBtn.className='toggleBtn'+(state.settings.toastsOn?' on':'');
+  tBtn.textContent = state.settings.toastsOn?'Popups: ON':'Popups: OFF';
+  tBtn.onclick=()=>{state.settings.toastsOn=!state.settings.toastsOn; renderPanel(); save();};
+  tDiv.appendChild(tBtn);
+  body.appendChild(tDiv);
+
+  const mDiv = document.createElement('div');
+  mDiv.className='item';
+  mDiv.innerHTML = `<div class="row1"><span class="name">🎵 Music</span></div>
+    <div class="desc">${TRACKS[0] ? TRACKS[0].title+' — '+TRACKS[0].credit : 'Background track'}</div>`;
+  const mBtn = document.createElement('button');
+  mBtn.id = 'setMusicToggle';
+  mBtn.className = 'toggleBtn'+(!bgAudio.paused?' on':'');
+  mBtn.textContent = bgAudio.paused ? '▶ Play Music' : '⏸ Pause Music';
+  mBtn.onclick = toggleMusic;
+  mDiv.appendChild(mBtn);
+  const volRow = document.createElement('div');
+  volRow.style.cssText='display:flex; align-items:center; gap:8px; margin-top:8px;';
+  const volLabel = document.createElement('span');
+  volLabel.className='desc'; volLabel.style.marginBottom='0'; volLabel.textContent='Volume';
+  const volSlider = document.createElement('input');
+  volSlider.type='range'; volSlider.min='0'; volSlider.max='100'; volSlider.id='setMusicVol';
+  volSlider.value = npVol.value;
+  volSlider.style.flex='1';
+  volSlider.addEventListener('input', ()=>{ setMusicVolume(volSlider.value); });
+  volRow.appendChild(volLabel); volRow.appendChild(volSlider);
+  mDiv.appendChild(volRow);
+  body.appendChild(mDiv);
 }
 
 /* ============ MAIN LOOP ============ */
@@ -1292,7 +1344,7 @@ function save(){
       ore: state.ore, totalMined: state.totalMined, shotsFired: state.shotsFired,
       mode: state.mode, upgrades: state.upgrades, autoAimOn: state.autoAimOn, autoPilotOn: state.autoPilotOn,
       depthWarpsBought: state.depthWarpsBought,
-      cosmetic: state.cosmetic, achievements: state.achievements,
+      cosmetic: state.cosmetic, achievements: state.achievements, settings: state.settings,
       prestigePoints: state.prestigePoints, prestigeRuns: state.prestigeRuns,
       prestigeUpgrades: state.prestigeUpgrades, bestDepthEver: state.bestDepthEver,
       goldFoundTotal: state.goldFoundTotal,
@@ -1313,6 +1365,7 @@ function load(){
     state.autoPilotOn=!!d.autoPilotOn;
     state.depthWarpsBought = d.depthWarpsBought||0;
     if (d.cosmetic) Object.assign(state.cosmetic, d.cosmetic);
+    if (d.settings) Object.assign(state.settings, d.settings);
     if (d.achievements) state.achievements = d.achievements;
     state.prestigePoints = d.prestigePoints||0;
     state.prestigeRuns = d.prestigeRuns||0;
@@ -1327,7 +1380,6 @@ function load(){
   }catch(e){ /* ignore corrupt save */ }
 }
 
-/* ============ INIT ============ */
 /* ============ MUSIC / INTRO VIDEO ============ */
 const TRACKS = [
   {title:'Mining Ambience', credit:'Chrome Music Lab', mime:'audio/mpeg', b64key:'PM_MUSIC_B64'}
@@ -1347,14 +1399,33 @@ function loadTrack(i){
   npTitle.textContent = t.title;
   npCredit.textContent = 'Music: '+t.credit;
 }
-npToggle.addEventListener('click', ()=>{
-  if (bgAudio.paused){
-    bgAudio.play().then(()=>{ npToggle.textContent='⏸'; }).catch(()=>{ toast('Tap again to allow audio playback.'); });
-  } else {
-    bgAudio.pause(); npToggle.textContent='▶';
+function syncMusicButtons(){
+  const label = bgAudio.paused ? '▶' : '⏸';
+  npToggle.textContent = label;
+  const sb = document.getElementById('setMusicToggle');
+  if (sb){
+    sb.textContent = bgAudio.paused ? '▶ Play Music' : '⏸ Pause Music';
+    sb.classList.toggle('on', !bgAudio.paused);
   }
-});
-npVol.addEventListener('input', ()=>{ bgAudio.volume = npVol.value/100; });
+  const sv = document.getElementById('setMusicVol');
+  if (sv) sv.value = npVol.value;
+}
+function toggleMusic(){
+  if (bgAudio.paused){
+    bgAudio.play().then(syncMusicButtons).catch(()=>{ toast('Tap again to allow audio playback.'); });
+  } else {
+    bgAudio.pause(); syncMusicButtons();
+  }
+}
+function setMusicVolume(v){
+  npVol.value = v;
+  bgAudio.volume = v/100;
+  state.settings.musicVolume = Number(v);
+  syncMusicButtons();
+  save();
+}
+npToggle.addEventListener('click', toggleMusic);
+npVol.addEventListener('input', ()=>{ setMusicVolume(npVol.value); });
 
 const INTRO_KEY = 'pixelMinerIntroSeen_v1';
 function maybeShowIntro(){
@@ -1384,7 +1455,7 @@ function init(){
   resize();
   syncDrones();
   loadTrack(0);
-  bgAudio.volume = npVol.value/100;
+  setMusicVolume(state.settings.musicVolume);
   document.querySelectorAll('.modeBtn').forEach(b=>{
     b.classList.toggle('active', b.dataset.mode===state.mode);
   });
