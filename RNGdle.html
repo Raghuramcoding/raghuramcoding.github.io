@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RNGdle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=Chivo+Mono:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1b1033;--card:#271a48;--ink:#f4efff;--muted:#a496cc;--line:#42316f;--accent:#ffb703;--on-accent:#2a1a00;
+--t-common:#9aa6c0;--t-uncommon:#3ddc97;--t-rare:#4cc2ff;--t-epic:#b57bff;--t-legendary:#ffb703;--t-mythic:#ff4d6d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f1ecff;--card:#fff;--ink:#1d1238;--muted:#645891;--line:#d9cff5;--on-accent:#2a1a00}}
+:root[data-theme="light"]{--bg:#f1ecff;--card:#fff;--ink:#1d1238;--muted:#645891;--line:#d9cff5;--on-accent:#2a1a00}
+:root[data-theme="dark"]{--bg:#1b1033;--card:#271a48;--ink:#f4efff;--muted:#a496cc;--line:#42316f}
+html{color-scheme:dark light;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.45 "Bricolage Grotesque",system-ui,sans-serif;min-height:100vh}
+main{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+h1{font:800 2rem/1 "Bricolage Grotesque",system-ui,sans-serif;margin:8px 0 4px;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0 0 18px}
+.seg{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:10px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-weight:800;padding:9px 6px;border-radius:9px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+button:focus-visible{outline:3px solid var(--t-rare);outline-offset:2px}
+.ticket{background:var(--card);border:1px solid var(--line);border-radius:20px;margin-top:16px;position:relative;overflow:hidden}
+.top{padding:22px 16px 18px;text-align:center}
+.num{font:800 min(4rem,calc(min(88vw,520px)/(var(--len,10)*.64)))/1.1 "Chivo Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;word-break:break-all;min-height:1.2em}
+.num.idle{color:var(--muted)}
+.xp{font-weight:800;font-size:1.5rem;margin-top:8px;color:var(--accent)}
+.xp small{display:block;font-size:.85rem;color:var(--muted);font-weight:500}
+.perf{border-top:2px dashed var(--line);position:relative;margin:0}
+.perf:before,.perf:after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.perf:before{left:-11px}.perf:after{right:-11px}
+.badges{list-style:none;margin:0;padding:16px;display:grid;gap:8px;min-height:72px}
+.badges li{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-left:6px solid var(--c);border-radius:10px;padding:8px 12px;animation:pop .28s ease-out}
+.badges b{display:block}.badges span{color:var(--muted);font-size:.85rem}
+.badges em{font-style:normal;font-weight:800;font-family:"Chivo Mono",monospace;white-space:nowrap}
+.empty{color:var(--muted);text-align:center;border:0!important;display:block!important}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+.actions{display:flex;gap:10px;margin-top:14px}
+.btn{flex:1;font:800 1.15rem "Bricolage Grotesque",sans-serif;border:0;border-radius:14px;padding:16px;cursor:pointer;background:var(--accent);color:var(--on-accent)}
+.btn.alt{flex:0 0 auto;background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:1rem;padding:16px 18px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.lvl{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .5s}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat span{color:var(--muted);font-size:.85rem;display:block}.stat b{font:800 1.1rem "Chivo Mono",monospace;overflow-wrap:anywhere}
+h2{font-size:1.1rem;margin:22px 0 8px}
+.coll{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);border-left:6px solid var(--c);border-radius:8px;padding:4px 10px;font-size:.85rem}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.reset{background:none;border:0;color:var(--muted);text-decoration:underline;font:inherit;cursor:pointer;margin-top:18px;padding:0}
+@media (prefers-reduced-motion:reduce){.badges li{animation:none}.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>RNGdle</h1>
+<p class="sub">Roll a number. Patterns inside it become badges, and badges pay XP. Only Daily rolls, bonuses and achievements add to your level; Unlimited is practice.</p>
+<div class="seg" id="mode" role="group" aria-label="Mode"><button data-v="daily">Daily</button><button data-v="unlimited">Unlimited</button></div>
+<div class="seg" id="diff" role="group" aria-label="Difficulty"><button data-v="easy">Easy &middot; 10<sup>19</sup></button><button data-v="normal">Normal &middot; 10<sup>12</sup></button><button data-v="hard">Hard &middot; 1 to 10<sup>6</sup></button></div>
+<div class="ticket">
+  <div class="top"><div class="num idle" id="num" aria-live="polite">?</div><div class="xp" id="xp"></div></div>
+  <hr class="perf">
+  <ul class="badges" id="badges"><li class="empty">No roll yet.</li></ul>
+</div>
+<ul class="badges" id="bonus" style="padding:12px 0 0;min-height:0"></ul>
+<div class="actions"><button class="btn" id="roll">Roll</button><button class="btn alt" id="share" disabled>Share</button></div>
+
+<div class="lvl"><b id="lvl">Level 1</b> <span id="lvlxp" style="color:var(--muted)"></span><div class="bar"><i id="bar"></i></div></div>
+<div class="grid" id="stats"></div>
+<h2>Badge collection</h2>
+<div class="coll" id="coll"></div>
+<h2>Achievements</h2>
+<div class="coll" id="ach"></div>
+<button class="reset" id="reset">Reset all progress</button>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+// LOGIC-START
+const MAXES={easy:10n**19n,normal:10n**12n,hard:10n**6n};
+const MULT={easy:1,normal:3,hard:10};
+const TIER_EMOJI={common:'⬜',uncommon:'🟩',rare:'🟦',epic:'🟪',legendary:'🟨',mythic:'🟥'};
+function modpow(b,e,m){let r=1n;b%=m;while(e>0n){if(e&1n)r=r*b%m;b=b*b%m;e>>=1n}return r}
+function isPrime(n){if(n<2n)return false;const P=[2n,3n,5n,7n,11n,13n,17n,19n,23n,29n,31n,37n];for(const p of P){if(n===p)return true;if(n%p===0n)return false}let d=n-1n,r=0;while(d%2n===0n){d/=2n;r++}for(const a of P){let x=modpow(a,d,n);if(x===1n||x===n-1n)continue;let ok=false;for(let i=1;i<r;i++){x=x*x%n;if(x===n-1n){ok=true;break}}if(!ok)return false}return true}
+function isqrt(n){if(n<2n)return n;let x=BigInt(Math.floor(Math.sqrt(Number(n))));for(let i=0;i<4;i++)x=(x+n/x)>>1n;while(x*x>n)x--;while((x+1n)*(x+1n)<=n)x++;return x}
+const isSq=n=>{const r=isqrt(n);return r*r===n};
+const isCube=n=>{const r=BigInt(Math.round(Math.cbrt(Number(n))));return [r-1n,r,r+1n].some(x=>x**3n===n)};
+const isPow=(n,b)=>{while(n%b===0n)n/=b;return n===1n};
+const isFact=n=>{let f=1n,k=1n;while(f<n){k++;f*=k}return f===n};
+const PERF=[6n,28n,496n,8128n,33550336n,8589869056n,137438691328n,2305843008139952128n];
+function longestRun(s,step){let best=1,cur=1;for(let i=1;i<s.length;i++){if(+s[i]-+s[i-1]===step){cur++;if(cur>best)best=cur}else cur=1}return best}
+function evalRoll(n,max){
+  const s=n.toString(),L=s.length,out=[];
+  const add=(id,name,tier,xp,desc)=>out.push({id,name,tier,xp,desc});
+  if(s.includes('7'))add('seven','Lucky Seven','common',120000,'Contains a 7');
+  if((s.split('7').length-1)>=3)add('wild7','Sevens Wild','uncommon',300000,'Three or more 7s');
+  if(s.includes('777'))add('777','Triple Seven','rare',777000,'Contains 777');
+  if(s.includes('888'))add('888','Triple Eight','rare',888000,'Contains 888');
+  if(s.includes('1337'))add('leet','Leet','epic',1337000,'Contains 1337');
+  if(s.includes('123456789'))add('seq9','Full Ladder','mythic',100000000,'Contains 123456789');
+  let m=1,c=1;for(let i=1;i<L;i++){c=(s[i]===s[i-1]&&s[i]!=='0')?c+1:1;if(c>m)m=c}
+  if(m>=5)add('rep5','Five of a Kind','epic',5000000,'5+ identical digits in a row');
+  else if(m===4)add('rep4','Four of a Kind','rare',900000,'4 identical digits in a row');
+  else if(m===3)add('rep3','Triple','uncommon',150000,'3 identical digits in a row');
+  else if(m===2)add('rep2','Pair','common',20000,'2 identical digits in a row');
+  for(const [step,nm] of [[1,'Stairs Up'],[-1,'Stairs Down']]){
+    const r=longestRun(s,step);
+    if(r>=6)add('st'+step+'6',nm+' (6+)','epic',6000000,r+' digits in a row');
+    else if(r===5)add('st'+step+'5',nm+' (5)','rare',1500000,'5 digits in a row');
+    else if(r===4)add('st'+step+'4',nm+' (4)','uncommon',400000,'4 digits in a row');
+  }
+  if(L>=5&&s===[...s].reverse().join(''))add('pal','Palindrome','epic',2500000,'Reads the same backwards');
+  const z=(s.match(/0+$/)||[''])[0].length;
+  if(z>=6)add('zero6','Round Number','epic',5000000,z+' trailing zeros');
+  else if(z>=3)add('zero3','Rounded Off','uncommon',300000,z+' trailing zeros');
+  if(L>=4&&/^10+$/.test(s))add('pow10','Power of Ten','legendary',50000000,'A 1 followed by zeros');
+  if(L>=3&&/^(\d)\1+$/.test(s))add('mono','Monotone','legendary',25000000,'Every digit is the same');
+  if(n===1n)add('one','Number One','legendary',10000000,'You rolled 1');
+  if(n===max)add('jackpot','Jackpot','mythic',1000000000,'The maximum possible roll');
+  const D=[...s].map(Number),cnt=Array(10).fill(0);D.forEach(d=>cnt[d]++);
+  const sum=D.reduce((a,b)=>a+b,0),size=cnt.filter(Boolean).length,mx=Math.max(...cnt),all=f=>D.every(f);
+  const rev=[...s].reverse().join(''),yr=String(new Date().getFullYear());
+  for(const [q,nm,t,x] of [['42','The Answer','common',42000],['69','Nice','common',69000],['100','Century','common',100000],['255','Max Byte','common',25500],['314','Pi Day','uncommon',314000],['420','Blaze It','uncommon',420000],['404','Not Found','uncommon',404000],['911','Emergency','uncommon',911000],['999','Hotline','uncommon',999000],['666','Devilish','uncommon',666000],['007','Licence to Roll','uncommon',700000],['1000','Grand','uncommon',1000000],['0000','Void','uncommon',400000],['2000','Y2K','uncommon',2000000],['1225','Christmas','uncommon',1225000],['1031','Halloween','uncommon',1031000],['0214','Valentine','uncommon',214000],['0101','New Year','uncommon',101000],['1024','Kilobyte','rare',1024000],['1066','Hastings','rare',1066000],['1492','Ocean Blue','rare',1492000],['1618','Golden Ratio','rare',1618000],['1776','Independence','rare',1776000],['1969','Moon Landing','rare',1969000],['1984','Big Brother','rare',1984000],['1999','Party Like It’s','rare',1999000],['2001','Odyssey','rare',2001000],['2718','Euler','rare',2718000],['3141','Pi','rare',3141000],['5280','Mile High','rare',5280000],['6626','Planck','rare',6626000],['9001','Over 9000','rare',9001000],['11235','Fibonacci Start','rare',11235000],['14142','Root Two','rare',14142000],['24601','Valjean','rare',24601000],['27315','Absolute Zero','rare',27315000],['90210','Zip Code','rare',90210000],['31415','Pi Digits','epic',31415000],['65536','Sixteen Bits','epic',6553600],['602214','Avogadro','epic',6022140],['8675309','Jenny','epic',8675309],['299792458','Light Speed','mythic',299792458],['4815162342','The Numbers','mythic',481516234],[yr,'This Year','rare',+yr*1000]])
+    if(s.includes(q))add('s'+q,nm,t,x,'Contains '+q);
+  const X=(id,nm,t,x,d,c)=>{if(c)add(id,nm,t,x,d)};
+  X('bookend','Bookends','common',30000,'First and last digit match',L>=3&&s[0]===s[L-1]);
+  X('7start','Seven Heaven','common',70000,'Starts with 7',L>=2&&s[0]==='7');
+  X('7end','Lucky Finish','common',77000,'Ends with 7',L>=2&&s[L-1]==='7');
+  X('13end','Unlucky Finish','common',13000,'Ends with 13',L>=3&&s.endsWith('13'));
+  X('13start','Unlucky Start','common',13000,'Starts with 13',L>=3&&s.startsWith('13'));
+  X('len1','Single Digit','uncommon',100000,'Only one digit',L===1);
+  X('len7','Lucky Length','common',70000,'Exactly 7 digits',L===7);
+  X('len10','Perfect Ten','common',100000,'Exactly 10 digits',L===10);
+  X('even','Even Steven','rare',500000,'Every digit is even',L>=4&&all(d=>d%2===0));
+  X('odd','Odd Squad','rare',500000,'Every digit is odd',L>=4&&all(d=>d%2===1));
+  X('two','Two Tone','uncommon',300000,'Only two different digits',L>=6&&size===2);
+  X('uniq','Unique Digits','uncommon',250000,'No digit repeats',L>=7&&size===L);
+  X('pandig','Pandigital','uncommon',400000,'Uses all ten digits',size===10);
+  X('sum21','Blackjack','uncommon',210000,'Digits add up to 21',sum===21);
+  X('sum42','Answer Sum','uncommon',420000,'Digits add up to 42',sum===42);
+  X('sum69','Nice Sum','uncommon',690000,'Digits add up to 69',sum===69);
+  X('sum77','Lucky Sum','rare',770000,'Digits add up to 77',sum===77);
+  X('sum100','Perfect Hundred','uncommon',600000,'Digits add up to 100',sum===100);
+  X('sum13','Unlucky Sum','common',13000,'Digits add up to 13',sum===13);
+  X('sump','Prime Sum','common',25000,'Digit sum is prime',isPrime(BigInt(sum)));
+  X('alt','Alternator','epic',2000000,'Two digits alternate all the way',L>=6&&/^(\d)(?!\1)(\d)(\1\2)*\1?$/.test(s));
+  X('echo','Echo','uncommon',200000,'A two-digit pair repeats, like 1212',/(\d)(?!\1)(\d)\1\2/.test(s));
+  X('mirror','Mirror','uncommon',220000,'Contains a mirror like 1221',/(\d)(?!\1)(\d)\2\1/.test(s));
+  X('3pairs','Three Pairs','rare',1100000,'Like 112233',/(\d)\1(\d)\2(\d)\3/.test(s));
+  X('fullh','Full House','rare',1200000,'Three of a kind next to a pair',/(\d)\1\1(?!\1)(\d)\2(?!\2)|(\d)\3(?!\3)(\d)\4\4/.test(s));
+  X('zerohero','Zero Hero','uncommon',500000,'Five or more zeros',L>=7&&cnt[0]>=5);
+  X('hoard','Digit Hoarder','rare',800000,'One digit shows up 6+ times',L>=10&&mx>=6);
+  X('dragon','Digit Dragon','epic',8000000,'One digit shows up 8+ times',L>=10&&mx>=8);
+  X('bin','Binary Bits','uncommon',300000,'Only 0s and 1s',L>=5&&all(d=>d<2));
+  X('tern','Ternary','uncommon',300000,'Only 0s, 1s and 2s',L>=6&&all(d=>d<3));
+  X('sorted','Sorted','rare',1500000,'Digits never decrease',L>=5&&s===[...s].sort().join(''));
+  X('rsorted','Reverse Sorted','rare',1500000,'Digits never increase',L>=5&&s===[...s].sort().reverse().join(''));
+  X('sqd','Square Digits','rare',900000,'Only 0, 1, 4 and 9',L>=5&&all(d=>[0,1,4,9].includes(d)));
+  X('primd','Prime Digits','rare',900000,'Only 2, 3, 5 and 7',L>=5&&all(d=>[2,3,5,7].includes(d)));
+  X('low','Low Roller','rare',600000,'Every digit is 3 or less',L>=6&&all(d=>d<=3));
+  X('high','High Roller','rare',600000,'Every digit is 7 or more',L>=5&&all(d=>d>=7));
+  X('8s','Eight Wonder','uncommon',800000,'Four or more 8s',cnt[8]>=4);
+  X('9s','Cloud Nine','uncommon',900000,'Five or more 9s',cnt[9]>=5);
+  X('1s','Ones Galore','uncommon',500000,'Five or more 1s',L>=8&&cnt[1]>=5);
+  X('parity','Heads or Tails','rare',1500000,'Odd and even digits alternate',L>=6&&D.every((d,i)=>i===0||d%2!==D[i-1]%2));
+  X('palin5','Palindrome Inside','uncommon',350000,'Hides a 5-digit palindrome',/(\d)(\d)\d\2\1/.test(s));
+  X('palin7','Deep Palindrome','rare',3500000,'Hides a 7-digit palindrome',/(\d)(\d)(\d)\d\3\2\1/.test(s));
+  X('twins','Twins','epic',3000000,'First half equals second half',L>=4&&/^(\d+)\1$/.test(s));
+  X('nohole','No Holes','common',50000,'No zeros at all',L>=8&&cnt[0]===0);
+  X('balance','Balanced','common',80000,'As many even digits as odd',L>=8&&D.filter(d=>d%2===0).length===L/2);
+  X('feather','Featherweight','rare',900000,'Digit sum no bigger than digit count',L>=6&&sum<=L);
+  X('heavy','Heavyweight','rare',900000,'Digit sum of 8 per digit or more',L>=5&&sum>=8*L);
+  X('prime','Prime','rare',1000000,'A prime number',isPrime(n));
+  X('palprime','Palindromic Prime','epic',20000000,'Prime and a palindrome',L>=3&&s===rev&&isPrime(n));
+  X('sq','Perfect Square','epic',5000000,'A square number',n>=4n&&isSq(n));
+  X('cube','Perfect Cube','legendary',15000000,'A cube number',n>=8n&&isCube(n));
+  X('pow2','Binary Royalty','legendary',16000000,'A power of 2',n>=2n&&isPow(n,2n));
+  X('pow3','Triple Power','epic',6000000,'A power of 3',n>=3n&&isPow(n,3n));
+  X('fib','Fibonacci','epic',8000000,'A Fibonacci number',n>=13n&&(isSq(5n*n*n+4n)||isSq(5n*n*n-4n)));
+  X('tri','Triangular','epic',6000000,'A triangular number',n>=10n&&isSq(8n*n+1n));
+  X('fact','Factorial','legendary',12000000,'A factorial',n>=6n&&isFact(n));
+  X('d7','Sevenfold','common',70000,'Divisible by 7',n%7n===0n);
+  X('d11','Eleven Up','common',11000,'Divisible by 11',n%11n===0n);
+  X('d13','Baker’s Dozen','common',13000,'Divisible by 13',n%13n===0n);
+  X('d42','Deep Thought','common',42000,'Divisible by 42',n%42n===0n);
+  X('d9','Casting Nines','common',9000,'Divisible by 9',n%9n===0n);
+  X('d1337','Leet Multiple','rare',1337000,'Divisible by 1337',n%1337n===0n);
+  X('perfect','Perfect Number','mythic',500000000,'Equals the sum of its divisors',PERF.includes(n));
+  X('narc','Narcissist','legendary',30000000,'Equals its digits raised to the digit count, summed',L>=3&&D.reduce((a,d)=>a+BigInt(d)**BigInt(L),0n)===n);
+  out.sort((a,b)=>b.xp-a.xp);
+  const mult=MULT[Object.keys(MAXES).find(k=>MAXES[k]===max)]||1;
+  const base=out.reduce((a,b)=>a+b.xp,0);
+  return {badges:out,base,mult,xp:base*mult};
+}
+function hash32(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return(h^=h>>>16)>>>0}}
+function pickNumber(max,rand32){let v=0n;for(let i=0;i<3;i++)v=(v<<32n)|BigInt(rand32());return v%max+1n}
+function levelOf(xp){const l=Math.floor(Math.sqrt(xp/500000))+1;return{l,cur:(l-1)**2*500000,next:l*l*500000}}
+// LOGIC-END
+
+const $=id=>document.getElementById(id);
+const KEY='rngdle-v1';
+const fmt=n=>n.toLocaleString('en-US');
+const dstr=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>dstr(new Date());
+const yesterday=()=>{const d=new Date();d.setDate(d.getDate()-1);return dstr(d)};
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fresh=()=>({mode:'daily',diff:'normal',rolls:0,xp:0,rollXp:0,dailyCount:0,ach:{},best:{xp:0,num:''},streak:0,bestStreak:0,lastDaily:'',badges:{},daily:{}});
+let S=fresh();
+try{const r=JSON.parse(localStorage.getItem(KEY));if(r)S=Object.assign(fresh(),r)}catch(e){}
+if(S.rollXp===0&&S.xp>0)S.rollXp=S.xp;
+const DISC={common:100000,uncommon:250000,rare:500000,epic:1000000,legendary:2500000,mythic:10000000};
+const nbad=()=>Object.keys(S.badges).length,hasT=t=>Object.values(S.badges).some(b=>b.tier===t);
+const ACH=[['first','First Roll',100000,()=>S.rolls>=1],['r50','Regular',1000000,()=>S.rolls>=50],['r500','Grinder',5000000,()=>S.rolls>=500],['s3','Three-Day Streak',1000000,()=>S.bestStreak>=3],['s7','Week Warrior',5000000,()=>S.bestStreak>=7],['s30','Monthly Master',30000000,()=>S.bestStreak>=30],['b10','Collector',2000000,()=>nbad()>=10],['b25','Curator',10000000,()=>nbad()>=25],['b50','Archivist',30000000,()=>nbad()>=50],['b100','Completionist',100000000,()=>nbad()>=100],['epic','Epic Find',5000000,()=>hasT('epic')],['leg','Legend',20000000,()=>hasT('legendary')],['myth','Mythic Find',100000000,()=>hasT('mythic')],['d10','Daily Habit',3000000,()=>S.dailyCount>=10],['d50','Daily Devotion',20000000,()=>S.dailyCount>=50],['hard','Hard Mode',2000000,()=>Object.keys(S.daily).some(k=>k.includes('|hard|'))],['big','Big Hit',10000000,()=>S.best.xp>=500000000],['bil','Billionaire',50000000,()=>S.best.xp>=2000000000]];
+function checkAch(gain){for(const [id,nm,x,f] of ACH)if(!S.ach[id]&&f()){S.ach[id]=1;gain('Achievement: '+nm,x)}}
+function xpHtml(r){return fmt(r.xp)+' XP'+(r.mult>1?'<small>'+fmt(r.base)+' × '+r.mult+' difficulty bonus</small>':'')+(r.daily?'':'<small>Practice roll: no level XP</small>')}
+function showBonus(r){const ul=$('bonus');ul.innerHTML='';if(!r.bonus||!r.bonus.length)return;for(const b of r.bonus){const li=document.createElement('li');li.style.setProperty('--c','var(--accent)');li.innerHTML='<div><b></b></div><em></em>';li.querySelector('b').textContent=b.l;li.querySelector('em').textContent='+'+fmt(b.x)+' level XP';ul.appendChild(li)}}
+function renderAch(){const el=$('ach');el.innerHTML='';for(const [id,nm,x] of ACH){const c=document.createElement('span'),on=S.ach[id];c.className='chip';c.style.setProperty('--c',on?'var(--accent)':'var(--line)');c.style.opacity=on?1:.6;c.textContent=(on?'✓ ':'')+nm+' · '+fmt(x)+' XP';el.appendChild(c)}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let last=null,busy=false;
+
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
+function setNum(str,idle){const e=$('num');e.textContent=str;e.style.setProperty('--len',Math.max(str.length,4));e.classList.toggle('idle',!!idle)}
+function badgeLi(b){const li=document.createElement('li');li.style.setProperty('--c','var(--t-'+b.tier+')');li.innerHTML='<div><b></b><span></span></div><em></em>';li.querySelector('b').textContent=b.name;li.querySelector('span').textContent=b.desc+' · '+b.tier;li.querySelector('em').textContent='+'+fmt(b.xp);return li}
+
+function showResult(r,animate,done){
+  const ul=$('badges');ul.innerHTML='';$('xp').innerHTML='';$('bonus').innerHTML='';
+  const s=r.num;
+  const finish=()=>{
+    setNum(fmt(BigInt(s)));
+    if(!r.badges.length){ul.innerHTML='<li class="empty">No badges. Roll again.</li>'}
+    let i=0;const step=()=>{
+      if(i<r.badges.length){ul.appendChild(badgeLi(r.badges[i++]));setTimeout(step,animate&&!reduced?260:0)}
+      else{$('xp').innerHTML=xpHtml(r);showBonus(r);done&&done()}
+    };step();
+  };
+  if(!animate||reduced){finish();return}
+  const f=fmt(BigInt(s)),t0=performance.now(),dur=900;
+  const tick=t=>{
+    const p=Math.min(1,(t-t0)/dur),lock=Math.floor(p*f.length);let o='';
+    for(let i=0;i<f.length;i++)o+=(i<lock||f[i]===',')?f[i]:Math.floor(Math.random()*10);
+    setNum(o);
+    p<1?requestAnimationFrame(tick):finish();
+  };requestAnimationFrame(tick);
+}
+
+function record(r,daily){
+  r.bonus=[];r.lvlXp=0;const gain=(l,x,q)=>{S.xp+=x;r.lvlXp+=x;if(!q)r.bonus.push({l,x})};
+  S.rolls++;S.rollXp+=r.xp;
+  if(r.xp>S.best.xp)S.best={xp:r.xp,num:r.num};
+  for(const b of r.badges){const nw=!S.badges[b.id];const e=S.badges[b.id]||(S.badges[b.id]={name:b.name,tier:b.tier,c:0});e.c++;if(nw)gain('New badge: '+b.name,DISC[b.tier])}
+  if(daily){
+    const t=today();
+    if(S.lastDaily!==t){S.streak=S.lastDaily===yesterday()?S.streak+1:1;S.lastDaily=t}
+    if(S.streak>S.bestStreak)S.bestStreak=S.streak;
+    S.dailyCount++;gain('Daily roll',r.xp,true);
+    if(S.streak>1)gain('Streak bonus, day '+S.streak,Math.min(S.streak,30)*250000);
+    if(['easy','normal','hard'].every(d=>S.daily[t+'|'+d+'|v2']))gain('Triple Crown: all three difficulties today',3000000);
+  }
+  checkAch(gain);
+}
+
+function dailyKey(){return today()+'|'+S.diff+'|v2'}
+function doRoll(){
+  if(busy)return;
+  const max=MAXES[S.diff],daily=S.mode==='daily';
+  if(daily&&S.daily[dailyKey()])return;
+  const n=daily?pickNumber(max,hash32('rngdle:'+dailyKey())):pickNumber(max,()=>crypto.getRandomValues(new Uint32Array(1))[0]);
+  const e=evalRoll(n,max);
+  last={num:n.toString(),badges:e.badges,base:e.base,mult:e.mult,xp:e.xp,daily,diff:S.diff,date:today()};
+  if(daily)S.daily[dailyKey()]={num:last.num,xp:e.xp};
+  record(last,daily);save();
+  busy=true;$('roll').disabled=true;
+  showResult(last,true,()=>{busy=false;$('share').disabled=false;syncRoll();renderStats()});
+}
+
+function syncRoll(){
+  const b=$('roll'),done=S.mode==='daily'&&S.daily[dailyKey()];
+  b.disabled=busy||!!done;
+  b.textContent=done?'Rolled today — back tomorrow':'Roll';
+}
+function showDailyIfRolled(){
+  last=null;$('share').disabled=true;
+  const d=S.mode==='daily'&&S.daily[dailyKey()];
+  if(d){const e=evalRoll(BigInt(d.num),MAXES[S.diff]);last={num:d.num,badges:e.badges,base:e.base,mult:e.mult,xp:e.xp,daily:true,diff:S.diff,date:today()};showResult(last,false);$('share').disabled=false}
+  else{setNum('?',true);$('badges').innerHTML='<li class="empty">No roll yet.</li>';$('xp').innerHTML='';$('bonus').innerHTML=''}
+  syncRoll();
+}
+
+function renderSeg(){for(const [id,key] of [['mode','mode'],['diff','diff']])document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S[key]))}
+function renderStats(){
+  const L=levelOf(S.xp);
+  $('lvl').textContent='Level '+L.l;$('lvlxp').textContent=fmt(S.xp)+' / '+fmt(L.next)+' XP';
+  $('bar').style.width=Math.min(100,(S.xp-L.cur)/(L.next-L.cur)*100)+'%';
+  const rows=[['Total rolls',fmt(S.rolls)+' ('+fmt(S.dailyCount)+' daily)'],['Level XP',fmt(S.xp)],['Daily streak',S.streak+' (best '+S.bestStreak+')'],['Best roll',S.best.xp?fmt(S.best.xp)+' XP':'-'],['Lifetime roll XP',fmt(S.rollXp)],['Achievements',Object.keys(S.ach).length+' / '+ACH.length]];
+  $('stats').innerHTML=rows.map(r=>'<div class="stat"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
+  const order=['mythic','legendary','epic','rare','uncommon','common'];
+  const list=Object.values(S.badges).sort((a,b)=>order.indexOf(a.tier)-order.indexOf(b.tier));
+  $('coll').innerHTML=list.length?'':'<span style="color:var(--muted)">Badges you earn show up here.</span>';
+  for(const b of list){const c=document.createElement('span');c.className='chip';c.style.setProperty('--c','var(--t-'+b.tier+')');c.textContent=b.name+' ×'+b.c;$('coll').appendChild(c)}
+  renderAch();
+}
+
+$('mode').onclick=e=>{const v=e.target.dataset&&e.target.dataset.v;if(!v||busy)return;S.mode=v;save();renderSeg();showDailyIfRolled()};
+$('diff').onclick=e=>{const v=e.target.dataset&&e.target.dataset.v;if(!v||busy)return;S.diff=v;save();renderSeg();showDailyIfRolled()};
+$('roll').onclick=doRoll;
+$('share').onclick=async()=>{
+  if(!last)return;
+  const nb=last.badges.length,grid=nb?last.badges.slice(0,24).map(b=>TIER_EMOJI[b.tier]).join('')+(nb>24?' +'+(nb-24):''):'⬛';
+  const title='RNGdle '+(last.daily?'Daily '+last.date:'Unlimited')+' ('+last.diff[0].toUpperCase()+last.diff.slice(1)+')';
+  const txt=title+'\n🎲 '+fmt(BigInt(last.num))+'\n'+grid+'\n'+fmt(last.xp)+' XP';
+  try{await navigator.clipboard.writeText(txt);toast('Copied to clipboard')}
+  catch(e){const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');toast('Copied to clipboard')}catch(_){toast('Copy failed')}t.remove()}
+};
+$('reset').onclick=()=>{if(busy||!confirm('Reset all XP, stats and daily rolls?'))return;S=fresh();save();renderSeg();renderStats();showDailyIfRolled()};
+
+renderSeg();renderStats();showDailyIfRolled();
+</script>
+</body>
+</html>
